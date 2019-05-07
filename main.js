@@ -1,7 +1,33 @@
 // d()
 
-var playing,index,loop,parse,focus,hyphenate,str,words;
-parse = function(words, str) {
+var playing, loop, parse, focus, paused;
+
+window.index = 0
+
+// hyphenating
+//    if <= 7 chars
+//      return self
+//    if <= 10
+//    return x, {3}
+//    if <= 14 chars
+//    return {7},{7}
+//    else
+//    return {7}, hyphenated{x}
+
+let hyphenate = function(words) {
+    // console.log(words)
+    let ret = words
+
+    with(words) {
+        ret = length < 8 ? words : length < 11 ? slice(0,length - 3) + '- ' + slice(length-3) : slice(0,7) + '- ' + hyphenate(slice(7))
+
+    }
+
+    return ret
+}
+
+
+parse = function(words) {
     // Logic
     // strings will be broken out into words
     // find the focus point of the word
@@ -13,57 +39,90 @@ parse = function(words, str) {
     // start in middle of word (default focus point)
     // move left until you hit a vowel, then stop
 
-    // hyphenating
-    //    if <= 7 chars
-    //      return self
-    //    if <= 10
-    //    return x, {3}
-    //    if <= 14 chars
-    //    return {7},{7}
-    //    else
-    //    return {7},hyphenated{x}
+    // return 2d array with word and focus point
+    return words.trim()
+        .replace(/([.?!])([A-Z-])/g, '$1 $2')
+        .split(/\s+/)
+        .reduce(function(words, str) {
+            with(str) {
+                // focus point
+                for(let j = focus = (length - 1) / 2 | 0; j >= 0;  j--) {
 
-    hyphenate = function(words, str) {
-        with(words)
-            return length < 8 ? words : length < 11 ? slice(0,length - 3)+'- '+slice(length-3) : slice(0,7)+'- '+hyphenate(slice(7))
-    }
+                    if (/[aeiou]/.test(str[j])) {
+                        focus = j
+                        break;
+                    }
+                }
 
-// return 2d array with word and focus point
-return words.trim().replace(/([.?!])([A-Z-])/g, '$1 $2').split(/\s+/).reduce(function(words, str) {
-    with(str) {
-        // focus point
-        for(j=focus=(length-1)/2|0;j>=0;j--)
-            if (/[aeiou]/.test(str[j])) {
-                focus = j
-                break
+                // time on page
+                let t = 60000/500 // 500 wpm
+
+                if (length > 6)
+                    t += t/4
+
+                if (~indexOf(',')){
+                    t += t/2
+                }
+
+                if(/[.?!]/.test(str)) {
+                    t+= t*1.5
+                }
+
+                return length > 14 || length - focus > 7 ? words.concat(parse(hyphenate(str))) : words.concat([[str, focus, t]])
             }
+        }, [])
+}
 
-        t = 60000/500 // 500 wpm
 
-        if (length > 6)
-            t += t/4
+function play() {
+    let arr = parse(word_content.textContent)
 
-        if (~indexOf(','))
-            t += t/2
-
-        if(/[.?!]/.test(str))
-            t+= t*1.5
-
-        return length > 14 || length - focus > 7 ? words.concat(parse(hyphenate(str))) : words.concat([[str, focus, t]])
+    if (paused) {
+        // continue playing
+        paused = false
+        loop(arr, window.index)
+        return
     }
-}, [])
+
+    // play from beginning
+    loop(arr, 0)
 }
 
-p = function(words,str) {
-    index = 0
-    playing = !playing
-    playing && loop()
+function pause() {
+    paused = true
 }
 
-loop = function(words,str) {
-    w = parse(i.textContent)[index++] || p()
-    o.innerHTML = Array(8 - w[1]).join('&nbsp;')+w[0].slice(0,w[1])+'<v>'+w[0][w[1]]+'</v>'+w[0].slice(w[1]+1)
-    playing && setTimeout(loop, w[2])
+
+// stick the tape in the VHS player ~
+loop = function(arr, index) {
+
+    console.log(index)
+
+    if (paused) { return }
+
+    // word object
+    var w = arr[index]
+
+
+    // 8 here is the string size
+    canvas.innerHTML = Array(8 - w[1]).join('&nbsp;') +
+        w[0].slice(0, w[1]) +
+        '<v>' +
+        w[0][w[1]] + // inject our hot letter
+        '</v>' +
+        w[0].slice(w[1] + 1)
+
+    // make recursive call
+    window.index++
+
+    let next_callback = function(){loop(arr, window.index)}
+    setTimeout(next_callback, w[2])
 }
 
-p()
+
+
+
+
+
+// to play instantly on page load
+// p()

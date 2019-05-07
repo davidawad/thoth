@@ -1,0 +1,36 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/* kill scrollbars from hell */
+#c { display: block; }
+
+
+body {
+    width:600px;
+    margin:0 auto;
+    font-family:Courier;
+}
+
+
+#canvas {
+    font-size:40px;
+    border:2px solid;
+    width:21rem;
+    display:inline-block
+}
+
+
+#word_content{
+    overflow:auto;
+    padding:20px;
+
+    width:600px;
+    height:350px;
+    border:1px solid;
+}
+
+v { color:red; }
+
