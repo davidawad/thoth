@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <title>Zethos - By Zolmeister</title>
+        <title>Speedreader | by David Awad</title>
         <meta charset="utf-8" />
         <!-- <link rel="shortcut icon" href="/favicon.ico"> -->
         <link rel="stylesheet" type="text/css" href="styles.css">
@@ -21,21 +21,25 @@
 
         <br>
         <br>
-        <p contenteditable id=word_content>
-            Welcome.
+        <p contenteditable id="word_content" onpaste="OnPaste_StripFormatting(this, event)">
+            Hello!
 
             <br>
             <br>
 
-            This is an open source speed reading tool inspired by Spritz ($3.5mil).
-            <br>It's free and open source on <a href=http://github.com/davidawad>GitHub.</a>
+            This is an open source speed reading tool inspired by Zethos and Spritz ($3.5mil).
+            <br>
+            It's free and open source on <a href=http://github.com/davidawad>GitHub.</a>
+
+
+            Seek truth, but faster. Enjoy!
 
             <br>
-            -<a contenteditable=false href=davidawad.com>David</a>
+
+            -<a href=davidawad.com>David</a>
 
         </p>
 
-        <canvas id="c"></canvas>
         <script>
             var a = document.getElementsByTagName('canvas')[0];
             var b = document.body;
@@ -58,14 +62,60 @@
                 window.msRequestAnimationFrame ||
                 function(f){ setTimeout(f, 1000/30); };
 
-            // stretch canvas to screen size (once, wont onresize!)
-            a.style.width = (a.width = innerWidth) + 'px';
-            a.style.height = (a.height = innerHeight) + 'px';
-
-            var c = a.getContext('2d');
-
         </script>
-        <script src='main.js'></script>
 
+
+        <script>
+            var _onPaste_StripFormatting_IEPaste = false;
+
+            function OnPaste_StripFormatting(elem, e) {
+
+                if (e.originalEvent && e.originalEvent.clipboardData && e.originalEvent.clipboardData.getData) {
+                    e.preventDefault();
+                    var text = e.originalEvent.clipboardData.getData('text/plain');
+                    window.document.execCommand('insertText', false, text);
+                }
+                else if (e.clipboardData && e.clipboardData.getData) {
+                    e.preventDefault();
+                    var text = e.clipboardData.getData('text/plain');
+                    window.document.execCommand('insertText', false, text);
+                }
+                else if (window.clipboardData && window.clipboardData.getData) {
+                    // Stop stack overflow
+                    if (!_onPaste_StripFormatting_IEPaste) {
+                        _onPaste_StripFormatting_IEPaste = true;
+                        e.preventDefault();
+                        window.document.execCommand('ms-pasteTextOnly', false);
+                    }
+                    _onPaste_StripFormatting_IEPaste = false;
+                }
+
+            }
+
+
+            document.body.onkeyup = function(e){
+                // use the space bar to control the reading
+                if(e.keyCode == 32){
+                    // toggle play_pause
+                    playpause();
+                }
+            }
+
+            // jquery function to color a word
+            <!-- function color_word(text_id, word, color) { -->
+                <!-- words = $('#' + text_id).text().split(' '); -->
+                <!-- words = words.map(function(item) { return item == word ? "<span style='color: " + color + "'>" + word + '</span>' : item }); -->
+                <!-- new_words = words.join(' '); -->
+                <!-- $('#' + text_id).html(new_words); -->
+            <!-- } -->
+        </script>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+        <!-- jquery highlight plugin? -->
+        <!-- http://bartaz.github.io/sandbox.js/jquery.highlight.html -->
+        <!-- <script src="https://raw.githubusercontent.com/bartaz/sandbox.js/master/jquery.highlight.js" type="application/javascript"> </script> -->
+
+        <script src='main.js'></script>
     </body>
 </html>
