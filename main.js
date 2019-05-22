@@ -3,7 +3,7 @@ var paused = true
 window.index = 0
 
 // speed in words per minute
-let READING_SPEED = 500
+let READING_SPEED = 700
 let MAX_WORD_SIZE = 8
 
 // hyphenating
@@ -98,6 +98,7 @@ parse = function(words) {
 
 function play() {
 
+    // TODO check when word_content is empty!!!
     let arr = parse(word_content.textContent)
 
     if (paused) {
