@@ -9,11 +9,13 @@ import DisplayReel from '../DisplayReel';
 
 import * as CONSTANTS from '../constants';
 
-const SPACE_KEY = 32
+const SPACE_KEY = CONSTANTS.SPACE_KEY; 
 
 const initialContent = `Hello! 
 
 This is Thoth, an open source speed reading tool inspired by Zethos and Spritz ($3.5mil series A).
+
+It combines a few different features of other powerful speed readers and lets you set options yourself.
 
 It's free and open source on GitHub.  
 
@@ -31,7 +33,7 @@ const styles = {
 };
 
 
-let READING_SPEED = 700 // in words-per-minute (wpm)
+let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 let MAX_WORD_SIZE = CONSTANTS.MAX_WORD_SIZE;
 
 
@@ -40,21 +42,24 @@ let MAX_WORD_SIZE = CONSTANTS.MAX_WORD_SIZE;
 class Reader extends Component {  
 
   constructor(props) {
+
     super(props);
 
-    // to bind paste handler to correct context for setState
-    this.pasteHandler = this.pasteHandler.bind(this);
-
+    // bind functions for correct setState context
     this.play  = this.play.bind(this);
     this.pause = this.pause.bind(this);
     this.reset = this.reset.bind(this);
     this.parse = this.parse.bind(this);
     this.hyphenate = this.hyphenate.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
+    this.pasteHandler = this.pasteHandler.bind(this);
 
-    
-    
-    this.onChange = (editorState) => this.setState({editorState});
+    const ctx = this;
+    this.onChange = function(editorState) {
+      ctx.pasteHandler();
+      // read new state information.
+      ctx.setState({editorState})
+    };
 
     this.setEditor = (editor) => {
       this.editor = editor;
@@ -67,7 +72,10 @@ class Reader extends Component {
       editorState: EditorState.createWithContent(ContentState.createFromText(initialContent)),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
       corpusArr: this.parse(initialContent),
+      readingSpeed: READING_SPEED,
+      readOnly: false,
     };
+
   }
 
 
@@ -175,6 +183,7 @@ class Reader extends Component {
       this.setState({
         paused: true,
         index: 0,
+        readOnly: false,
       })
 
       return;
@@ -214,6 +223,7 @@ class Reader extends Component {
 
       this.setState({
         paused: false,
+        readOnly: false,
       }, () => {this.loop()})
 
       return;
@@ -224,7 +234,10 @@ class Reader extends Component {
   }
 
   pause () {
-    this.setState({paused: true})
+    this.setState({
+      paused: true,
+      readOnly: false,
+    })
   }
 
   // switch between paused & playing
@@ -255,16 +268,13 @@ class Reader extends Component {
 
 
   // TODO not necessary anymore?
-  pasteHandler(event){
+  pasteHandler(){
     let text = '';
     let arr = [];
 
     // get plain text from the paste event
     text = this.state.editorState.getCurrentContent().getPlainText();
-
     arr = this.parse(text);
-
-    console.log("user pasted :", text)
 
     this.setState({
       "bodyText": text,
@@ -315,6 +325,7 @@ class Reader extends Component {
             showUndoControl={true}
             showRedoControl={true}
             stripPastedStyles={true}
+            readOnly={this.state.readOnly}
           />
         </div>
         
