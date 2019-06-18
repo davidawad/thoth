@@ -1,6 +1,8 @@
-## Speadreader (working title)
+## thoth
 
 This is a speed reading tool for reaching 500wpm or even more.
+
+It's based on my research on how the brain reads content and how we can improve our ability to read and comprehend medium to low fidelity content faster.
 
 ## TODO
 
@@ -23,6 +25,7 @@ center reading box in middle of page
 set text box to optimal width for eye travel
 
 add blurb to bottom in light grey "Inspired by Zethos and Spritzer, coded with <3 by David Awad"
+
 
 display previous words on pause?
 
