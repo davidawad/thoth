@@ -189,11 +189,8 @@ class Reader extends Component {
       return;
     }
 
-    //console.log(this.state.paused)
-
     // STATE updates are bundled together!! 
     if (this.state.paused) { 
-      console.log("READING PAUSED.") 
       return 
     }
 
@@ -210,7 +207,6 @@ class Reader extends Component {
       this.loop() 
     }.bind(this); // make sure we can refer to parent context.
     
-
     setTimeout(next_callback, newReel.displayTime)
   }
 
@@ -263,7 +259,12 @@ class Reader extends Component {
   }
 
   reset() {
-    this.setState({index: 0})
+    // pick index 0 and re-display that
+    let reel = this.state.corpusArr[0];
+    this.setState({
+      index: 0,
+      currentReel: reel,
+    })
   }
 
 

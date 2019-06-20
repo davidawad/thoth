@@ -22,7 +22,7 @@ class App extends Component {
           <footer>
             <ul className="site-links">
               <li>
-                Thoth &copy; {this.state.year} <a href="davidawad.com">David Awad</a>.
+              Thoth is an <a href="https://github.com/davidawad/thoth">open source project</a> by <a href="http://davidawad.com">David Awad</a>. &copy; {this.state.year}
               </li>
             </ul>        
           </footer>
