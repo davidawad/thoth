@@ -20,8 +20,7 @@ html, body {
 .Reader-canvas {
   font-size:40px;
   border:2px solid;
-  /* TODO border radius */
-  width:21rem;
+  width:21rem; 
   display:inline-block;
   padding-left: 5px;
   padding-right: 5px;
@@ -56,6 +55,9 @@ html, body {
   overflow: auto;
 }
 
+.center {
+  text-align: center;
+}
 
 .editor {
   border: '1px solid gray';
@@ -65,6 +67,15 @@ html, body {
 
 
 
+.readerSurroundingWord {
+
+  font-size: 1em;
+}
+
+.hide
+.settings-close {
+  display: none;
+}
 
 
 

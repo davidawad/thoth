@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 
 import * as CONSTANTS from '../constants';
-let MAX_WORD_SIZE = CONSTANTS.MAX_WORD_SIZE;
+let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
+
 
 class PlaybackHead extends Component {
 
@@ -45,9 +46,9 @@ class PlaybackHead extends Component {
         
     } else { // otherwise find & display the Focus Point.
 
-      let numSpaces = MAX_WORD_SIZE - reel.hotCharInd; 
+      let numSpaces = MAX_DISPLAY_SIZE - reel.hotCharInd; 
 
-      // console.log("NUM SPACES: ", MAX_WORD_SIZE, reel.hotCharInd, typeof(reel.hotCharInd), numSpaces);
+      // console.log("NUM SPACES: ", MAX_DISPLAY_SIZE, reel.hotCharInd, typeof(reel.hotCharInd), numSpaces);
 
       // add whitespaces
       let wsp = Array(numSpaces).join("\u00a0");
@@ -77,9 +78,6 @@ class PlaybackHead extends Component {
 
     }
     
-
-    
-
     return ret;
   }
 }

@@ -6,23 +6,13 @@ import './Reader.css';
 // import '../Editor/Editor.css';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
+// import SettingsPanel from '../SettingsPanel/SettingsPanel';
+import ModalWrapper from '../ModalWrapper/ModalWrapper';
+
 
 import * as CONSTANTS from '../constants';
 
 const SPACE_KEY = CONSTANTS.SPACE_KEY; 
-
-const initialContent = `Hello! 
-
-This is Thoth, an open source speed reading tool inspired by Zethos and Spritz ($3.5mil series A).
-
-It combines a few different features of other powerful speed readers and lets you set options yourself.
-
-It's free and open source on GitHub.  
-
-Seek truth, but faster. Enjoy!
-
-- David`
-
 
 const styles = {
   editor: {
@@ -34,8 +24,8 @@ const styles = {
 
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
-let MAX_WORD_SIZE = CONSTANTS.MAX_WORD_SIZE;
-
+let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
+let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
 
 
@@ -68,12 +58,14 @@ class Reader extends Component {
     this.state = {
       index: 0,
       paused: true,
-      bodyText: initialContent,
-      editorState: EditorState.createWithContent(ContentState.createFromText(initialContent)),
+      bodyText: this.props.initialContent,
+      editorState: EditorState.createWithContent(ContentState.createFromText(this.props.initialContent)),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
-      corpusArr: this.parse(initialContent),
+      corpusArr: this.parse(this.props.initialContent),
       readingSpeed: READING_SPEED,
       readOnly: false,
+      enableSurroundingReels: true,
+      displaySurroundingReels: true,
     };
 
   }
@@ -88,7 +80,7 @@ class Reader extends Component {
     // console.log(word, len)
 
     // TODO idfk why I can't tear this disgusting thing apart without it breaking
-    ret = len < MAX_WORD_SIZE ? word : len < 11 ? word.slice(0, len - 3) + '- ' + word.slice(len - 3) : word.slice(0,7) + '- ' + this.hyphenate(word.slice(7))
+    ret = len < MAX_DISPLAY_SIZE ? word : len < 11 ? word.slice(0, len - 3) + '- ' + word.slice(len - 3) : word.slice(0,7) + '- ' + this.hyphenate(word.slice(7))
 
     // if (len >= 7 && len < 11) {
         // ret = word.slice(0, len - 3) + '- ' + word.slice(len - 3)
@@ -203,7 +195,7 @@ class Reader extends Component {
     })
 
     // make recursive call    
-    let next_callback = function(){ 
+    let next_callback = function() { 
       this.loop() 
     }.bind(this); // make sure we can refer to parent context.
     
@@ -215,11 +207,10 @@ class Reader extends Component {
     // if paused, unpause and continue playing
     if (this.state.paused) {
       
-      console.log("paused, starting reading")
-
       this.setState({
         paused: false,
         readOnly: false,
+        displaySurroundingReels: false,
       }, () => {this.loop()})
 
       return;
@@ -230,9 +221,11 @@ class Reader extends Component {
   }
 
   pause () {
+
     this.setState({
       paused: true,
       readOnly: false,
+      displaySurroundingReels: true,
     })
   }
 
@@ -250,8 +243,6 @@ class Reader extends Component {
 
     // use the space bar to play / pause reading session.
     if(event.keyCode === SPACE_KEY){
-
-      console.log('Space Bar Pressed')
 
       // toggle play_pause
       this.playpause()
@@ -286,6 +277,16 @@ class Reader extends Component {
 
   render() {
 
+    let prevWord = typeof(this.state.corpusArr[this.state.index - 2]) !== typeof(undefined) ? this.state.corpusArr[this.state.index - 2].text : ''  
+    let postWord = typeof(this.state.corpusArr[this.state.index]) !== typeof(undefined) ? this.state.corpusArr[this.state.index].text : ''  
+
+    let preNumSpaces   = typeof(prevWord) !== typeof(undefined) ? LARGEST_WORD_SIZE - prevWord.length : 0; 
+    // let postNumSpaces  = typeof(postWord) !== typeof(undefined) ? LARGEST_WORD_SIZE - postWord.length : 0; 
+
+    // add white spaces
+    let preWsp  = Array(preNumSpaces).join("\u00a0");
+    // let postWsp = Array(postNumSpaces).join("\u00a0");
+    
     return (
 
       <div 
@@ -295,19 +296,44 @@ class Reader extends Component {
 
         <br/>
         <br/>
-          
-        <button onClick={this.play}>Play</button>
-        &nbsp;
-        <button onClick={this.pause}>Pause</button>
-        &nbsp;
-        <button onClick={this.reset}>Reset</button>
-        
         <br/>
         <br/>
 
-        <PlaybackHead
-          currentReel = {this.state.currentReel}
-        />
+        <div className="">
+        
+          
+
+          {(this.state.enableSurroundingReels && this.state.displaySurroundingReels) ? 
+            ( <span className="readerSurroundingWord">{preWsp}{prevWord}</span>) :
+            ( <span>{Array(LARGEST_WORD_SIZE).join("\u00a0")}</span>)}
+          
+          
+          {/* single space after pre-word */}
+          <span className="readerSurroundingWord">{"\u00a0"}</span>
+
+          <PlaybackHead
+            currentReel = {this.state.currentReel}
+          />
+          
+          {/* single space before post-word */}
+          <span className="readerSurroundingWord">{"\u00a0"}</span>
+
+          {(this.state.enableSurroundingReels && this.state.displaySurroundingReels) ? 
+            (<span className="readerSurroundingWord">{postWord}</span>) : 
+            (<span></span>)}
+
+          <br/>
+          <br/>
+
+          <button onClick={this.play}>Play</button>
+          &nbsp;
+          <button onClick={this.pause}>Pause</button>
+          &nbsp;
+          <button onClick={this.reset}>Reset</button>
+          
+
+
+        </div>
         
         <br/>
         <br/>
@@ -330,6 +356,13 @@ class Reader extends Component {
           />
         </div>
         
+        <br/>
+
+        {/* Modal Tag to wrap our settings page */}
+        <ModalWrapper
+          className="sample"
+        />
+
       </div>
     );
   }
