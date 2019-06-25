@@ -80,8 +80,6 @@ class Reader extends Component {
 
   // when parent updates state, this component gets re-rendered
   componentWillReceiveProps(props) {
-
-    console.log("READER RECEIVED: ", props);
     this.setState(props, this.pasteHandler)
   }
 
@@ -125,12 +123,8 @@ class Reader extends Component {
 
     let speed = READING_SPEED;
 
-    console.log("state :", typeof(this.state), this.state)
-
     if (typeof(this.state) !== typeof(undefined)) {
       speed = Number(this.state.readingSpeed);
-
-      console.log("READING SPEED IS DEFINED", speed)
     }
 
     let t = 60000 / speed; 
