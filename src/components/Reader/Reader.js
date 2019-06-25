@@ -151,12 +151,13 @@ class Reader extends Component {
         ret = words.concat(this.parse(this.hyphenate(str)))
     }
 
-    console.log("THIS BEFORE RETURNING FROM TIMINGBELT", this, this.state);
+    let shit = this;
+    console.log("THIS BEFORE RETURNING FROM TIMINGBELT", this, this.state, shit.state);
+    console.log("OTHER THINGS FROM TIMINGBELT", this.refs);
 
-    return ret
+    return ret;
 
   }
-
 
 
   parse = function(words) { 

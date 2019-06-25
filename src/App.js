@@ -4,18 +4,10 @@ import './App.css';
 
 import Reader from './components/Reader/Reader';
 
+import * as CONSTANTS from './components/constants';
 
-const initialContent = `Hello! 
 
-This is Thoth, an open source speed reading tool inspired by Zethos and Spritz ($3.5mil series A).
-
-It combines a few different features of other powerful speed readers and lets you set options yourself.
-
-It's free and open source on GitHub.  
-
-Seek truth, but faster. Enjoy!
-
-- David`
+const initialContent = CONSTANTS.INTRO_TEXT;
 
 
 class App extends Component {
@@ -28,11 +20,10 @@ class App extends Component {
     };
   }
 
-
   render() {
 
     /* 
-      TODO take the query parameters from the URL and pass as initial text to the Reader Class. 
+      TODO take the query parameters from the URL and pass as initial text to the Reader Class using react router?
       https://stackoverflow.com/questions/29852998/getting-query-parameters-from-react-router-hash-fragment
     */
     
