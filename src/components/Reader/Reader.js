@@ -12,7 +12,7 @@ import ModalWrapper from '../ModalWrapper/ModalWrapper';
 
 import * as CONSTANTS from '../constants';
 
-const SPACE_KEY = CONSTANTS.SPACE_KEY; 
+const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 
 /* TODO remove this thing */
 const styles = {
@@ -108,9 +108,7 @@ class Reader extends Component {
     return ret
   }
 
-  timingBelt(words, str) {
-
-    // let speed = this.ctx.state.readingSpeed;
+  timingBelt = function(words, str) {
 
     let focus
     let len = str.length
@@ -128,9 +126,11 @@ class Reader extends Component {
 
     // time that this word will be displayed in milliseconds
     // let t = 60000 / 700;
-    let t = 60000 / this.stateref.readingSpeed
-    
     console.log("TIMING BELT STATE ", this.state)
+
+    let t = 60000 / 700
+    // let t = 60000 / this.state.readingSpeed
+    
     
 
     if (len > 6) {
@@ -151,13 +151,17 @@ class Reader extends Component {
         ret = words.concat(this.parse(this.hyphenate(str)))
     }
 
+    console.log("THIS BEFORE RETURNING FROM TIMINGBELT", this, this.state);
+
     return ret
 
   }
 
 
 
-  parse(words) { 
+  parse = function(words) { 
+
+    let timingBelt = this.timingBelt;
 
     // defining due to fucking stupid function definition problems
     // let parse = this.parse;
@@ -173,12 +177,14 @@ class Reader extends Component {
     //   one end protrudes from either end more than 7 chars
     //   re-run parser after hyphenating the words
 
+    // array.reduce(timingBelt.bind(this), initialValue);
 
     // return array of displayReels
     return words.trim()
         .replace(/([.?!])([A-Z-])/g, '$1 $2')
         .split(/\s+/)
-        .reduce(this.timingBelt, [])
+        // .reduce(timingBelt, [])
+        .reduce(timingBelt.bind(this), [])
   }
 
 
@@ -266,7 +272,7 @@ class Reader extends Component {
     event.preventDefault();
 
     // use the space bar to play / pause reading session.
-    if(event.keyCode === SPACE_KEY){
+    if(event.keyCode === PLAYPAUSE_KEY){
 
       // toggle play_pause
       this.playpause()
@@ -288,6 +294,8 @@ class Reader extends Component {
     let text = '';
     let arr = [];
 
+    console.log("state inside pastehandler", this.state)
+
     // get plain text from the paste event
     text = this.state.editorState.getCurrentContent().getPlainText();
     arr = this.parse(text);
@@ -299,10 +307,7 @@ class Reader extends Component {
   }
 
 
-  render() {
-
-      this.timingBelt.stateref = this.state;
-    
+  render() {    
 
     let prevWord = typeof(this.state.corpusArr[this.state.index - 2]) !== typeof(undefined) ? this.state.corpusArr[this.state.index - 2].text : ''  
     let postWord = typeof(this.state.corpusArr[this.state.index]) !== typeof(undefined) ? this.state.corpusArr[this.state.index].text : ''  
