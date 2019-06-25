@@ -24,9 +24,8 @@ const customStyles = {
 
 class ModalWrapper extends Component {
 
-
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       modalIsOpen: false
@@ -74,10 +73,11 @@ class ModalWrapper extends Component {
 
           <h2 ref={subtitle => this.subtitle = subtitle}>Settings</h2>
           
-          <SettingsPanel/>
+          {/* pass along the callback to update reader state with new settings */}
+          <SettingsPanel
+            updateCallback={this.props.updateCallback}
+          />
 
-          <br/>
-          <br/>
 
           <button onClick={this.closeModal}>close</button>
 

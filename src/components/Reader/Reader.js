@@ -14,6 +14,7 @@ import * as CONSTANTS from '../constants';
 
 const SPACE_KEY = CONSTANTS.SPACE_KEY; 
 
+/* TODO remove this thing */
 const styles = {
   editor: {
     border: '1px solid gray',
@@ -27,8 +28,6 @@ let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm
 let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
-
-
 class Reader extends Component {  
 
   constructor(props) {
@@ -39,18 +38,27 @@ class Reader extends Component {
     this.play  = this.play.bind(this);
     this.pause = this.pause.bind(this);
     this.reset = this.reset.bind(this);
-    this.parse = this.parse.bind(this);
-    this.hyphenate = this.hyphenate.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
     this.pasteHandler = this.pasteHandler.bind(this);
+    this.updateSettings = this.updateSettings.bind(this)
+
+
+    // can't get these to work properly because they take arguments and are called outside of render context
+    this.parse = this.parse.bind(this);
+    this.hyphenate = this.hyphenate.bind(this);
+    this.timingBelt = this.timingBelt.bind(this);
+
 
     const ctx = this;
+
+    // TODO move this out of constructor. 
     this.onChange = function(editorState) {
       ctx.pasteHandler();
       // read new state information.
       ctx.setState({editorState})
     };
 
+    // TODO move this out of constructor 
     this.setEditor = (editor) => {
       this.editor = editor;
     };
@@ -71,6 +79,13 @@ class Reader extends Component {
   }
 
 
+  /* 
+  Callback function that takes a settings object from child and updates duplicate keys in object state
+  */ 
+  updateSettings(newSettings) {
+    this.setState(newSettings)
+  }
+
 
   hyphenate(word) {
 
@@ -90,78 +105,88 @@ class Reader extends Component {
         // ret = word.slice(0, 7) + '- ' + hyphenate(word.slice(7))
     // }
 
-
     return ret
   }
 
+  timingBelt(words, str) {
 
-  parse(words) {
+    // let speed = this.ctx.state.readingSpeed;
+
+    let focus
+    let len = str.length
+
+
+    // focus point
+    // start in middle of word (default focus point)
+    // move left until you hit a vowel, then stop
+    for (let j = focus = (len - 1) / 2 | 0; j >= 0;  j--) {
+        if (/[aeiou]/.test(str[j])) {
+            focus = j
+            break
+        }
+    }
+
+    // time that this word will be displayed in milliseconds
+    // let t = 60000 / 700;
+    let t = 60000 / this.stateref.readingSpeed
+    
+    console.log("TIMING BELT STATE ", this.state)
+    
+
+    if (len > 6) {
+        t += t/4
+    }
+
+    if (~str.indexOf(',')) {
+        t += t/2
+    }
+
+    if (/[.?!]/.test(str)) {
+        t += t * 1.5
+    }
+
+    let ret = words.concat([new DisplayReel(str, focus, t)])
+
+    if (len > 14 || len - focus > 7 ) {
+        ret = words.concat(this.parse(this.hyphenate(str)))
+    }
+
+    return ret
+
+  }
+
+
+
+  parse(words) { 
 
     // defining due to fucking stupid function definition problems
-    let parse = this.parse;
-    let hyphenate = this.hyphenate;
+    // let parse = this.parse;
+    // let hyphenate = this.hyphenate;
+    // let state = this.state;
+
+    console.log("state inside parse", this.state);
 
     // Logic
     // strings will be broken out into words
     // find the focus point of the word
     // if, when the word is shifted to its focus point
-    //   one end prodtrudes from either end more than 7 chars
+    //   one end protrudes from either end more than 7 chars
     //   re-run parser after hyphenating the words
 
-    // focus point
-    // start in middle of word (default focus point)
-    // move left until you hit a vowel, then stop
 
-    // return 2d array with word and focus point
+    // return array of displayReels
     return words.trim()
         .replace(/([.?!])([A-Z-])/g, '$1 $2')
         .split(/\s+/)
-        .reduce(function(words, str) {
-
-            let focus
-            let len = str.length
-
-            // focus point is typically going to be
-            // the first vowel in the word
-            for (let j = focus = (len - 1) / 2 | 0; j >= 0;  j--) {
-
-                if (/[aeiou]/.test(str[j])) {
-                    focus = j
-                    break
-                }
-            }
-
-            // time that this word will be displayed
-            let t = 60000 / READING_SPEED
-
-            if (len > 6) {
-                t += t/4
-            }
-
-            if (~str.indexOf(',')) {
-                t += t/2
-            }
-
-            if (/[.?!]/.test(str)) {
-                t += t * 1.5
-            }
-
-            // let ret = words.concat([[str, focus, t]])
-            let ret = words.concat([new DisplayReel(str, focus, t)])
-
-            if (len > 14 || len - focus > 7 ) {
-                ret = words.concat(parse(hyphenate(str)))
-            }
-
-            return ret
-
-        }, [])
+        .reduce(this.timingBelt, [])
   }
 
 
 // the "actual" play function. 
 // Uses state information and begins rendering words through PlaybackHead
   loop() {
+
+    // console.log("state inside loop", this.state);
 
     let arr = this.state.corpusArr;
 
@@ -170,7 +195,6 @@ class Reader extends Component {
     // are we at the end of the reading
     if (this.state.index === arr.length) {
       // pause & reset index when done reading
-      console.log("Done Reading");
 
       this.setState({
         paused: true,
@@ -260,7 +284,7 @@ class Reader extends Component {
 
 
   // TODO not necessary anymore?
-  pasteHandler(){
+  pasteHandler() {
     let text = '';
     let arr = [];
 
@@ -276,6 +300,9 @@ class Reader extends Component {
 
 
   render() {
+
+      this.timingBelt.stateref = this.state;
+    
 
     let prevWord = typeof(this.state.corpusArr[this.state.index - 2]) !== typeof(undefined) ? this.state.corpusArr[this.state.index - 2].text : ''  
     let postWord = typeof(this.state.corpusArr[this.state.index]) !== typeof(undefined) ? this.state.corpusArr[this.state.index].text : ''  
@@ -300,8 +327,6 @@ class Reader extends Component {
         <br/>
 
         <div className="">
-        
-          
 
           {(this.state.enableSurroundingReels && this.state.displaySurroundingReels) ? 
             ( <span className="readerSurroundingWord">{preWsp}{prevWord}</span>) :
@@ -331,22 +356,20 @@ class Reader extends Component {
           &nbsp;
           <button onClick={this.reset}>Reset</button>
           
-
-
         </div>
         
         <br/>
         <br/>
 
-        <div className="editor" style={styles.editor} onClick={this.focusEditor}>
+        <div className="editor" 
+             style={styles.editor} 
+             onClick={this.focusEditor}>
         
           <Editor
             ref={this.setEditor}
             editorState={this.state.editorState}
             onChange={this.onChange}
-            
-            placeholder="Place your text content in here!"
-
+            placeholder="Place your text content in here and press the play button!"
             enableLineBreak={true}
             spellcheck={false}
             showUndoControl={true}
@@ -360,7 +383,7 @@ class Reader extends Component {
 
         {/* Modal Tag to wrap our settings page */}
         <ModalWrapper
-          className="sample"
+          updateCallback={this.updateSettings}
         />
 
       </div>

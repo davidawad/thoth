@@ -1,14 +1,19 @@
 
 import React, { Component } from 'react';
 
+
+// TODO remove this jank settings pane that doesn't work.
 import {SettingsPane, SettingsPage, SettingsContent} from 'react-settings-pane'
 
 import './SettingsPanel.css';
+import Settings from '../Settings'
 
 
-let settings = {
-    'readingSpeed': 500,
-};
+let defaults = new Settings();
+
+// default settings object. 
+let settings = defaults;
+
 
 // Define your menu
 const menu = [
@@ -21,33 +26,32 @@ const menu = [
 
 
 class SettingsPanel extends Component {
+
+    /* 
+    constructor(props) {
+        super(props);
+    };
+    */
     
-     // Save settings after close
 
-    // You will maybe receive your settings from this.props or do a fetch request in your componentWillMount
-    //let settings = settings;
-
-
-    
-    // Save settings after close
+    /* Save settings when save button is hit */
     leavePaneHandler = (wasSaved, newSettings, oldSettings) => {
         // "wasSaved" indicates whether the pane was just closed or the save button was clicked.
     
         if (wasSaved && newSettings !== oldSettings) {
             // do something with the settings, e.g. save via ajax.
             
-            // TODO save our settings after they've been changed.
-            console.log("new settings: ", newSettings)
+            // save our settings after they've been changed.
+            this.props.updateCallback(newSettings);
 
         }
     };
     
-    
+    /* when any form change is made */
     settingsChanged = function(changedSettings) {
         // this is triggered onChange of the inputs
         console.log("settings changed!", changedSettings);
     };
-
 
 
     // render function of a random component 
@@ -76,7 +80,7 @@ class SettingsPanel extends Component {
                         <fieldset className="form-group">
                             <label>Reading Speed: </label>
                             <input 
-                                type="text" 
+                                type="number" 
                                 className="form-control" 
                                 name="readingSpeed" 
                                 placeholder="500" 

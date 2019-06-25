@@ -59,12 +59,21 @@ html, body {
   text-align: center;
 }
 
+/*
 .editor {
   border: '1px solid gray';
   minHeight: '6em';
   border-radius:0.25rem;
 }
+*/
 
+/*
+.editor {
+  border: '1px solid gray';
+  minHeight: '20em';
+  padding: '20px';
+}
+*/
 
 
 .readerSurroundingWord {
