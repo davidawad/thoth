@@ -6,20 +6,20 @@ import React, { Component } from 'react';
 import {SettingsPane, SettingsPage, SettingsContent} from 'react-settings-pane'
 
 import './SettingsPanel.css';
-import Settings from '../Settings'
+// import Settings from '../Settings'
 
 
-let defaults = new Settings();
+// let defaults = new Settings();
 
 // default settings object. 
-let settings = defaults;
+// let settings = defaults;
 
 
 // Define your menu
 const menu = [
     {
-    title: 'Settings',          // Title that is displayed as text in the menu
-    url: '/settings'  // Identifier (url-slug)
+    title: 'Settings',  // Title that is displayed as text in the menu
+    url: '/settings'    // Identifier (url-slug)
     },
 ];
 
@@ -27,11 +27,15 @@ const menu = [
 
 class SettingsPanel extends Component {
 
-    /* 
+     
     constructor(props) {
         super(props);
+
+        this.state = {
+            readingSpeed: Number(this.props.readingSpeed),
+        };
     };
-    */
+    
     
 
     /* Save settings when save button is hit */
@@ -42,21 +46,27 @@ class SettingsPanel extends Component {
             // do something with the settings, e.g. save via ajax.
             
             // save our settings after they've been changed.
-            this.props.updateCallback(newSettings);
+            this.props.updateCallback(newSettings, 
+                function(){
+                    console.log("state updated.");
+                }
+            );
 
         }
     };
+
+
+    // when parent updates state, this component gets re-rendered
     
-    /* when any form change is made */
-    settingsChanged = function(changedSettings) {
-        // this is triggered onChange of the inputs
-        console.log("settings changed!", changedSettings);
-    };
+    componentWillReceiveProps(props) {
+        this.setState(props)
+    }
+    
 
 
-    // render function of a random component 
     render() {
 
+        console.log("READING SPEED BEING RENDERED IS: ", this.state.readingSpeed)
 
         // Return your Settings Pane
         return (
@@ -64,11 +74,11 @@ class SettingsPanel extends Component {
                 items={menu} 
                 index="/settings" 
                 ariaHideApp={false}
-                settings={settings} 
+                // settings={settings} 
                 onPaneLeave={this.leavePaneHandler}>
 
                 <SettingsContent
-                saveButtonClass="primary"
+                saveButtonClass="saveButton"
                 >
                     <SettingsPage 
                     handler="/settings" 
@@ -80,16 +90,16 @@ class SettingsPanel extends Component {
                         <fieldset className="form-group">
                             <label>Reading Speed: </label>
                             <input 
-                                type="number" 
                                 className="form-control" 
                                 name="readingSpeed" 
                                 placeholder="500" 
-                                id="readingSpeed" 
-                                onChange={this.settingsChanged} 
-                                defaultValue={settings['readingSpeed']} />
+
+                                defaultValue={this.state.readingSpeed} />
                         </fieldset>
 
                     </SettingsPage>
+
+                    <br/>
 
                 </SettingsContent>
                     

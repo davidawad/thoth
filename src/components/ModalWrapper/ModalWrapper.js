@@ -19,7 +19,7 @@ const customStyles = {
 };
 
 // Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
-// Modal.setAppElement('#yourAppElement')
+// Modal.setAppElement('.App')
 
 
 class ModalWrapper extends Component {
@@ -53,6 +53,13 @@ class ModalWrapper extends Component {
         });
   }
 
+  // when parent updates state, this component gets re-rendered
+  /*
+  componentWillReceiveProps(props) {
+    this.setState(props)
+  }
+  */
+
   render() {
     return (
 
@@ -67,7 +74,6 @@ class ModalWrapper extends Component {
           onRequestClose={this.closeModal}
           ariaHideApp={false}
           style={customStyles}
-          // className="ModalWrapper"
           contentLabel="SettingsModal ContentLabel"
         >
 
@@ -76,10 +82,13 @@ class ModalWrapper extends Component {
           {/* pass along the callback to update reader state with new settings */}
           <SettingsPanel
             updateCallback={this.props.updateCallback}
+            {...this.props}
           />
 
-
-          <button onClick={this.closeModal}>close</button>
+          <div className="closeButtonWrapper">
+            <button onClick={this.closeModal}>Close</button>
+          </div>
+          
 
         </Modal>
       </div>

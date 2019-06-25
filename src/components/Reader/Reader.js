@@ -7,7 +7,7 @@ import './Reader.css';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
 // import SettingsPanel from '../SettingsPanel/SettingsPanel';
-import ModalWrapper from '../ModalWrapper/ModalWrapper';
+
 
 
 import * as CONSTANTS from '../constants';
@@ -40,7 +40,7 @@ class Reader extends Component {
     this.reset = this.reset.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
     this.pasteHandler = this.pasteHandler.bind(this);
-    this.updateSettings = this.updateSettings.bind(this)
+    this.processCorpus = this.processCorpus.bind(this);
 
 
     // can't get these to work properly because they take arguments and are called outside of render context
@@ -70,7 +70,7 @@ class Reader extends Component {
       editorState: EditorState.createWithContent(ContentState.createFromText(this.props.initialContent)),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
       corpusArr: this.parse(this.props.initialContent),
-      readingSpeed: READING_SPEED,
+      readingSpeed: 1000000,
       readOnly: false,
       enableSurroundingReels: true,
       displaySurroundingReels: true,
@@ -78,21 +78,17 @@ class Reader extends Component {
 
   }
 
+  // when parent updates state, this component gets re-rendered
+  componentWillReceiveProps(props) {
 
-  /* 
-  Callback function that takes a settings object from child and updates duplicate keys in object state
-  */ 
-  updateSettings(newSettings) {
-    this.setState(newSettings)
+    console.log("READER RECEIVED: ", props);
+    this.setState(props, this.pasteHandler)
   }
-
 
   hyphenate(word) {
 
     let ret = word
     let len = word.length
-
-    // console.log(word, len)
 
     // TODO idfk why I can't tear this disgusting thing apart without it breaking
     ret = len < MAX_DISPLAY_SIZE ? word : len < 11 ? word.slice(0, len - 3) + '- ' + word.slice(len - 3) : word.slice(0,7) + '- ' + this.hyphenate(word.slice(7))
@@ -126,10 +122,18 @@ class Reader extends Component {
 
     // time that this word will be displayed in milliseconds
     // let t = 60000 / 700;
-    console.log("TIMING BELT STATE ", this.state)
 
-    let t = 60000 / 700
-    // let t = 60000 / this.state.readingSpeed
+    let speed = READING_SPEED;
+
+    console.log("state :", typeof(this.state), this.state)
+
+    if (typeof(this.state) !== typeof(undefined)) {
+      speed = Number(this.state.readingSpeed);
+
+      console.log("READING SPEED IS DEFINED", speed)
+    }
+
+    let t = 60000 / speed; 
     
     
 
@@ -151,10 +155,6 @@ class Reader extends Component {
         ret = words.concat(this.parse(this.hyphenate(str)))
     }
 
-    let shit = this;
-    console.log("THIS BEFORE RETURNING FROM TIMINGBELT", this, this.state, shit.state);
-    console.log("OTHER THINGS FROM TIMINGBELT", this.refs);
-
     return ret;
 
   }
@@ -169,8 +169,6 @@ class Reader extends Component {
     // let hyphenate = this.hyphenate;
     // let state = this.state;
 
-    console.log("state inside parse", this.state);
-
     // Logic
     // strings will be broken out into words
     // find the focus point of the word
@@ -184,8 +182,7 @@ class Reader extends Component {
     return words.trim()
         .replace(/([.?!])([A-Z-])/g, '$1 $2')
         .split(/\s+/)
-        // .reduce(timingBelt, [])
-        .reduce(timingBelt.bind(this), [])
+        .reduce(timingBelt, [])
   }
 
 
@@ -193,11 +190,7 @@ class Reader extends Component {
 // Uses state information and begins rendering words through PlaybackHead
   loop() {
 
-    // console.log("state inside loop", this.state);
-
     let arr = this.state.corpusArr;
-
-    // console.log("looping", arr, this.state.corpusArr)
 
     // are we at the end of the reading
     if (this.state.index === arr.length) {
@@ -291,22 +284,28 @@ class Reader extends Component {
 
 
   // TODO not necessary anymore?
+  // TODO move text parsing to processCorpus!
   pasteHandler() {
     let text = '';
-    let arr = [];
-
-    console.log("state inside pastehandler", this.state)
 
     // get plain text from the paste event
     text = this.state.editorState.getCurrentContent().getPlainText();
-    arr = this.parse(text);
+
+    this.processCorpus(text);
+  }
+
+  
+  processCorpus(text) {
+
+    let arr = this.parse(text);
 
     this.setState({
       "bodyText": text,
       "corpusArr" : arr,
     })
+    
   }
-
+  
 
   render() {    
 
@@ -332,7 +331,8 @@ class Reader extends Component {
         <br/>
         <br/>
 
-        <div className="">
+        <div 
+          className="">
 
           {(this.state.enableSurroundingReels && this.state.displaySurroundingReels) ? 
             ( <span className="readerSurroundingWord">{preWsp}{prevWord}</span>) :
@@ -385,13 +385,6 @@ class Reader extends Component {
           />
         </div>
         
-        <br/>
-
-        {/* Modal Tag to wrap our settings page */}
-        <ModalWrapper
-          updateCallback={this.updateSettings}
-        />
-
       </div>
     );
   }
