@@ -11,6 +11,11 @@ const initialContent = CONSTANTS.INTRO_TEXT;
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 
+let START_COLOR = CONSTANTS.START_COLOR;
+let STOP_COLOR = CONSTANTS.STOP_COLOR;
+
+
+
 class App extends Component {
 
   constructor(props) {
@@ -20,6 +25,8 @@ class App extends Component {
       year: new Date().getFullYear(), 
       initialContent : initialContent,
       readingSpeed: READING_SPEED,
+      baseColorStop: START_COLOR,
+      finalColorStop : STOP_COLOR,
     };
 
     // TODO remove this from here
@@ -48,8 +55,9 @@ class App extends Component {
           <Reader 
             className="Reader"
             // {...this.settings}
-            initialContent={this.state.initialContent}
-            readingSpeed={this.state.readingSpeed}
+            // initialContent={this.state.initialContent}
+            // readingSpeed={this.state.readingSpeed}
+            {...this.state}
             />
 
           <br/>
@@ -60,13 +68,18 @@ class App extends Component {
             {...this.state}
           />
 
+          
+
         <footer>
-          <ul className="site-links">
-            <li>
-              {/* TODO link to research paper when it's written. */}
-              Thoth is an <a href="https://github.com/davidawad/thoth">open source</a> research project by <a href="http://davidawad.com">David Awad</a>. &copy; {this.state.year}
-            </li>
-          </ul>        
+
+          
+
+          {/* TODO link to research paper when it's written. */}
+          <p>
+            Thoth is an <a href="https://github.com/davidawad/thoth">open source</a> research project by <a href="http://davidawad.com">David Awad</a>. 
+            <br/> &copy; {this.state.year}
+          </p>
+          
       </footer>
 
     </div>

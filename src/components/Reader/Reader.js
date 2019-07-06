@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 
-import {Editor, EditorState, ContentState} from 'draft-js';
+import {Editor, EditorState, ContentState, Modifier, RichUtils, SelectionState} from 'draft-js';
+
+// import {useRef, useEffect} from 'react';
+// import diff from 'deep-diff'
 
 import './Reader.css';
 // import '../Editor/Editor.css';
@@ -8,9 +11,11 @@ import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
 // import SettingsPanel from '../SettingsPanel/SettingsPanel';
 
-
+import LoadingBar from "react-top-loading-bar";
 
 import * as CONSTANTS from '../constants';
+
+
 
 const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 
@@ -22,6 +27,8 @@ const styles = {
     padding: '20px'
   }
 };
+
+
 
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
@@ -49,6 +56,11 @@ class Reader extends Component {
     this.timingBelt = this.timingBelt.bind(this);
 
 
+    this.scrollWindow = this.scrollWindow.bind(this);
+    this.toggleColor = this.toggleColor.bind(this);
+
+    //this.toggleColor = (toggledColor) => this._toggleColor(toggledColor);
+    
     const ctx = this;
 
     // TODO move this out of constructor. 
@@ -70,17 +82,58 @@ class Reader extends Component {
       editorState: EditorState.createWithContent(ContentState.createFromText(this.props.initialContent)),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
       corpusArr: this.parse(this.props.initialContent),
-      readingSpeed: 1000000,
-      readOnly: false,
+      readingSpeed: READING_SPEED,
       enableSurroundingReels: true,
       displaySurroundingReels: true,
+      highlightColor: 'yellow', 
+      baseColorStop: typeof(this.props.baseColorStop) !== typeof(undefined) ? this.props.baseColorStop : "#00AD00",
+      finalColorStop: typeof(this.props.finalColorStop) !== typeof(undefined) ? this.props.finalColorStop : "#0077AD",
     };
 
+
   }
+
 
   // when parent updates state, this component gets re-rendered
   componentWillReceiveProps(props) {
     this.setState(props, this.pasteHandler)
+  }
+
+
+  scrollWindow () {
+
+    const {editorState} = this.state;
+
+    console.log("scrolling to section"); 
+
+
+    let target = 'Men are disturbed, not by things'
+
+    let selection = new SelectionState({
+      anchorKey: target, // key of block
+      anchorOffset: target.length,
+      // focusKey: 'abc',
+      // focusOffset: 10, // key of block
+      hasFocus: true,
+    });
+    
+    let s = new SelectionState(selection);
+
+    let newEditorState = EditorState.forceSelection(editorState, s);
+
+    // selection = forcedEditorState.getSelection();
+
+    // Make sure to set this new EditorState as the editorState of Draft.js component
+
+
+
+
+    window.getSelection().focusNode.parentElement.scrollIntoView();
+    // window.getSelection().anchorNode.parentElement.scrollIntoView();
+
+    this.setState({editorState: newEditorState})
+
+
   }
 
   hyphenate(word) {
@@ -128,8 +181,6 @@ class Reader extends Component {
     }
 
     let t = 60000 / speed; 
-    
-    
 
     if (len > 6) {
         t += t/4
@@ -151,6 +202,91 @@ class Reader extends Component {
 
     return ret;
 
+  }
+
+  /* TODO better abstractions ~ 
+  setColors() { 
+
+
+  }
+
+  highlight() {
+    // highlight current selection! 
+    let highlightColor = 'yellow'
+
+    
+
+  }
+  */
+
+  
+  toggleColor() {
+    // apply gradient to entire section of text
+
+    let toggledColor = 'gradient';
+
+    const {editorState} = this.state;
+
+    // TODO force selection of entire text. Not working. 
+
+    // TODO try https://github.com/facebook/draft-js/issues/1386
+
+    /*
+    let selection = editorState.getSelection().merge({
+      // anchorOffset: 0,
+      focusOffset: 7,  // WATCH THE OFFSET.
+    })
+
+    let DEBUG = selection;
+
+    let forcedEditorState = EditorState.forceSelection(editorState, selection);
+
+    selection = forcedEditorState.getSelection();
+    
+    console.log("BEFORE")  
+    console.log(selection)
+    
+    console.log("AFTER")    
+    console.log(selection)
+
+    console.log("DIFF: ", diff(DEBUG, selection));
+    */
+    
+
+    // TODO in meantime hand select text instead. : [ 
+    let selection = editorState.getSelection();
+  
+
+    // Let's just allow one color at a time. Turn off all active colors.
+    const nextContentState = Object.keys(this.colorStyleMap)
+      .reduce((contentState, color) => {
+        return Modifier.removeInlineStyle(contentState, selection, color)
+      }, editorState.getCurrentContent());
+
+    let nextEditorState = EditorState.push(
+      editorState,
+      nextContentState,
+      'change-inline-style'
+    );
+
+    const currentStyle = editorState.getCurrentInlineStyle();
+
+    // Unset styles if they're enabled.
+    if (selection.isCollapsed()) {
+      nextEditorState = currentStyle.reduce((state, color) => {
+        return RichUtils.toggleInlineStyle(state, color);
+      }, nextEditorState);
+    }
+
+    // If the color is being toggled on, apply it.
+      if (!currentStyle.has(toggledColor)) {
+      nextEditorState = RichUtils.toggleInlineStyle(
+        nextEditorState,
+        toggledColor
+      );
+    }
+
+    this.setState({editorState: nextEditorState})
   }
 
 
@@ -193,7 +329,6 @@ class Reader extends Component {
       this.setState({
         paused: true,
         index: 0,
-        readOnly: false,
       })
 
       return;
@@ -217,8 +352,10 @@ class Reader extends Component {
       this.loop() 
     }.bind(this); // make sure we can refer to parent context.
     
+
     setTimeout(next_callback, newReel.displayTime)
   }
+
 
   play () {
 
@@ -227,25 +364,22 @@ class Reader extends Component {
       
       this.setState({
         paused: false,
-        readOnly: false,
         displaySurroundingReels: false,
       }, () => {this.loop()})
 
-      return;
-    }
+    } 
 
-    // play from beginning to end. 
-    this.loop()
   }
+
 
   pause () {
 
     this.setState({
       paused: true,
-      readOnly: false,
       displaySurroundingReels: true,
     })
   }
+
 
   // switch between paused & playing
   playpause() {
@@ -255,6 +389,7 @@ class Reader extends Component {
         this.pause()
     }
   }
+
 
   handleKeyUp(event) {
     event.preventDefault();
@@ -297,22 +432,59 @@ class Reader extends Component {
       "bodyText": text,
       "corpusArr" : arr,
     })
-    
   }
+
+  // TODO remove this? 
+  onLoaderFinished = () => {
+    this.setState({ loadingBarProgress: 0 });
+  };
+  
   
 
   render() {    
 
+
+    this.colorStyleMap = {
+      yellow: {
+        color: 'rgba(180, 180, 0, 1.0)',
+      },
+
+      gradient : {
+        'background' : 'repeating-linear-gradient(90deg, rgba(2,0,36,1) 0%, ' + this.state.baseColorStop + ' 50%, ' + this.state.finalColorStop + ' 100%)',
+        'WebkitBackgroundClip': 'text',
+        'BackgroundClip': 'text',
+        'WebkitTextFillColor': 'transparent'
+      }
+    };
+
+
     let prevWord = typeof(this.state.corpusArr[this.state.index - 2]) !== typeof(undefined) ? this.state.corpusArr[this.state.index - 2].text : ''  
     let postWord = typeof(this.state.corpusArr[this.state.index]) !== typeof(undefined) ? this.state.corpusArr[this.state.index].text : ''  
 
-    let preNumSpaces   = typeof(prevWord) !== typeof(undefined) ? LARGEST_WORD_SIZE - prevWord.length : 0; 
+    let preNumSpaces   = typeof(prevWord) !== typeof(undefined) ? Math.max(LARGEST_WORD_SIZE - prevWord.length, 0) : 0; 
     // let postNumSpaces  = typeof(postWord) !== typeof(undefined) ? LARGEST_WORD_SIZE - postWord.length : 0; 
 
     // add white spaces
     let preWsp  = Array(preNumSpaces).join("\u00a0");
     // let postWsp = Array(postNumSpaces).join("\u00a0");
     
+
+    if (!this.state.paused) {
+      let scrollSelector = prevWord + " " + this.state.currentReel.text + " " + postWord; 
+
+      // seek through the text corpus as we read through it. 
+      let matching_element = Array.from(document.querySelectorAll('span'))
+      .find(el => el.textContent.includes(scrollSelector));
+
+      if (typeof(matching_element) !== typeof(undefined)){
+        // element is there, scroll to it.
+        matching_element.scrollIntoView();
+      }
+      
+    }
+
+
+
     return (
 
       <div 
@@ -329,8 +501,8 @@ class Reader extends Component {
           className="">
 
           {(this.state.enableSurroundingReels && this.state.displaySurroundingReels) ? 
-            ( <span className="readerSurroundingWord">{preWsp}{prevWord}</span>) :
-            ( <span>{Array(LARGEST_WORD_SIZE).join("\u00a0")}</span>)}
+            (<span className="readerSurroundingWord">{preWsp}{prevWord}</span>) :
+            (<span>{Array(LARGEST_WORD_SIZE).join("\u00a0")}</span>)}
           
           
           {/* single space after pre-word */}
@@ -355,17 +527,29 @@ class Reader extends Component {
           <button onClick={this.pause}>Pause</button>
           &nbsp;
           <button onClick={this.reset}>Reset</button>
-          
+          &nbsp;
+          <button onClick={this.toggleColor}>Colors</button>
+                     
         </div>
         
         <br/>
         <br/>
 
-        <div className="editor" 
+        <LoadingBar
+          progress={ (this.state.index / this.state.corpusArr.length) * 100 }
+          height={3}
+          color="red"
+          // backgroundImage="linear-gradient(90deg, rgba(2,0,36,1) 0%, #00AD00 50%, #0077AD 100%)"
+          // className='grad'
+          onLoaderFinished={() => this.onLoaderFinished()}
+        />
+
+        <div className="editor"
              style={styles.editor} 
              onClick={this.focusEditor}>
         
           <Editor
+            // className={"EditorRoot " + (this.state.paused ? "" : ' ReaderScroll') }            
             ref={this.setEditor}
             editorState={this.state.editorState}
             onChange={this.onChange}
@@ -375,7 +559,8 @@ class Reader extends Component {
             showUndoControl={true}
             showRedoControl={true}
             stripPastedStyles={true}
-            readOnly={this.state.readOnly}
+            readOnly={!this.state.paused} 
+            customStyleMap={this.colorStyleMap}
           />
         </div>
         

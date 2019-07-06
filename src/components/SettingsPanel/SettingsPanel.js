@@ -8,11 +8,18 @@ import {SettingsPane, SettingsPage, SettingsContent} from 'react-settings-pane'
 import './SettingsPanel.css';
 // import Settings from '../Settings'
 
+import * as CONSTANTS from '../constants';
+
+
+let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
+let START_COLOR = CONSTANTS.START_COLOR;
+let STOP_COLOR = CONSTANTS.STOP_COLOR;
+
 
 // let defaults = new Settings();
 
 // default settings object. 
-// let settings = defaults;
+let settings = {};
 
 
 // Define your menu
@@ -33,6 +40,8 @@ class SettingsPanel extends Component {
 
         this.state = {
             readingSpeed: Number(this.props.readingSpeed),
+            baseColorStop: String(this.props.baseColorStop),
+            finalColorStop: String(this.props.finalColorStop),
         };
     };
     
@@ -66,15 +75,13 @@ class SettingsPanel extends Component {
 
     render() {
 
-        console.log("READING SPEED BEING RENDERED IS: ", this.state.readingSpeed)
-
         // Return your Settings Pane
         return (
             <SettingsPane 
                 items={menu} 
                 index="/settings" 
                 ariaHideApp={false}
-                // settings={settings} 
+                settings={settings} 
                 onPaneLeave={this.leavePaneHandler}>
 
                 <SettingsContent
@@ -86,16 +93,36 @@ class SettingsPanel extends Component {
                     closeButtonClass="hide noshow"
                     >
                     
-
                         <fieldset className="form-group">
                             <label>Reading Speed: </label>
                             <input 
                                 className="form-control" 
                                 name="readingSpeed" 
-                                placeholder="500" 
-
+                                placeholder={ String(READING_SPEED) + " Words Per Minute (WPM)"}
                                 defaultValue={this.state.readingSpeed} />
                         </fieldset>
+
+
+                        <fieldset className="form-group">
+                        <label>Base Color Stop: </label>
+                        <input 
+                            className="form-control" 
+                            name="baseColorStop" 
+                            placeholder={START_COLOR} 
+                            defaultValue={this.state.baseColorStop} />
+                        </fieldset>
+
+
+                        <fieldset className="form-group">
+                        <label>Final Color Stop: </label>
+                        <input 
+                            className="form-control" 
+                            name="finalColorStop" 
+                            placeholder={STOP_COLOR} 
+                            defaultValue={this.state.finalColorStop} />
+                        </fieldset>
+
+
 
                     </SettingsPage>
 

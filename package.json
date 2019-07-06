@@ -7,13 +7,15 @@
     "node": "12.4.0"
   },
   "dependencies": {
+    "deep-diff": "^1.0.2",
     "draft-js": "^0.10.5",
     "draft-js-plugins-editor": "^2.1.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-modal": "^3.8.1",
     "react-scripts": "3.0.1",
-    "react-settings-pane": "^0.1.5"
+    "react-settings-pane": "^0.1.5",
+    "react-top-loading-bar": "^1.0.6"
   },
   "scripts": {
     "start": "react-scripts start",
