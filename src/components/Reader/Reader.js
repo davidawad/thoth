@@ -15,25 +15,12 @@ import LoadingBar from "react-top-loading-bar";
 
 import * as CONSTANTS from '../constants';
 
-
-
 const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
-
-/* TODO remove this thing */
-const styles = {
-  editor: {
-    border: '1px solid gray',
-    minHeight: '20em',
-    padding: '20px'
-  }
-};
-
-
-
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
+
 
 class Reader extends Component {  
 
@@ -42,38 +29,28 @@ class Reader extends Component {
     super(props);
 
     // bind functions for correct setState context
-    this.play  = this.play.bind(this);
-    this.pause = this.pause.bind(this);
-    this.reset = this.reset.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);
-    this.pasteHandler = this.pasteHandler.bind(this);
+    this.play          = this.play.bind(this);
+    this.pause         = this.pause.bind(this);
+    this.reset         = this.reset.bind(this);
+    this.handleKeyUp   = this.handleKeyUp.bind(this);
+    this.pasteHandler  = this.pasteHandler.bind(this);
     this.processCorpus = this.processCorpus.bind(this);
+    this.parse         = this.parse.bind(this);
+    this.hyphenate     = this.hyphenate.bind(this);
+    this.timingBelt    = this.timingBelt.bind(this);
+    this.toggleColor   = this.toggleColor.bind(this);
+    this.setEditor     = this.setEditor.bind(this);
+    this.onEditorPaste = this.onEditorPaste.bind(this);
 
-
-    // can't get these to work properly because they take arguments and are called outside of render context
-    this.parse = this.parse.bind(this);
-    this.hyphenate = this.hyphenate.bind(this);
-    this.timingBelt = this.timingBelt.bind(this);
-
-
-    this.scrollWindow = this.scrollWindow.bind(this);
-    this.toggleColor = this.toggleColor.bind(this);
+    
+    this.highlightSelection   = this.highlightSelection.bind(this);
+    this.setGradient          = this.setGradient.bind(this);
 
     //this.toggleColor = (toggledColor) => this._toggleColor(toggledColor);
     
-    const ctx = this;
+    // const ctx = this;
 
-    // TODO move this out of constructor. 
-    this.onChange = function(editorState) {
-      ctx.pasteHandler();
-      // read new state information.
-      ctx.setState({editorState})
-    };
 
-    // TODO move this out of constructor 
-    this.setEditor = (editor) => {
-      this.editor = editor;
-    };
 
     this.state = {
       index: 0,
@@ -85,6 +62,7 @@ class Reader extends Component {
       readingSpeed: READING_SPEED,
       enableSurroundingReels: true,
       displaySurroundingReels: true,
+      scrollingEnabled: (this.props.scrollingEnabled ? this.props.scrollingEnabled : true),  
       highlightColor: 'yellow', 
       baseColorStop: typeof(this.props.baseColorStop) !== typeof(undefined) ? this.props.baseColorStop : "#00AD00",
       finalColorStop: typeof(this.props.finalColorStop) !== typeof(undefined) ? this.props.finalColorStop : "#0077AD",
@@ -100,41 +78,43 @@ class Reader extends Component {
   }
 
 
-  scrollWindow () {
 
-    const {editorState} = this.state;
+  // setEditor function for draftjs 
+  setEditor = (editor) => {
+    this.editor = editor;
+  };
 
-    console.log("scrolling to section"); 
-
-
-    let target = 'Men are disturbed, not by things'
-
-    let selection = new SelectionState({
-      anchorKey: target, // key of block
-      anchorOffset: target.length,
-      // focusKey: 'abc',
-      // focusOffset: 10, // key of block
-      hasFocus: true,
-    });
-    
-    let s = new SelectionState(selection);
-
-    let newEditorState = EditorState.forceSelection(editorState, s);
-
-    // selection = forcedEditorState.getSelection();
-
-    // Make sure to set this new EditorState as the editorState of Draft.js component
+  // paste handler for drafjs, this strips out all the styles from the content.
+  onEditorPaste = function(editorState) {
+    this.pasteHandler();
+    // read new state information.
+    this.setState({editorState})
+  };
 
 
+  // handler function for text pasted
+  pasteHandler() {
+    let text = '';
 
+    // get plain text from the paste event
+    text = this.state.editorState.getCurrentContent().getPlainText();
 
-    window.getSelection().focusNode.parentElement.scrollIntoView();
-    // window.getSelection().anchorNode.parentElement.scrollIntoView();
-
-    this.setState({editorState: newEditorState})
-
-
+    this.processCorpus(text);
   }
+
+  
+  // processes a new text sample and updates the state objects
+  processCorpus(text) {
+
+    let arr = this.parse(text);
+
+    this.setState({
+      "bodyText": text,
+      "corpusArr" : arr,
+    })
+  }
+
+
 
   hyphenate(word) {
 
@@ -204,33 +184,20 @@ class Reader extends Component {
 
   }
 
-  /* TODO better abstractions ~ 
-  setColors() { 
+  // TODO better abstractions
 
-
-  }
-
-  highlight() {
-    // highlight current selection! 
-    let highlightColor = 'yellow'
-
-    
-
-  }
-  */
-
+  // highlights entire editor and applies color gradient to it. 
+  setGradient() { 
   
-  toggleColor() {
-    // apply gradient to entire section of text
-
-    let toggledColor = 'gradient';
-
-    const {editorState} = this.state;
-
     // TODO force selection of entire text. Not working. 
-
     // TODO try https://github.com/facebook/draft-js/issues/1386
 
+    // better way to construct entire selection : 
+    // https://github.com/facebook/draft-js/issues/2122
+
+    let selection = undefined; 
+
+    
     /*
     let selection = editorState.getSelection().merge({
       // anchorOffset: 0,
@@ -252,11 +219,31 @@ class Reader extends Component {
     console.log("DIFF: ", diff(DEBUG, selection));
     */
     
+    let highlightColor = 'gradient'; 
+    this.toggleColor(highlightColor, selection); 
+  }
 
-    // TODO in meantime hand select text instead. : [ 
-    let selection = editorState.getSelection();
+  // highlight current selection! 
+  highlightSelection () {
+    let highlightColor = 'yellow';
+    this.toggleColor(highlightColor); 
+  }
   
 
+  // Toggles identified styles on the text in question.
+  toggleColor(toggledColor, selection) {
+    
+
+    // let toggledColor = 'gradient';
+
+    const {editorState} = this.state;
+
+    if (typeof(selection) === typeof(undefined)){
+      selection = editorState.getSelection();
+    }
+
+    
+  
     // Let's just allow one color at a time. Turn off all active colors.
     const nextContentState = Object.keys(this.colorStyleMap)
       .reduce((contentState, color) => {
@@ -290,23 +277,16 @@ class Reader extends Component {
   }
 
 
+  // parses a chunk of text into an array of objects that we can use for display
   parse = function(words) { 
 
-    let timingBelt = this.timingBelt;
+    const timingBelt = this.timingBelt;
 
-    // defining due to fucking stupid function definition problems
-    // let parse = this.parse;
-    // let hyphenate = this.hyphenate;
-    // let state = this.state;
-
-    // Logic
     // strings will be broken out into words
     // find the focus point of the word
     // if, when the word is shifted to its focus point
     //   one end protrudes from either end more than 7 chars
     //   re-run parser after hyphenating the words
-
-    // array.reduce(timingBelt.bind(this), initialValue);
 
     // return array of displayReels
     return words.trim()
@@ -336,11 +316,11 @@ class Reader extends Component {
 
     // STATE updates are bundled together!! 
     if (this.state.paused) { 
-      return 
+      return;
     }
 
     // word object
-    const newReel = arr[this.state.index]
+    const newReel = arr[this.state.index];
 
     this.setState({
       currentReel: newReel,
@@ -358,7 +338,6 @@ class Reader extends Component {
 
 
   play () {
-
     // if paused, unpause and continue playing
     if (this.state.paused) {
       
@@ -368,7 +347,6 @@ class Reader extends Component {
       }, () => {this.loop()})
 
     } 
-
   }
 
 
@@ -411,42 +389,22 @@ class Reader extends Component {
     })
   }
 
-
-  // TODO not necessary anymore?
-  // TODO move text parsing to processCorpus!
-  pasteHandler() {
-    let text = '';
-
-    // get plain text from the paste event
-    text = this.state.editorState.getCurrentContent().getPlainText();
-
-    this.processCorpus(text);
-  }
-
-  
-  processCorpus(text) {
-
-    let arr = this.parse(text);
-
-    this.setState({
-      "bodyText": text,
-      "corpusArr" : arr,
-    })
-  }
-
   // TODO remove this? 
+  /*
   onLoaderFinished = () => {
     this.setState({ loadingBarProgress: 0 });
   };
-  
+  */
   
 
   render() {    
 
-
+    // TODO Move some of this out of here and into CSS classes?
     this.colorStyleMap = {
       yellow: {
         color: 'rgba(180, 180, 0, 1.0)',
+        fontWeight: 'bold',
+        className: 'highlighted',
       },
 
       gradient : {
@@ -467,9 +425,10 @@ class Reader extends Component {
     // add white spaces
     let preWsp  = Array(preNumSpaces).join("\u00a0");
     // let postWsp = Array(postNumSpaces).join("\u00a0");
-    
 
-    if (!this.state.paused) {
+
+    // scrolling text on render
+    if (!this.state.paused && this.state.scrollingEnabled) {
       let scrollSelector = prevWord + " " + this.state.currentReel.text + " " + postWord; 
 
       // seek through the text corpus as we read through it. 
@@ -479,10 +438,8 @@ class Reader extends Component {
       if (typeof(matching_element) !== typeof(undefined)){
         // element is there, scroll to it.
         matching_element.scrollIntoView();
-      }
-      
+      }      
     }
-
 
 
     return (
@@ -492,7 +449,6 @@ class Reader extends Component {
         onKeyUp={ this.handleKeyUp }
         >
 
-        <br/>
         <br/>
         <br/>
         <br/>
@@ -528,31 +484,32 @@ class Reader extends Component {
           &nbsp;
           <button onClick={this.reset}>Reset</button>
           &nbsp;
-          <button onClick={this.toggleColor}>Colors</button>
+          <button onClick={this.highlightSelection}>Highlight</button>
+          &nbsp;
+          <button onClick={this.setGradient}>Gradient</button>
                      
         </div>
         
         <br/>
-        <br/>
 
+        {/*
+          TODO convert loading bars to a css gradient! 
+          See github issue here : https://github.com/klendi/react-top-loading-bar/issues/6 
+        */}
         <LoadingBar
           progress={ (this.state.index / this.state.corpusArr.length) * 100 }
           height={3}
           color="red"
-          // backgroundImage="linear-gradient(90deg, rgba(2,0,36,1) 0%, #00AD00 50%, #0077AD 100%)"
-          // className='grad'
-          onLoaderFinished={() => this.onLoaderFinished()}
         />
 
-        <div className="editor"
-             style={styles.editor} 
+        <div className="editor" 
              onClick={this.focusEditor}>
         
           <Editor
             // className={"EditorRoot " + (this.state.paused ? "" : ' ReaderScroll') }            
             ref={this.setEditor}
             editorState={this.state.editorState}
-            onChange={this.onChange}
+            onChange={this.onEditorPaste}
             placeholder="Place your text content in here and press the play button!"
             enableLineBreak={true}
             spellcheck={false}

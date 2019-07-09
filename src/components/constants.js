@@ -1,7 +1,7 @@
 export const MAX_DISPLAY_SIZE = 8        // max length in characters before separating a word.
 export const LARGEST_WORD_SIZE = 10      // number of spaces before / after displayhead
 export const DEFAULT_READING_SPEED = 500 // in words-per-minute (wpm)
-export const SPACE_KEY = 32              // key code for space key
+export const SPACE_KEY = 32              // key code for space bar
 export const PLAYPAUSE_KEY = SPACE_KEY   // key code for play/pause, space bar by default.
 export const START_COLOR  = '#FF0000'
 export const STOP_COLOR   = '#0000FF'
@@ -20,8 +20,8 @@ Seek truth, but faster. Enjoy!
 - David`
 
 // an excerpt from The Enchiridion : http://classics.mit.edu/Epictetus/epicench.html
-export const EPICTETUS = `
-Some things are in our control and others not. Things in our control are opinion, pursuit, desire, aversion, and, in a word, whatever are our own actions. Things not in our control are body, property, reputation, command, and, in one word, whatever are not our own actions. 
+// useful for testing.
+export const EPICTETUS = `Some things are in our control and others not. Things in our control are opinion, pursuit, desire, aversion, and, in a word, whatever are our own actions. Things not in our control are body, property, reputation, command, and, in one word, whatever are not our own actions. 
 
 The things in our control are by nature free, unrestrained, unhindered; but those not in our control are weak, slavish, restrained, belonging to others. Remember, then, that if you suppose that things which are slavish by nature are also free, and that what belongs to others is your own, then you will be hindered. You will lament, you will be disturbed, and you will find fault both with gods and men. But if you suppose that only to be your own which is your own, and what belongs to others such as it really is, then no one will ever compel you or restrain you. Further, you will find fault with no one or accuse no one. You will do nothing against your will. No one will hurt you, you will have no enemies, and you not be harmed. 
 

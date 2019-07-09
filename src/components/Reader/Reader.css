@@ -1,17 +1,3 @@
-/* Lock the Reader Down! 
-html, body {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-*/
-
-/* kill scrollbars from hell */
-#c {
-  display: block;
-}
-
-
 .Reader {
   width:600px;
   margin:0 auto;
@@ -64,27 +50,14 @@ html, body {
   text-align: center;
 }
 
-/*
-.editor {
-  border: '1px solid gray';
-  minHeight: '6em';
-  border-radius:0.25rem;
+
+.editor {  
+  border: solid gray 1px;
+  min-height: 20em;
+  padding: 20px;
 }
-*/
-
-/*
-.editor {
-  border: '1px solid gray';
-  minHeight: '20em';
-  padding: '20px';
-}
-*/
-
-
-
 
 .readerSurroundingWord {
-
   font-size: 1em;
 }
 
@@ -94,7 +67,10 @@ html, body {
 }
 
 
-
+.highlighted {
+  font-weight: bold;
+  color: 'rgba(180, 180, 0, 1.0)';
+}
 
 
 /*

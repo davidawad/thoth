@@ -56,7 +56,7 @@ class SettingsPanel extends Component {
             
             // save our settings after they've been changed.
             this.props.updateCallback(newSettings, 
-                function(){
+                function() {
                     console.log("state updated.");
                 }
             );
