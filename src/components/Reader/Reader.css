@@ -1,8 +1,10 @@
+/* Lock the Reader Down! 
 html, body {
   margin: 0;
   padding: 0;
   border: 0;
 }
+*/
 
 /* kill scrollbars from hell */
 #c {
@@ -14,6 +16,9 @@ html, body {
   width:600px;
   margin:0 auto;
   font-family:Courier;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 

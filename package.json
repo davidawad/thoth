@@ -12,7 +12,9 @@
     "draft-js-plugins-editor": "^2.1.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-dropzone": "^10.1.5",
     "react-modal": "^3.8.1",
+    "react-reader": "^0.17.10",
     "react-scripts": "3.0.1",
     "react-settings-pane": "^0.1.5",
     "react-top-loading-bar": "^1.0.6"

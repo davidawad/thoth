@@ -58,6 +58,7 @@ class App extends Component {
             // initialContent={this.state.initialContent}
             // readingSpeed={this.state.readingSpeed}
             {...this.state}
+
             />
 
           <br/>
