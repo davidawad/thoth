@@ -1,14 +1,33 @@
 import React, {Component} from 'react';
 import Dropzone from 'react-dropzone';
 
+import PropTypes from "prop-types";
+
+// TODO remove this 
+import Swipeable from "react-swipeable";
+
 
 import EpubParser from '../EpubParser/EpubParser';
+import PDFParser from '../PDFParser/PDFParser';
+
+// import { ReactReader } from "react-reader";
+
+
+import defaultStyles from "./style";
+
+// import Epub from "epubjs/lib/index";
+
+import './FileParser.css';
 
 
 const PDFTYPE = 'application/pdf'
 const EPUBTYPE = 'application/epub+zip'
 
-const allowedFiletypes = [PDFTYPE, EPUBTYPE]
+
+const allowedFiletypes = [PDFTYPE, EPUBTYPE];
+
+
+// global.ePub = Epub; // Fix for v3 branch of epub.js -> needs ePub to by a global var
 
 
 class FileParser extends Component {
@@ -27,35 +46,29 @@ class FileParser extends Component {
       
       const file = files[0];
 
-      var reader = new FileReader();
+      // var reader = new FileReader();
 
       // reader.readAsBinaryString(file); 
 
       // reader.read
 
+      console.log("FILEPARSER FILE:", file);
 
-      reader.onabort = () => console.log('file reading was aborted')
-      reader.onerror = () => console.log('file reading has failed')
+      const fUrl = URL.createObjectURL(file);
 
-      /* 
-      reader.onload = () => {
-        // Do whatever you want with the file contents
-        // const binaryStr = reader.result
+      console.log("FILEPARSER FILE URL:", fUrl);
 
-      }
-      */
-
-
-      // TODO validate Filetype! 
-
+      console.log("TYPES: ", "FILE ", typeof(file), "URL: ", typeof(fUrl));
 
       // TODO update callback with text from page
       // this.props.updateCallback({})
+
 
       
       this.setState({ 
           fileLoaded: true, 
           currentFile: file,
+          currentFileUrl: fUrl,
         })
         
     };
@@ -68,6 +81,24 @@ class FileParser extends Component {
   }
 
   render() {
+
+
+
+    const {
+        url,
+        title,
+        showToc,
+        loadingView,
+        epubOptions,
+        styles,
+        getRendition,
+        locationChanged,
+        location,
+        swipeable
+      } = this.props;
+
+
+
     const files = this.state.files.map(file => (
       <li key={file.name}>
         {file.name} - {file.size} bytes
@@ -77,7 +108,7 @@ class FileParser extends Component {
     return (
 
 
-      <div className="">
+      <div className="FileParser">
 
         <Dropzone 
             onDrop={this.onDrop}
@@ -103,42 +134,105 @@ class FileParser extends Component {
 
         </Dropzone>
 
-        { this.state.fileLoaded && (this.state.currentFile.type === EPUBTYPE)? 
+        { this.state.fileLoaded && (this.state.currentFile.type === EPUBTYPE) ? 
 
             // render epub view!
+
+            /*
+            <p> 
+                Reading Book with React Reader
+            </p>
+
+            <ReactReader
+                className="ReactReader"
+                url={this.state.currentFileUrl}
+                title={"Shite"}
+                location={"epubcfi(/6/2[cover]!/6)"}
+                locationChanged={epubcifi => console.log(epubcifi)}
+            />
+            */
+
+            
+            
             <EpubParser
                 className="false"
                 file={this.state.currentFile}
+
+                // epub parser
+                ref={this.readerRef}
+                url={this.state.currentFileUrl}
+                location={location}
+                loadingView={loadingView}
+                tocChanged={this.onTocChange}
+                locationChanged={locationChanged}
+                epubOptions={{}}
+                getRendition={getRendition}
                 />
+            
 
             // else
             :   <span></span>
+
+
+
         }
-         
         
-        { /* 
-        TODO PDF rendering ~ 
 
-        { this.state.fileLoaded && (this.state.currentFile.type === PDFTYPE)? 
 
-            // render pdf view!
-            <SOMETHING
+        { this.state.fileLoaded && (this.state.currentFile.type === PDFTYPE) ? 
+
+            // render PDF text!
+            
+            <PDFParser
                 className="false"
                 file={this.state.currentFile}
+
+                ref={this.readerRef}
+                url={this.state.currentFileUrl}
                 />
+            
 
             // else
             :   <span></span>
-            
+
         }
 
-        */ }
 
 
+        <div id="reader-fodder"/>
 
       </div>
     );
   }
 }
+
+
+
+
+FileParser.defaultProps = {
+    loadingView: <div>Loading . . . </div>,
+    locationChanged: null,
+    tocChanged: () => {console.log("TOC CHANGED FUNC CALLED?")},
+    showToc: true,
+    styles: defaultStyles
+  };
+  
+  FileParser.propTypes = {
+    title: PropTypes.string,
+    loadingView: PropTypes.element,
+    url: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.instanceOf(ArrayBuffer)
+    ]),
+    showToc: PropTypes.bool,
+    location: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    locationChanged: PropTypes.func,
+    tocChanged: PropTypes.func,
+    styles: PropTypes.object,
+    epubOptions: PropTypes.object,
+    getRendition: PropTypes.func,
+    swipeable: PropTypes.bool
+  };
+
 
 export default FileParser;

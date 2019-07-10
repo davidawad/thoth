@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 
+// eslint-disable-next-line
 import {Editor, EditorState, ContentState, Modifier, RichUtils, SelectionState} from 'draft-js';
 
 // import {useRef, useEffect} from 'react';
