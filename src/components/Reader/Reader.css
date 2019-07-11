@@ -1,35 +1,32 @@
 .Reader {
-  width:600px;
-  margin:0 auto;
-  font-family:Courier;
+  width: 600px;
+  margin: 0 auto;
+  font-family: Courier;
   margin: 0;
   padding: 0;
   border: 0;
 }
 
-
 .Reader-canvas {
-  font-size:40px;
-  border:2px solid;
-  width:21rem; 
-  display:inline-block;
+  font-size: 40px;
+  border: 2px solid;
+  width: 21rem;
+  display: inline-block;
   padding-left: 5px;
   padding-right: 5px;
-  border-radius:0.25rem;
+  border-radius: 0.25rem;
 }
 
-
-.Reader-word-content{
+.Reader-word-content {
   /* overflow:auto; */
-  padding:20px;
+  padding: 20px;
 
-  width:600px;
-  height:350px;
-  border:1px solid;
+  width: 600px;
+  height: 350px;
+  border: 1px solid;
 
   /* left: 50%; */
   /* transform: translateX(+60%); */
-
 }
 
 /*
@@ -37,9 +34,8 @@
 * This is a horrible way to do this.
 */
 .red {
-  color:red;
+  color: red;
 }
-
 
 .public-DraftEditor-content {
   max-height: 350px;
@@ -50,8 +46,7 @@
   text-align: center;
 }
 
-
-.editor {  
+.editor {
   border: solid gray 1px;
   min-height: 20em;
   padding: 20px;
@@ -61,17 +56,14 @@
   font-size: 1em;
 }
 
-.hide
-.settings-close {
+.hide .settings-close {
   display: none;
 }
-
 
 .highlighted {
   font-weight: bold;
   color: 'rgba(180, 180, 0, 1.0)';
 }
-
 
 /*
 DraftEditorBlock {
@@ -84,7 +76,6 @@ DraftEditorBlock {
 /* linear-gradient(direction, color-stop1, color-stop2, ...); */
 
 /* background: -webkit-linear-gradient(#00AD00, #0077AD); */
-
 
 /*
 .EditorRoot,
@@ -100,7 +91,7 @@ DraftEditorBlock {
 }
 */
 
-  /* white-space: pre-line; 
+/* white-space: pre-line; 
   display: inline-block;
   */
 
@@ -121,4 +112,3 @@ DraftEditorBlock {
   -webkit-text-fill-color: transparent;
 } 
 */
-

@@ -1,20 +1,16 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 // import { EpubView } from "react-reader";
 
 // eslint-disable-next-line
-import PropTypes from "prop-types";
+import PropTypes from 'prop-types';
 // eslint-disable-next-line
-import Epub, { Rendition } from "epubjs/lib/index";
+import Epub, { Rendition } from 'epubjs/lib/index';
 
-
-// TODO remove this one too 
+// TODO remove this one too
 // import JSZip from "jszip";
-
 
 // TODO remove this package
 // import parser from '@gxl/epub-parser'
-
-
 
 // global.ePub = Epub; // Fix for v3 branch of epub.js -> needs ePub to by a global var
 // window.epub = Epub;
@@ -22,30 +18,23 @@ import Epub, { Rendition } from "epubjs/lib/index";
 const epubOptions = {};
 
 class EpubParser extends Component {
-
-
-    constructor(props) {
-
+  constructor(props) {
     super(props);
 
-    this.openBook   = this.openBook.bind(this);
-
+    this.openBook = this.openBook.bind(this);
 
     // book file passed into this component.
     const currFile = this.props.file;
 
-    const ctx = this; 
-
     this.state = {
-        currentFile: currFile, 
-        bookLoaded: false,
-        book : {},
-    }
+      currentFile: currFile,
+      bookLoaded: false,
+      book: {}
+    };
   }
 
-
   componentDidMount() {
-    console.log("COMPONENT MOUNT.");
+    console.log('COMPONENT MOUNT.');
 
     var reader = new FileReader();
 
@@ -54,28 +43,24 @@ class EpubParser extends Component {
     let inputFile = this.props.file;
 
     reader.readAsArrayBuffer(inputFile);
-    
-    
   }
 
   openBook(e) {
-
-
     let book = {};
 
     var bookData = e.target.result;
-    
-    console.log("BOOKDATA: ", bookData)
+
+    console.log('BOOKDATA: ', bookData);
 
     book = Epub(bookData, {
-      store: "epubjs-test",
+      store: 'epubjs-test',
       restore: true,
-      storage: true,
-    })
+      storage: true
+    });
 
     // book.open(bookData);
 
-    console.log("EPUB PARSER BOOK: ", book);
+    console.log('EPUB PARSER BOOK: ', book);
 
     /*
     this.setState({
@@ -84,7 +69,7 @@ class EpubParser extends Component {
     */
 
     // hack
-    // book.storage = 'offline'; 
+    // book.storage = 'offline';
 
     // const zip = new JSZip();
 
@@ -98,90 +83,66 @@ class EpubParser extends Component {
       });
     */
 
-    var rendition = book.renderTo("reader-fodder", {
-      width: "100%",
+    var rendition = book.renderTo('reader-fodder', {
+      width: '100%',
       height: 600
-    }) ;
+    });
 
     var displayed = rendition.display();
 
-    displayed.then( function(renderer) {
-    // Add all resources to the store
-    // Add `true` to force re-saving resources
+    displayed.then(function(renderer) {
+      // Add all resources to the store
+      // Add `true` to force re-saving resources
       book.storage.add(book.resources, true).then(() => {
-       console.log("stored");
-      })
+        console.log('stored');
+      });
     });
 
+    // print out contents ~
+    book.loaded.spine.then(spine => {
+      spine.each(section => {
+        console.log('SECTION: ', section, typeof section);
 
-    // print out contents ~  
-    book.loaded.spine.then((spine) => {
-        
-         
-        spine.each((section) => {
-
-            console.log("SECTION: ", section, typeof(section));
-
-            section.load().then((contents) => {
-
-                // console.log("SECTION DOC:", contents, typeof(contents), contents.contents, contents.document, contents.innerText)
-                console.log("SECTION DOC:", contents, typeof(contents), contents.contents, contents.document)
-
-            })
-            
+        section.load().then(contents => {
+          // console.log("SECTION DOC:", contents, typeof(contents), contents.contents, contents.document, contents.innerText)
+          console.log(
+            'SECTION DOC:',
+            contents,
+            typeof contents,
+            contents.contents,
+            contents.document
+          );
         });
-
+      });
     });
-
-
-
 
     /* 
     this.setState({
         bookLoaded: true,
     })
     */
-
   }
 
   render() {
-
     // console.log("EPUB DISPLAY GIVEN THE FOLLOWING FILE : ", this.state.currentFile);
 
     // use empty options to avoid ArrayBuffer urls being treated as options in epub.js
 
     if (!this.state.bookLoaded) {
+      // render spinning icon?
 
-        // render spinning icon? 
-
-        return (
-            <p>
-                Book Loading . . . 
-            </p>
-
-            
-        )
-
+      return <p>Book Loading . . .</p>;
     }
-    
-    console.log("book on render", this.state.book)
+
+    console.log('book on render', this.state.book);
 
     return (
-
-        <div className="EpubParser">
-
-            <p>
-            { this.state.book.locations }
-            </p>
-
-        </div>
-
+      <div className="EpubParser">
+        <p>{this.state.book.locations}</p>
+      </div>
     );
   }
-
-
 }
-
 
 /* 
     

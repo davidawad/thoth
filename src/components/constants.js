@@ -1,10 +1,10 @@
-export const MAX_DISPLAY_SIZE = 8        // max length in characters before separating a word.
-export const LARGEST_WORD_SIZE = 10      // number of spaces before / after displayhead
-export const DEFAULT_READING_SPEED = 500 // in words-per-minute (wpm)
-export const SPACE_KEY = 32              // key code for space bar
-export const PLAYPAUSE_KEY = SPACE_KEY   // key code for play/pause, space bar by default.
-export const START_COLOR  = '#FF0000'
-export const STOP_COLOR   = '#0000FF'
+export const MAX_DISPLAY_SIZE = 8; // max length in characters before separating a word.
+export const LARGEST_WORD_SIZE = 10; // number of spaces before / after displayhead
+export const DEFAULT_READING_SPEED = 500; // in words-per-minute (wpm)
+export const SPACE_KEY = 32; // key code for space bar
+export const PLAYPAUSE_KEY = SPACE_KEY; // key code for play/pause, space bar by default.
+export const START_COLOR = '#FF0000';
+export const STOP_COLOR = '#0000FF';
 export const INTRO_TEXT = `Hello! 
 
 This is Thoth, an open source speed reading tool inspired by Zethos and Spritz ($3.5mil series A).
@@ -17,7 +17,7 @@ All you have to do is paste in some text and you'll be breezing through it in no
 
 Seek truth, but faster. Enjoy!
 
-- David`
+- David`;
 
 // an excerpt from The Enchiridion : http://classics.mit.edu/Epictetus/epicench.html
 // useful for testing.
@@ -40,4 +40,4 @@ Work, therefore to be able to say to every harsh appearance, "You are but an app
 6. Don't be prideful with any excellence that is not your own. If a horse should be prideful and say, " I am handsome," it would be supportable. But when you are prideful, and say, " I have a handsome horse," know that you are proud of what is, in fact, only the good of the horse. What, then, is your own? Only your reaction to the appearances of things. Thus, when you behave conformably to nature in reaction to how things appear, you will be proud with reason; for you will take pride in some good of your own. 
 
 7. Consider when, on a voyage, your ship is anchored; if you go on shore to get water you may along the way amuse yourself with picking up a shellfish, or an onion. However, your thoughts and continual attention ought to be bent towards the ship, waiting for the captain to call on board; you must then immediately leave all these things, otherwise you will be thrown into the ship, bound neck and feet like a sheep. So it is with life. If, instead of an onion or a shellfish, you are given a wife or child, that is fine. But if the captain calls, you must run to the ship, leaving them, and regarding none of them. But if you are old, never go far from the ship: lest, when you are called, you should be unable to come in time.
-`
+`;

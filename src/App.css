@@ -4,9 +4,9 @@
   padding: 0;
   border: 0;
 
-  width:600px;
-  margin:0 auto;
-  font-family:Courier;
+  width: 600px;
+  margin: 0 auto;
+  font-family: Courier;
 }
 
 .App-logo {
@@ -30,7 +30,7 @@
   color: #61dafb;
 }
 
-.App-FileParser {  
+.App-FileParser {
   border: solid gray 1px;
   min-height: 20em;
   padding: 20px;

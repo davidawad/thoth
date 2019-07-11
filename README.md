@@ -70,3 +70,15 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 ## notes on dockerfile :
 
 https://medium.com/@shakyShane/lets-talk-about-docker-artifacts-27454560384f
+
+
+## Images used with attribution from freepik
+
+https://www.freepik.com/free-vector/egypt-symbols-gods-collection_2857150.htm
+
+
+MIT © David Awad
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftaylorudell%2Freact-pdf.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftaylorudell%2Freact-pdf?ref=badge_large)
+
+
