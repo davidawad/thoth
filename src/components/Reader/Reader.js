@@ -87,27 +87,12 @@ class Reader extends Component {
           : '#0077AD'
     };
   }
-
-  // when parent updates state, this component gets re-rendered
-  componentWillReceiveProps(someProps) {
-    console.log('fuck', someProps);
-    if (typeof someprops === typeof undefined) {
+  componentWillReceiveProps({ someProp }) {
+    if (typeof someProp === typeof undefined) {
       return;
     }
-    this.setState(...someProps, this.propHandler(someProps));
+    this.setState({ ...this.state, someProp }, this.propHandler(someProp));
   }
-
-  // when parent updates state, this component gets re-rendered
-  /*
-  componentWillReceiveProps(props) {
-    console.log("READER RECEIVED PROPS: ", props);
-
-    let newText = props.content;
-
-    this.setState(props, this.propHandler(props));
-    
-  }
-  */
 
   // setEditor function for draftjs
   setEditor = editor => {
@@ -129,12 +114,10 @@ class Reader extends Component {
     // it's possible for the user to edit the text passed a content prop to this component
 
     let textEdited = editorText !== this.state.bodyText;
-
     if (textEdited) {
       console.log('no text change from editor');
       return;
     }
-
     text = editorText;
 
     // pass text along to new content handler.
@@ -185,7 +168,6 @@ class Reader extends Component {
       corpusArr: arr
     });
   }
-
   hyphenate(word) {
     let ret = word;
     let len = word.length;
