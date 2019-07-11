@@ -16,6 +16,8 @@ let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm
 let START_COLOR = CONSTANTS.START_COLOR;
 let STOP_COLOR = CONSTANTS.STOP_COLOR;
 
+let DEBUG = process.env.NODE_ENV === 'development';
+
 // let defaults = new Settings();
 
 // default settings object.

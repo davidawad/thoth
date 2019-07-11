@@ -26,7 +26,7 @@ class App extends Component {
 
     this.state = {
       year: new Date().getFullYear(),
-      initialContent: initialContent,
+      content: initialContent,
       readingSpeed: READING_SPEED,
       baseColorStop: START_COLOR,
       finalColorStop: STOP_COLOR,

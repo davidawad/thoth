@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 
-// eslint-disable-next-line
 import {
   Editor,
   EditorState,
   ContentState,
   Modifier,
-  RichUtils,
-  SelectionState
+  RichUtils
+  //SelectionState,
+  // convertFromHTML,
 } from 'draft-js';
 
 // import {useRef, useEffect} from 'react';
@@ -29,6 +29,8 @@ let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm
 let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
+let DEBUG = process.env.NODE_ENV === 'development';
+
 class Reader extends Component {
   constructor(props) {
     super(props);
@@ -38,14 +40,15 @@ class Reader extends Component {
     this.pause = this.pause.bind(this);
     this.reset = this.reset.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
-    this.pasteHandler = this.pasteHandler.bind(this);
+    this.contentHandler = this.contentHandler.bind(this);
+    this.propHandler = this.propHandler.bind(this);
     this.processCorpus = this.processCorpus.bind(this);
     this.parse = this.parse.bind(this);
     this.hyphenate = this.hyphenate.bind(this);
     this.timingBelt = this.timingBelt.bind(this);
     this.toggleColor = this.toggleColor.bind(this);
     this.setEditor = this.setEditor.bind(this);
-    this.onEditorPaste = this.onEditorPaste.bind(this);
+    this.onEditorChange = this.onEditorChange.bind(this);
 
     this.highlightSelection = this.highlightSelection.bind(this);
     this.setGradient = this.setGradient.bind(this);
@@ -57,23 +60,27 @@ class Reader extends Component {
     this.state = {
       index: 0,
       paused: true,
-      bodyText: this.props.initialContent,
+      bodyText: this.props.content,
       editorState: EditorState.createWithContent(
-        ContentState.createFromText(this.props.initialContent)
+        ContentState.createFromText(this.props.content)
       ),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
-      corpusArr: this.parse(this.props.initialContent),
+      corpusArr: this.parse(this.props.content),
       readingSpeed: READING_SPEED,
       enableSurroundingReels: true,
       displaySurroundingReels: true,
+
       scrollingEnabled: this.props.scrollingEnabled
         ? this.props.scrollingEnabled
-        : true,
+        : false,
+
       highlightColor: 'yellow',
+
       baseColorStop:
         typeof this.props.baseColorStop !== typeof undefined
           ? this.props.baseColorStop
           : '#00AD00',
+
       finalColorStop:
         typeof this.props.finalColorStop !== typeof undefined
           ? this.props.finalColorStop
@@ -82,9 +89,25 @@ class Reader extends Component {
   }
 
   // when parent updates state, this component gets re-rendered
-  componentWillReceiveProps(props) {
-    this.setState(props, this.pasteHandler);
+  componentWillReceiveProps(someProps) {
+    console.log('fuck', someProps);
+    if (typeof someprops === typeof undefined) {
+      return;
+    }
+    this.setState(...someProps, this.propHandler(someProps));
   }
+
+  // when parent updates state, this component gets re-rendered
+  /*
+  componentWillReceiveProps(props) {
+    console.log("READER RECEIVED PROPS: ", props);
+
+    let newText = props.content;
+
+    this.setState(props, this.propHandler(props));
+    
+  }
+  */
 
   // setEditor function for draftjs
   setEditor = editor => {
@@ -92,24 +115,69 @@ class Reader extends Component {
   };
 
   // paste handler for drafjs, this strips out all the styles from the content.
-  onEditorPaste = function(editorState) {
-    this.pasteHandler();
-    // read new state information.
-    this.setState({ editorState });
-  };
-
-  // handler function for text pasted
-  pasteHandler() {
+  onEditorChange = function(editorState) {
     let text = '';
 
     // get plain text from the paste event
-    text = this.state.editorState.getCurrentContent().getPlainText();
+    const editorText = this.state.editorState
+      .getCurrentContent()
+      .getPlainText();
 
-    this.processCorpus(text);
+    // if the current text in the editor isn't the same as the state bodyText, the user just edited it.
+    // if the prop to the component isn't the same as the current body text, it's been edited as well.
+
+    // it's possible for the user to edit the text passed a content prop to this component
+
+    let textEdited = editorText !== this.state.bodyText;
+
+    if (textEdited) {
+      console.log('no text change from editor');
+      return;
+    }
+
+    text = editorText;
+
+    // pass text along to new content handler.
+    this.contentHandler(text);
+
+    // read new state information.
+
+    // not sure why this works but whatever.
+    this.setState({
+      editorState: editorState
+    });
+  };
+
+  propHandler(props) {
+    console.log('PROPS GIVEN TO PROP HANDLER : ', props);
+    this.contentHandler(props.content, true);
   }
 
+  // handler function for text pasted
+  contentHandler(text, override) {
+    console.log('CONTENT HANDLER');
+
+    if (text === this.state.bodyText && override !== true) {
+      console.log('Content handler given Same Text as existing. Skipping');
+      return;
+    }
+
+    // pass text to internal processing
+    this.processCorpus(text);
+
+    this.setState({
+      editorState: EditorState.createWithContent(
+        ContentState.createFromText(text)
+      )
+    });
+  }
+
+  // TODO combine processCorpus and contentHandler
   // processes a new text sample and updates the state objects
   processCorpus(text) {
+    console.log('PARSING TEXT : ', text.substring(0, 20), '...');
+
+    console.log('SPEED ON PROCESSCORPUS: ', this.state.readingSpeed);
     let arr = this.parse(text);
 
     this.setState({
@@ -161,7 +229,8 @@ class Reader extends Component {
     let speed = READING_SPEED;
 
     if (typeof this.state !== typeof undefined) {
-      speed = Number(this.state.readingSpeed);
+      speed = Number(this.props.readingSpeed);
+      console.log('SPEED IS : ', speed);
     }
 
     let t = 60000 / speed;
@@ -226,8 +295,7 @@ class Reader extends Component {
 
   // highlight current selection!
   highlightSelection() {
-    let highlightColor = 'yellow';
-    this.toggleColor(highlightColor);
+    this.toggleColor(this.state.highlightColor);
   }
 
   // Toggles identified styles on the text in question.
@@ -365,7 +433,7 @@ class Reader extends Component {
     event.preventDefault();
 
     // use the space bar to play / pause reading session.
-    if (event.keyCode === PLAYPAUSE_KEY) {
+    if (event.keyCode === PLAYPAUSE_KEY && !DEBUG) {
       // toggle play_pause
       this.playpause();
     }
@@ -501,7 +569,8 @@ class Reader extends Component {
             // className={"EditorRoot " + (this.state.paused ? "" : ' ReaderScroll') }
             ref={this.setEditor}
             editorState={this.state.editorState}
-            onChange={this.onEditorPaste}
+            onChange={this.onEditorChange}
+            // onPaste={this.onEditorPaste}
             placeholder="Place your text content in here and press the play button!"
             enableLineBreak={true}
             spellcheck={false}

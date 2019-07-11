@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
 
-import PDFJSWorker from 'worker-loader!./pdf.worker.js'; // eslint-disable-line import/no-webpack-loader-syntax
+// NOTE: using tool to import web worker directly due to CRA restrictions.
+import PDFJSWorker from 'worker-loader!pdfjs-dist/build/pdf.worker.js'; // eslint-disable-line import/no-webpack-loader-syntax
 import PDFJS from 'pdfjs-dist';
 
-// NOTE: using tool to import web worker directly due to CRA restrictions.
-
-// PDFJS.workerSrc = '../../../public/pdf.worker.js';
-
 PDFJS.GlobalWorkerOptions.workerPort = new PDFJSWorker();
+
+let ctx = {};
 
 class PDFParser extends Component {
   constructor(props) {
@@ -18,19 +17,18 @@ class PDFParser extends Component {
     // book file passed into this component.
     const currFile = this.props.file;
 
+    ctx = this;
+
     this.state = {
       currentFile: currFile,
       bookLoaded: false,
-      book: {}
+      book: {},
+      content: '',
+      complete: false
     };
   }
 
   componentDidMount() {
-    console.log(window);
-    // console.log(self);
-
-    console.log('COMPONENT MOUNT.');
-
     var reader = new FileReader();
 
     reader.onload = this.openBook;
@@ -38,64 +36,54 @@ class PDFParser extends Component {
     let inputFile = this.props.file;
 
     reader.readAsArrayBuffer(inputFile);
-    // reader.readAsText(inputFile);
   }
 
   openBook(e) {
     // Loading file from file system into typed array
 
-    // let pdfPath = this.props.url;
-
     var bookData = e.target.result;
-
-    console.log('BOOK DATA: ', bookData);
-
-    // console.log('WORKER SOURCE : ', PDFJS.workerSrc);
-
-    //const PDF_URL = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf'
-
-    // Will be using promises to load document, pages and misc data instead of
-    // callback.
-
-    // FUCK MY LIFE
-
-    // FUCK PDF JS
-
-    // FUCK THIS WHOLE FUCKING THING.
-
-    /* FUCKING BULL SHIT THAT DOES NOT WORK. */
     var loadingTask = PDFJS.getDocument(bookData);
+
+    // buffer of text from all pages
+    let pagesText = [];
 
     loadingTask.promise
       .then(function(doc) {
         var numPages = doc.numPages;
+
+        /*
         console.log('# Document Loaded');
         console.log('Number of Pages: ' + numPages);
         console.log();
+        */
 
         var lastPromise; // will be used to chain promises
 
         lastPromise = doc.getMetadata().then(function(data) {
+          /*
           console.log('# Metadata Is Loaded');
           console.log('## Info');
           console.log(JSON.stringify(data.info, null, 2));
           console.log();
+          */
 
           if (data.metadata) {
+            /*
             console.log('## Metadata');
             console.log(JSON.stringify(data.metadata.getAll(), null, 2));
             console.log();
+            */
           }
         });
 
         var loadPage = function(pageNum) {
           return doc.getPage(pageNum).then(function(page) {
-            console.log('# Page ' + pageNum);
+            // console.log('# Page ' + pageNum);
 
-            var viewport = page.getViewport({ scale: 1.0 });
+            // var viewport = page.getViewport({ scale: 1.0 });
 
-            console.log('Size: ' + viewport.width + 'x' + viewport.height);
-            console.log();
+            // console.log('Size: ' + viewport.width + 'x' + viewport.height);
+            // console.log();
 
             return page
               .getTextContent()
@@ -105,8 +93,13 @@ class PDFParser extends Component {
                 var strings = content.items.map(function(item) {
                   return item.str;
                 });
-                console.log('## Text Content');
-                console.log(strings.join(' '));
+
+                const pageText = strings.join(' ');
+
+                // console.log('## Text Content');
+                // console.log(pageText);
+
+                pagesText.push(pageText);
               })
               .then(function() {
                 console.log();
@@ -123,7 +116,18 @@ class PDFParser extends Component {
       })
       .then(
         function() {
-          console.log('# End of Document');
+          // console.log('# End of Document');
+
+          // console.log("ALL PAGE TEXT : ", pagesText.join(' '))
+
+          // we now have all page text, let's now pass it back up as initialContent to the
+
+          ctx.props.updateCallback(
+            { content: pagesText.join(' ') },
+            function() {
+              // console.log('state updated with new page text');
+            }
+          );
         },
         function(err) {
           console.error('Error: ' + err);
@@ -138,17 +142,13 @@ class PDFParser extends Component {
   }
 
   render() {
-    // console.log("EPUB DISPLAY GIVEN THE FOLLOWING FILE : ", this.state.currentFile);
-
     // use empty options to avoid ArrayBuffer urls being treated as options in epub.js
 
     if (!this.state.bookLoaded) {
       // render spinning icon?
 
-      return <p>Book Loading . . .</p>;
+      return <p>PDF Loading . . .</p>;
     }
-
-    console.log('book on render', this.state.book);
 
     return (
       <div className="PDFParser">

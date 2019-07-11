@@ -24,25 +24,24 @@ const allowedFiletypes = [PDFTYPE, EPUBTYPE];
 
 // global.ePub = Epub; // Fix for v3 branch of epub.js -> needs ePub to by a global var
 
+// TODO ADD PROCESSING INFO FOR SLOW / LARGER BOOKS
 class FileParser extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       fileLoaded: false,
-      currentFile: undefined
+      currentFile: undefined,
+      updateCallback: this.props.updateCallback
     };
 
     this.onDrop = files => {
-      // console.log(files, files[0], typeof(files[0]));
+      this.setState({
+        fileLoaded: false,
+        currentFile: undefined
+      });
 
       const file = files[0];
-
-      // var reader = new FileReader();
-
-      // reader.readAsBinaryString(file);
-
-      // reader.read
 
       console.log('FILEPARSER FILE:', file);
 
@@ -50,10 +49,7 @@ class FileParser extends Component {
 
       console.log('FILEPARSER FILE URL:', fUrl);
 
-      console.log('TYPES: ', 'FILE ', typeof file, 'URL: ', typeof fUrl);
-
       // TODO update callback with text from page
-      // this.props.updateCallback({})
 
       this.setState({
         fileLoaded: true,
@@ -67,7 +63,12 @@ class FileParser extends Component {
     };
   }
 
+  componentWillReceiveProps({ someProp }) {
+    this.setState({ ...this.state, someProp });
+  }
+
   render() {
+    // TODO trim these out?
     const {
       url,
       title,
@@ -154,6 +155,7 @@ class FileParser extends Component {
             file={this.state.currentFile}
             ref={this.readerRef}
             url={this.state.currentFileUrl}
+            updateCallback={this.props.updateCallback}
           />
         ) : (
           // else
