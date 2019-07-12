@@ -31,9 +31,13 @@ let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
 let DEBUG = process.env.NODE_ENV === 'development';
 
+let ctx = {};
+
 class Reader extends Component {
   constructor(props) {
     super(props);
+
+    ctx = this;
 
     // bind functions for correct setState context
     this.play = this.play.bind(this);
@@ -49,13 +53,8 @@ class Reader extends Component {
     this.toggleColor = this.toggleColor.bind(this);
     this.setEditor = this.setEditor.bind(this);
     this.onEditorChange = this.onEditorChange.bind(this);
-
     this.highlightSelection = this.highlightSelection.bind(this);
     this.setGradient = this.setGradient.bind(this);
-
-    //this.toggleColor = (toggledColor) => this._toggleColor(toggledColor);
-
-    // const ctx = this;
 
     this.state = {
       index: 0,
@@ -87,19 +86,18 @@ class Reader extends Component {
           : '#0077AD'
     };
   }
-  componentWillReceiveProps({ someProp }) {
-    if (typeof someProp === typeof undefined) {
-      return;
-    }
-    this.setState({ ...this.state, someProp }, this.propHandler(someProp));
+
+  // when parent updates state, this component gets re-rendered
+  componentWillReceiveProps(props) {
+    this.setState(props, this.propHandler);
   }
 
-  // setEditor function for draftjs
+  // required function for draftjs
   setEditor = editor => {
     this.editor = editor;
   };
 
-  // paste handler for drafjs, this strips out all the styles from the content.
+  // change handler for drafjs, this strips out all the styles from the content and applies the new editor state.
   onEditorChange = function(editorState) {
     let text = '';
 
@@ -114,16 +112,18 @@ class Reader extends Component {
     // it's possible for the user to edit the text passed a content prop to this component
 
     let textEdited = editorText !== this.state.bodyText;
+
     if (textEdited) {
-      console.log('no text change from editor');
+      if (ctx.state.verbose) {
+        console.log('no text change from editor');
+      }
       return;
     }
+
     text = editorText;
 
-    // pass text along to new content handler.
+    // pass text along to content handler.
     this.contentHandler(text);
-
-    // read new state information.
 
     // not sure why this works but whatever.
     this.setState({
@@ -131,14 +131,15 @@ class Reader extends Component {
     });
   };
 
-  propHandler(props) {
-    console.log('PROPS GIVEN TO PROP HANDLER : ', props);
-    this.contentHandler(props.content, true);
+  propHandler() {
+    this.contentHandler(this.props.content, true);
   }
 
   // handler function for text pasted
   contentHandler(text, override) {
-    console.log('CONTENT HANDLER');
+    if (ctx.state.verbose) {
+      console.log('CONTENT HANDLER');
+    }
 
     if (text === this.state.bodyText && override !== true) {
       console.log('Content handler given Same Text as existing. Skipping');
@@ -158,9 +159,12 @@ class Reader extends Component {
   // TODO combine processCorpus and contentHandler
   // processes a new text sample and updates the state objects
   processCorpus(text) {
-    console.log('PARSING TEXT : ', text.substring(0, 20), '...');
+    if (ctx.state.verbose) {
+      console.log('PARSING TEXT : ', text.substring(0, 20), '...');
 
-    console.log('SPEED ON PROCESSCORPUS: ', this.state.readingSpeed);
+      console.log('SPEED ON PROCESSCORPUS: ', this.state.readingSpeed);
+    }
+
     let arr = this.parse(text);
 
     this.setState({
@@ -168,6 +172,7 @@ class Reader extends Component {
       corpusArr: arr
     });
   }
+
   hyphenate(word) {
     let ret = word;
     let len = word.length;
@@ -212,7 +217,10 @@ class Reader extends Component {
 
     if (typeof this.state !== typeof undefined) {
       speed = Number(this.props.readingSpeed);
-      console.log('SPEED IS : ', speed);
+
+      if (ctx.state.verbose) {
+        console.log('SPEED IS : ', speed);
+      }
     }
 
     let t = 60000 / speed;
@@ -261,11 +269,11 @@ class Reader extends Component {
     let forcedEditorState = EditorState.forceSelection(editorState, selection);
 
     selection = forcedEditorState.getSelection();
-    
-    console.log("BEFORE")  
+
+    console.log("BEFORE")
     console.log(selection)
-    
-    console.log("AFTER")    
+
+    console.log("AFTER")
     console.log(selection)
 
     console.log("DIFF: ", diff(DEBUG, selection));
@@ -537,8 +545,8 @@ class Reader extends Component {
         <br />
 
         {/*
-          TODO convert loading bars to a css gradient! 
-          See github issue here : https://github.com/klendi/react-top-loading-bar/issues/6 
+          TODO convert loading bars to a css gradient!
+          See github issue here : https://github.com/klendi/react-top-loading-bar/issues/6
         */}
         <LoadingBar
           progress={(this.state.index / this.state.corpusArr.length) * 100}

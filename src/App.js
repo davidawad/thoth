@@ -18,6 +18,9 @@ let STOP_COLOR = CONSTANTS.STOP_COLOR;
 const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
 let scrollingEnabled = DEBUG ? false : true;
 
+// const verbose = DEBUG ? true : false;
+const verbose = false;
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -30,7 +33,8 @@ class App extends Component {
       readingSpeed: READING_SPEED,
       baseColorStop: START_COLOR,
       finalColorStop: STOP_COLOR,
-      scrollingEnabled: scrollingEnabled
+      scrollingEnabled: scrollingEnabled,
+      verbose: verbose
     };
   }
 
@@ -58,9 +62,10 @@ class App extends Component {
           <FileParser
             className="App-FileParser"
             updateCallback={this.updateSettings}
+            verbose={this.state.verbose}
           />
 
-          {/* Modal Tag to wrap our settings page */}
+          {/* Modal Tag to wrap our settings pane */}
           <ModalWrapper updateCallback={this.updateSettings} {...this.state} />
         </div>
 

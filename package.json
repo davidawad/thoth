@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@babel/core": "7.4.3",
-    "@gxl/epub-parser": "^1.0.6",
     "@svgr/webpack": "4.1.0",
     "@typescript-eslint/eslint-plugin": "1.6.0",
     "@typescript-eslint/parser": "1.6.0",

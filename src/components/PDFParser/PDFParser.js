@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 
 // NOTE: using tool to import web worker directly due to CRA restrictions.
+// eslint-disable-next-line
 import PDFJSWorker from 'worker-loader!pdfjs-dist/build/pdf.worker.js'; // eslint-disable-line import/no-webpack-loader-syntax
+
+// eslint-disable-next-line
 import PDFJS from 'pdfjs-dist';
 
 PDFJS.GlobalWorkerOptions.workerPort = new PDFJSWorker();
@@ -24,7 +27,8 @@ class PDFParser extends Component {
       bookLoaded: false,
       book: {},
       content: '',
-      complete: false
+      complete: false,
+      verbose: this.props.verbose
     };
   }
 
@@ -51,39 +55,37 @@ class PDFParser extends Component {
       .then(function(doc) {
         var numPages = doc.numPages;
 
-        /*
-        console.log('# Document Loaded');
-        console.log('Number of Pages: ' + numPages);
-        console.log();
-        */
+        if (ctx.state.verbose) {
+          console.log('# Document Loaded');
+          console.log('Number of Pages: ' + numPages);
+          console.log();
+        }
 
         var lastPromise; // will be used to chain promises
 
         lastPromise = doc.getMetadata().then(function(data) {
-          /*
-          console.log('# Metadata Is Loaded');
-          console.log('## Info');
-          console.log(JSON.stringify(data.info, null, 2));
-          console.log();
-          */
+          if (ctx.state.verbose) {
+            console.log('# Metadata Is Loaded');
+            console.log('## Info');
+            console.log(JSON.stringify(data.info, null, 2));
+            console.log();
+          }
 
           if (data.metadata) {
-            /*
-            console.log('## Metadata');
-            console.log(JSON.stringify(data.metadata.getAll(), null, 2));
-            console.log();
-            */
+            if (ctx.state.verbose) {
+              console.log('## Metadata');
+              console.log(JSON.stringify(data.metadata.getAll(), null, 2));
+              console.log();
+            }
           }
         });
 
         var loadPage = function(pageNum) {
           return doc.getPage(pageNum).then(function(page) {
-            // console.log('# Page ' + pageNum);
-
-            // var viewport = page.getViewport({ scale: 1.0 });
-
-            // console.log('Size: ' + viewport.width + 'x' + viewport.height);
-            // console.log();
+            if (ctx.state.verbose) {
+              console.log('# Page ' + pageNum);
+              console.log();
+            }
 
             return page
               .getTextContent()
@@ -96,8 +98,10 @@ class PDFParser extends Component {
 
                 const pageText = strings.join(' ');
 
-                // console.log('## Text Content');
-                // console.log(pageText);
+                if (ctx.state.verbose) {
+                  console.log('## Text Content');
+                  console.log(pageText);
+                }
 
                 pagesText.push(pageText);
               })
@@ -112,20 +116,32 @@ class PDFParser extends Component {
         for (var i = 1; i <= numPages; i++) {
           lastPromise = lastPromise.then(loadPage.bind(null, i));
         }
+
         return lastPromise;
       })
+
       .then(
         function() {
-          // console.log('# End of Document');
+          if (ctx.state.verbose) {
+            console.log('# End of Document');
 
-          // console.log("ALL PAGE TEXT : ", pagesText.join(' '))
+            console.log('ALL PAGE TEXT : ', pagesText.join(' '));
 
-          // we now have all page text, let's now pass it back up as initialContent to the
+            // we now have all page text, let's now pass it back up as initialContent to the
+          }
 
           ctx.props.updateCallback(
-            { content: pagesText.join(' ') },
+            {
+              content: pagesText.join(' ')
+            },
             function() {
-              // console.log('state updated with new page text');
+              if (ctx.state.verbose) {
+                console.log('state updated with new page text');
+              }
+
+              this.setState({
+                bookLoaded: true
+              });
             }
           );
         },
@@ -133,12 +149,6 @@ class PDFParser extends Component {
           console.error('Error: ' + err);
         }
       );
-
-    /* 
-    this.setState({
-        bookLoaded: true,
-    })
-    */
   }
 
   render() {

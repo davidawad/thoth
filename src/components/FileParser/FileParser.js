@@ -9,11 +9,8 @@ import Swipeable from 'react-swipeable';
 import EpubParser from '../EpubParser/EpubParser';
 import PDFParser from '../PDFParser/PDFParser';
 
-// import { ReactReader } from "react-reader";
-
+// TODO remove these styles?
 import defaultStyles from './style';
-
-// import Epub from "epubjs/lib/index";
 
 import './FileParser.css';
 
@@ -22,17 +19,22 @@ const EPUBTYPE = 'application/epub+zip';
 
 const allowedFiletypes = [PDFTYPE, EPUBTYPE];
 
+let ctx = {};
+
 // global.ePub = Epub; // Fix for v3 branch of epub.js -> needs ePub to by a global var
 
-// TODO ADD PROCESSING INFO FOR SLOW / LARGER BOOKS
+// TODO ADD PROCESSING INFO FOR SLOW / LARGER BOOKS ?
 class FileParser extends Component {
   constructor(props) {
     super(props);
 
+    ctx = this;
+
     this.state = {
       fileLoaded: false,
       currentFile: undefined,
-      updateCallback: this.props.updateCallback
+      updateCallback: this.props.updateCallback,
+      verbose: this.props.verbose
     };
 
     this.onDrop = files => {
@@ -43,11 +45,15 @@ class FileParser extends Component {
 
       const file = files[0];
 
-      console.log('FILEPARSER FILE:', file);
+      if (ctx.state.verbose) {
+        console.log('FILEPARSER FILE:', file);
+      }
 
       const fUrl = URL.createObjectURL(file);
 
-      console.log('FILEPARSER FILE URL:', fUrl);
+      if (ctx.state.verbose) {
+        console.log('FILEPARSER FILE URL:', fUrl);
+      }
 
       // TODO update callback with text from page
 
@@ -90,12 +96,6 @@ class FileParser extends Component {
 
     return (
       <div className="FileParser">
-        {/* 
-            TODO remove this
-        TERRIBLE Workaround. Garbagio. Due to https://github.com/facebook/create-react-app/issues/1574  
-        <script src="http://mozilla.github.io/pdf.js/build/pdf.worker.js" type="text/javascript"></script>
-        */}
-
         <Dropzone onDrop={this.onDrop} accept={allowedFiletypes}>
           {({ getRootProps, getInputProps }) => (
             <section className="container">
@@ -115,20 +115,6 @@ class FileParser extends Component {
         {this.state.fileLoaded && this.state.currentFile.type === EPUBTYPE ? (
           // render epub view!
 
-          /*
-            <p> 
-                Reading Book with React Reader
-            </p>
-
-            <ReactReader
-                className="ReactReader"
-                url={this.state.currentFileUrl}
-                title={"Shite"}
-                location={"epubcfi(/6/2[cover]!/6)"}
-                locationChanged={epubcifi => console.log(epubcifi)}
-            />
-            */
-
           <EpubParser
             className="false"
             file={this.state.currentFile}
@@ -141,6 +127,7 @@ class FileParser extends Component {
             locationChanged={locationChanged}
             epubOptions={{}}
             getRendition={getRendition}
+            verbose={true} // TODO set back to normal.
           />
         ) : (
           // else
@@ -156,6 +143,7 @@ class FileParser extends Component {
             ref={this.readerRef}
             url={this.state.currentFileUrl}
             updateCallback={this.props.updateCallback}
+            verbose={this.props.verbose}
           />
         ) : (
           // else
@@ -168,11 +156,14 @@ class FileParser extends Component {
   }
 }
 
+/* TODO remove these prop types as they're not necessary. */
 FileParser.defaultProps = {
   loadingView: <div>Loading . . . </div>,
   locationChanged: null,
   tocChanged: () => {
-    console.log('TOC CHANGED FUNC CALLED?');
+    if (ctx.state.verbose) {
+      console.log('TOC CHANGED FUNC CALLED?');
+    }
   },
   showToc: true,
   styles: defaultStyles
