@@ -17,7 +17,8 @@ import './FileParser.css';
 const PDFTYPE = 'application/pdf';
 const EPUBTYPE = 'application/epub+zip';
 
-const allowedFiletypes = [PDFTYPE, EPUBTYPE];
+// const allowedFiletypes = [PDFTYPE, EPUBTYPE];
+const allowedFiletypes = [PDFTYPE];
 
 let ctx = {};
 
@@ -95,7 +96,7 @@ class FileParser extends Component {
     ));
 
     return (
-      <div className="FileParser">
+      <div className="FileParser-canvas">
         <Dropzone onDrop={this.onDrop} accept={allowedFiletypes}>
           {({ getRootProps, getInputProps }) => (
             <section className="container">
@@ -105,7 +106,7 @@ class FileParser extends Component {
               </div>
 
               <aside>
-                <h4>Files</h4>
+                <h4>File</h4>
                 <ul>{files}</ul>
               </aside>
             </section>
@@ -143,7 +144,8 @@ class FileParser extends Component {
             ref={this.readerRef}
             url={this.state.currentFileUrl}
             updateCallback={this.props.updateCallback}
-            verbose={this.props.verbose}
+            // verbose={this.props.verbose}
+            verbose={true}
           />
         ) : (
           // else
@@ -156,7 +158,7 @@ class FileParser extends Component {
   }
 }
 
-/* TODO remove these prop types as they're not necessary. */
+/* TODO remove these prop types as they're not necessary. 
 FileParser.defaultProps = {
   loadingView: <div>Loading . . . </div>,
   locationChanged: null,
@@ -185,5 +187,6 @@ FileParser.propTypes = {
   getRendition: PropTypes.func,
   swipeable: PropTypes.bool
 };
+*/
 
 export default FileParser;

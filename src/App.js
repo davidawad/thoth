@@ -65,6 +65,8 @@ class App extends Component {
             verbose={this.state.verbose}
           />
 
+          <br />
+
           {/* Modal Tag to wrap our settings pane */}
           <ModalWrapper updateCallback={this.updateSettings} {...this.state} />
         </div>

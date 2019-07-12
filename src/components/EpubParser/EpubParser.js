@@ -16,11 +16,13 @@ global.ePub = Epub; // Fix for v3 branch of epub.js -> needs ePub to by a global
 window.epub = Epub;
 const ePub = Epub;
 
-const epubOptions = {
+let epubOptions = {
   store: 'epubjs-test',
   restore: true,
   storage: true
 };
+
+epubOptions = {};
 
 let ctx = {};
 
@@ -58,7 +60,7 @@ class EpubParser extends Component {
     reader.readAsArrayBuffer(inputFile);
   }
 
-  makeRangeCfi = (a, b) => {
+  makeRangeCfi(a, b) {
     const CFI = new ePub.CFI();
     const start = CFI.parse(a),
       end = CFI.parse(b);
@@ -100,7 +102,7 @@ class EpubParser extends Component {
       CFI.segmentString(cfi.end) +
       ')'
     );
-  };
+  }
 
   openBook(e) {
     let book = {};
@@ -115,107 +117,9 @@ class EpubParser extends Component {
     book = Epub(bookData, epubOptions);
 
     // sample book, this works and fetches text
-    // book = ePub("https://s3.amazonaws.com/epubjs/books/moby-dick/OPS/package.opf");
-
-    // var $viewer = document.getElementById("viewer");
-
-    /* 
-    book.on("renderer:selected", function(range) {
-      console.log("RENDERER SELECTED!")
-      var epubcfi = new ePub.EpubCFI();
-      var cfi = epubcfi.generateCfiFromRangeAnchor(range, book.renderer.currentChapter.cfiBase);
-      console.log("selected:", cfi );
-    });
-    */
-
-    /* 
-    book.ready.then(function(){
-
-      let pg = book.pageList.pages[45];
-      console.log("BOOK PAGES :", book.pageList);
-
-      console.log("BOOK PAGE 3 :", pg, pg.cfi);
-
-      book.getRange("epubcfi(/1/1[xchapter_001]!/4/2,/2/2/2[c001s0000]/1:0,/8/2[c001p0003]/1:663)").then(function(range) {
-
-        let text = range.toString()
-        console.log(" BOOK TEXT : ", text);
-        // $viewer.textContent = text;
-      });
-    });
-    */
-    // return;
-
-    // book.open(bookData);
+    // book = ePub("https://s3.amazonaws.com/epubjs/books/moby-dick/OPS/package.opf", epubOptions);
 
     console.log('EPUB PARSER BOOK: ', book);
-
-    /*
-    this.setState({
-      book: book
-    })
-    */
-
-    // hack
-    //book.storage = 'offline';
-
-    // const zip = new JSZip();
-
-    // const {files} = book.zip.zip;
-
-    /*
-      Object.keys(files).forEach(file => {
-      // file is the file name
-      // files[file] is the file object
-      // use `zip.utf8decode(files[file]._data.getContent())` to get the text content
-      });
-    */
-
-    /*
-    var rendition = book.renderTo('reader-fodder', {
-      width: '100%',
-      height: 600
-    });
-
-    var displayed = rendition.display();
-    */
-
-    /*
-    displayed.then(function(renderer) {
-      // Add all resources to the store
-      // Add `true` to force re-saving resources
-      book.storage.add(book.resources, true).then(() => {
-        console.log('stored');
-      });
-    });
-    */
-
-    /*
-    // print out contents ~
-    book.loaded.spine.then(spine => {
-      spine.each(section => {
-
-
-        console.log('SECTION: ', section, typeof section);
-
-        section.load().then(contents => {
-
-
-          // console.log("SECTION DOC:", contents, typeof(contents), contents.contents, contents.document, contents.innerText)
-          console.log(
-            'SECTION DOC:',
-            contents,
-            typeof contents,
-            contents.contents,
-            contents.document
-          );
-
-
-
-        });
-      });
-    });
-    */
 
     var $viewer = document.getElementById('viewer');
     var $next = document.getElementById('next');
@@ -244,7 +148,50 @@ class EpubParser extends Component {
         var index = $select.selectedIndex,
           url = $select.options[index].ref;
 
+        // shitty hack to save time
+        let nextUrl = $select.options[index].ref;
+        if (typeof $select.options[index + 1] !== typeof undefined) {
+          nextUrl = $select.options[index + 1].ref;
+        }
+
         // TODO get the cfi string for that chapter and get it rendered with the callback~
+        console.log('DISPLAYING A THING CALLED URL', url);
+
+        // This rendering doesn't work for some reason.
+        let rendition = book.renderTo('fodder');
+
+        console.log('LOCATION: ', rendition);
+
+        // TODO this library is shit.
+
+        /* 
+        let currChapterCFIStr = book.spine.get(url).cfiBase; 
+
+        console.log("CURRENT CHAPTER", currChapterCFIStr);
+
+        let nextChapterCFIStr = book.spine.get(nextUrl).cfiBase; 
+
+        console.log("NEXT CHAPTER", nextChapterCFIStr);
+        */
+
+        // See this github issue for getting rendering
+        // https://github.com/futurepress/epub.js/issues/363
+
+        // only code example here.
+
+        // https://github.com/search?q=makeRangeCfi&type=Code
+        // https://github.com/johnfactotum/foliate/blob/22fdcfa739ee308721295f94bd9c553e98dbf20b/src/assets/viewer.js#L251
+
+        // after getting the Rendition back, you should be able to get the string from the rendition range
+
+        const [a, b] = [
+          rendition.currentLocation().start.cfi,
+          rendition.currentLocation().end.cfi
+        ];
+
+        book.getRange(ctx.makeRangeCfi(a, b)).then(range => {
+          console.log('RANGE OF TEXT', range.toString());
+        });
 
         display(url);
 
@@ -255,39 +202,44 @@ class EpubParser extends Component {
         display(currentSectionIndex);
       });
 
-      /* 
-    $next.addEventListener("click", function(){
-      var displayed = display(currentSectionIndex+1);
-      if(displayed) currentSectionIndex++;
-    }, false);
+      $next.addEventListener(
+        'click',
+        function() {
+          var displayed = display(currentSectionIndex + 1);
+          if (displayed) currentSectionIndex++;
+        },
+        false
+      );
 
-    $prev.addEventListener("click", function(){
-      var displayed = display(currentSectionIndex-1);
-      if(displayed) currentSectionIndex--;
-    }, false);
-    */
+      $prev.addEventListener(
+        'click',
+        function() {
+          var displayed = display(currentSectionIndex - 1);
+          if (displayed) currentSectionIndex--;
+        },
+        false
+      );
 
       function display(item) {
         var section = book.spine.get(item);
+
         if (section) {
           currentSection = section;
 
-          console.log(section);
+          let cfiString = currentSection.cfiBase;
+
+          console.log('SECTION HERE: ', section);
 
           section.render().then(function(html) {
-            // $viewer.srcdoc = html;
             $viewer.innerHTML = html;
+
+            // console.log("HTML TO DISPLAY: ", html);
           });
         }
+
         return section;
       }
     });
-
-    /* 
-    this.setState({
-        bookLoaded: true,
-    })
-    */
   }
 
   render() {
@@ -306,11 +258,15 @@ class EpubParser extends Component {
       <div className="EpubParser">
         {/* <p>{this.state.book.locations}</p> */}
 
+        <div id="fodder" className="scrolled"></div>
+
         <select id="toc"></select>
         <div id="viewer" className="scrolled"></div>
+
         <div id="prev" className="arrow">
           ‹
         </div>
+
         <div id="next" className="arrow">
           ›
         </div>

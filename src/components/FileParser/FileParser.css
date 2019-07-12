@@ -1,3 +1,11 @@
 .ReactReader {
   height: 300px;
 }
+
+.FileParser-canvas {
+  padding: 20px;
+
+  width: 560px;
+
+  border: 1px solid gray;
+}

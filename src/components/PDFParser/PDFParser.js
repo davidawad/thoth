@@ -28,6 +28,7 @@ class PDFParser extends Component {
       book: {},
       content: '',
       complete: false,
+      fileName: 'PDF LOADING . . .',
       verbose: this.props.verbose
     };
   }
@@ -38,6 +39,8 @@ class PDFParser extends Component {
     reader.onload = this.openBook;
 
     let inputFile = this.props.file;
+
+    // console.log("INPUT FILE : ", inputFile);
 
     reader.readAsArrayBuffer(inputFile);
   }
@@ -68,6 +71,7 @@ class PDFParser extends Component {
             console.log('# Metadata Is Loaded');
             console.log('## Info');
             console.log(JSON.stringify(data.info, null, 2));
+            ctx.setState({ fileName: data.info.Title });
             console.log();
           }
 
@@ -154,17 +158,7 @@ class PDFParser extends Component {
   render() {
     // use empty options to avoid ArrayBuffer urls being treated as options in epub.js
 
-    if (!this.state.bookLoaded) {
-      // render spinning icon?
-
-      return <p>PDF Loading . . .</p>;
-    }
-
-    return (
-      <div className="PDFParser">
-        <p>{''}</p>
-      </div>
-    );
+    return <p>{this.props.file.path}</p>;
   }
 }
 
