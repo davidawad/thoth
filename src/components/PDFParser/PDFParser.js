@@ -4,10 +4,12 @@ import React, { Component } from 'react';
 // eslint-disable-next-line
 import PDFJSWorker from 'worker-loader!pdfjs-dist/build/pdf.worker.js'; // eslint-disable-line import/no-webpack-loader-syntax
 
-// eslint-disable-next-line
 import PDFJS from 'pdfjs-dist';
 
 PDFJS.GlobalWorkerOptions.workerPort = new PDFJSWorker();
+
+// nice delimeter between page contents.
+const DELIMETER = '\n\n' 
 
 let ctx = {};
 
@@ -136,7 +138,7 @@ class PDFParser extends Component {
 
           ctx.props.updateCallback(
             {
-              content: pagesText.join(' ')
+              content: pagesText.join(DELIMETER)
             },
             function() {
               if (ctx.state.verbose) {

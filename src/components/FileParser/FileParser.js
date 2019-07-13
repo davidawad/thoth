@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 
-import PropTypes from 'prop-types';
-
-// TODO remove this
-import Swipeable from 'react-swipeable';
 
 import EpubParser from '../EpubParser/EpubParser';
 import PDFParser from '../PDFParser/PDFParser';

@@ -77,7 +77,7 @@ class EpubParser extends Component {
     const len = cfi.start.steps.length;
     for (let i = 0; i < len; i++) {
       if (CFI.equalStep(cfi.start.steps[i], cfi.end.steps[i])) {
-        if (i == len - 1) {
+        if (i === len - 1) {
           // Last step is equal, check terminals
           if (cfi.start.terminal === cfi.end.terminal) {
             // CFI's are equal
