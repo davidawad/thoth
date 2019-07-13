@@ -1,0 +1,9 @@
+Fonts used in this design:
+
+Font: Antonio
+Author: Vernon Adams
+Url: http://www.fontsquirrel.com/fonts/antonio
+
+Font: BodoniXT
+Author: Manfred Klein Fonteria
+Url: http://www.fontsquirrel.com/fonts/bodonixt

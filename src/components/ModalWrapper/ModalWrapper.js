@@ -3,27 +3,23 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import SettingsPanel from '../SettingsPanel/SettingsPanel';
 
-
 import './ModalWrapper.css';
 
-
 const customStyles = {
-  content : {
-    top                   : '50%',
-    left                  : '50%',
-    right                 : 'auto',
-    bottom                : 'auto',
-    marginRight           : '-50%',
-    transform             : 'translate(-50%, -50%)'
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)'
   }
 };
 
 // Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
 // Modal.setAppElement('.App')
 
-
 class ModalWrapper extends Component {
-
   constructor(props) {
     super(props);
 
@@ -38,7 +34,7 @@ class ModalWrapper extends Component {
 
   openModal() {
     this.setState({
-        modalIsOpen: true
+      modalIsOpen: true
     });
   }
 
@@ -49,8 +45,8 @@ class ModalWrapper extends Component {
 
   closeModal() {
     this.setState({
-            modalIsOpen: false
-        });
+      modalIsOpen: false
+    });
   }
 
   // when parent updates state, this component gets re-rendered
@@ -62,11 +58,8 @@ class ModalWrapper extends Component {
 
   render() {
     return (
-
       <div>
-
         <button onClick={this.openModal}>Settings</button>
-
 
         <Modal
           isOpen={this.state.modalIsOpen}
@@ -76,9 +69,8 @@ class ModalWrapper extends Component {
           style={customStyles}
           contentLabel="SettingsModal ContentLabel"
         >
+          <h2 ref={subtitle => (this.subtitle = subtitle)}>Settings</h2>
 
-          <h2 ref={subtitle => this.subtitle = subtitle}>Settings</h2>
-          
           {/* pass along the callback to update reader state with new settings */}
           <SettingsPanel
             updateCallback={this.props.updateCallback}
@@ -88,19 +80,10 @@ class ModalWrapper extends Component {
           <div className="closeButtonWrapper">
             <button onClick={this.closeModal}>Close</button>
           </div>
-          
-
         </Modal>
       </div>
     );
   }
 }
 
-export default ModalWrapper; 
-
-
-
-
-
-
-
+export default ModalWrapper;
