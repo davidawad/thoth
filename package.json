@@ -79,8 +79,8 @@
     ]
   },
   "scripts": {
-    "start": "node --max_old_space_size=4096 scripts/start.js",
-    "build": "node --max_old_space_size=4096 scripts/build.js",
+    "start": "node --max_old_space_size=1024 scripts/start.js",
+    "build": "node --max_old_space_size=1024 scripts/build.js",
     "test": "node scripts/test.js",
     "heroku-postbuild": "react-scripts build"
   },
