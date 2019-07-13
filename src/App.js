@@ -18,8 +18,7 @@ let STOP_COLOR = CONSTANTS.STOP_COLOR;
 const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
 let scrollingEnabled = DEBUG ? false : true;
 
-// const verbose = DEBUG ? true : false;
-const verbose = false;
+const verbose = DEBUG ? true : false;
 
 class App extends Component {
   constructor(props) {
@@ -55,6 +54,7 @@ class App extends Component {
     return (
       <div className="App">
         <div className="row">
+          <br />
           <Reader className="Reader" {...this.state} />
 
           <br />

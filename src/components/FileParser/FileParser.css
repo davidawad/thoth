@@ -3,9 +3,9 @@
 }
 
 .FileParser-canvas {
-  padding: 20px;
+  padding: 5px;
 
-  width: 560px;
-
+  width: 590px;
+  height: 130px;
   border: 1px solid gray;
 }

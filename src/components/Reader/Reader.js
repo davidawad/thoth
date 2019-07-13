@@ -504,10 +504,6 @@ class Reader extends Component {
 
     return (
       <div className="Reader" onKeyUp={this.handleKeyUp}>
-        <br />
-        <br />
-        <br />
-
         <div className="">
           {this.state.enableSurroundingReels &&
           this.state.displaySurroundingReels ? (

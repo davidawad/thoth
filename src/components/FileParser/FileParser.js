@@ -158,35 +158,4 @@ class FileParser extends Component {
   }
 }
 
-/* TODO remove these prop types as they're not necessary. 
-FileParser.defaultProps = {
-  loadingView: <div>Loading . . . </div>,
-  locationChanged: null,
-  tocChanged: () => {
-    if (ctx.state.verbose) {
-      console.log('TOC CHANGED FUNC CALLED?');
-    }
-  },
-  showToc: true,
-  styles: defaultStyles
-};
-
-FileParser.propTypes = {
-  title: PropTypes.string,
-  loadingView: PropTypes.element,
-  url: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.instanceOf(ArrayBuffer)
-  ]),
-  showToc: PropTypes.bool,
-  location: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  locationChanged: PropTypes.func,
-  tocChanged: PropTypes.func,
-  styles: PropTypes.object,
-  epubOptions: PropTypes.object,
-  getRendition: PropTypes.func,
-  swipeable: PropTypes.bool
-};
-*/
-
 export default FileParser;
