@@ -11,7 +11,7 @@ import {
 } from 'draft-js';
 
 // import {useRef, useEffect} from 'react';
-// import diff from 'deep-diff'
+import diff from 'deep-diff'
 
 import './Reader.css';
 // import '../Editor/Editor.css';
@@ -246,41 +246,25 @@ class Reader extends Component {
     return ret;
   };
 
-  // TODO better abstractions
 
   // highlights entire editor and applies color gradient to it.
   setGradient() {
-    // TODO force selection of entire text. Not working.
-    // TODO try https://github.com/facebook/draft-js/issues/1386
-
-    // better way to construct entire selection :
-    // https://github.com/facebook/draft-js/issues/2122
 
     let selection = undefined;
 
-    /*
-    let selection = editorState.getSelection().merge({
-      // anchorOffset: 0,
-      focusOffset: 7,  // WATCH THE OFFSET.
+    let currentContent = this.state.editorState.getCurrentContent();
+    
+    selection = this.state.editorState.getSelection().merge({
+      anchorKey: currentContent.getFirstBlock().getKey(),
+      anchorOffset: 0,  
+
+      focusOffset: currentContent.getLastBlock().getText().length, 
+      focusKey: currentContent.getLastBlock().getKey(),
     })
 
-    let DEBUG = selection;
+    let forcedEditorState = EditorState.forceSelection(this.state.editorState, selection);
 
-    let forcedEditorState = EditorState.forceSelection(editorState, selection);
-
-    selection = forcedEditorState.getSelection();
-
-    console.log("BEFORE")
-    console.log(selection)
-
-    console.log("AFTER")
-    console.log(selection)
-
-    console.log("DIFF: ", diff(DEBUG, selection));
-    */
-
-    let highlightColor = 'gradient';
-    this.toggleColor(highlightColor, selection);
+    this.toggleColor('gradient', selection);
   }
 
   // highlight current selection!
@@ -540,14 +524,11 @@ class Reader extends Component {
 
         <br />
 
-        {/*
-          TODO convert loading bars to a css gradient!
-          See github issue here : https://github.com/klendi/react-top-loading-bar/issues/6
-        */}
         <LoadingBar
           progress={(this.state.index / this.state.corpusArr.length) * 100}
           height={3}
           color="red"
+          // background={this.colorStyleMap.gradient.background}
         />
 
         <div className="editor" onClick={this.focusEditor}>

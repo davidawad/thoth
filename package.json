@@ -153,5 +153,8 @@
     "presets": [
       "react-app"
     ]
+  },
+  "devDependencies": {
+    "deep-diff": "^1.0.2"
   }
 }

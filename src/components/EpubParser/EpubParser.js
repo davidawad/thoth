@@ -154,6 +154,8 @@ class EpubParser extends Component {
           nextUrl = $select.options[index + 1].ref;
         }
 
+        console.log("next url", nextUrl);
+
         // TODO get the cfi string for that chapter and get it rendered with the callback~
         console.log('DISPLAYING A THING CALLED URL', url);
 
@@ -227,6 +229,7 @@ class EpubParser extends Component {
           currentSection = section;
 
           let cfiString = currentSection.cfiBase;
+          console.log("cfi String", cfiString);
 
           console.log('SECTION HERE: ', section);
 

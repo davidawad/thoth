@@ -9,6 +9,7 @@ import * as CONSTANTS from './components/constants';
 import './App.css';
 
 let DEBUG = process.env.NODE_ENV === 'development';
+DEBUG = false;
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 let START_COLOR = CONSTANTS.START_COLOR;
@@ -19,6 +20,7 @@ const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
 let scrollingEnabled = DEBUG ? false : true;
 
 const verbose = DEBUG ? true : false;
+
 
 class App extends Component {
   constructor(props) {
@@ -40,7 +42,6 @@ class App extends Component {
   /*
     Callback function that takes a settings object from child and updates duplicate keys in object state
   */
-
   updateSettings(newSettings) {
     this.setState(newSettings);
   }
