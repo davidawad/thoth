@@ -79,6 +79,3 @@ https://www.freepik.com/free-vector/egypt-symbols-gods-collection_2857150.htm
 
 MIT © David Awad
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftaylorudell%2Freact-pdf.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftaylorudell%2Freact-pdf?ref=badge_large)
-
-
