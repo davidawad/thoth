@@ -18,6 +18,7 @@ let STOP_COLOR = CONSTANTS.STOP_COLOR;
 // if debugging is enabled, use larger corpus and disable scrolling.
 const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
 let scrollingEnabled = DEBUG ? false : true;
+scrollingEnabled = false;
 
 const verbose = DEBUG ? true : false;
 
@@ -60,6 +61,7 @@ class App extends Component {
 
           <br />
 
+          {/* File Parser so we can add content to the Reader. */}
           <FileParser
             className="App-FileParser"
             updateCallback={this.updateSettings}

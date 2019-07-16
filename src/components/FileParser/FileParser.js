@@ -1,12 +1,10 @@
-import React, { Component } from 'react';
-import Dropzone from 'react-dropzone';
+import React, { Component }  from 'react';
+import {useDropzone} from 'react-dropzone';
+import styled from 'styled-components';
 
 
 import EpubParser from '../EpubParser/EpubParser';
 import PDFParser from '../PDFParser/PDFParser';
-
-// TODO remove these styles?
-import defaultStyles from './style';
 
 import './FileParser.css';
 
@@ -18,22 +16,82 @@ const allowedFiletypes = [PDFTYPE];
 
 let ctx = {};
 
-// global.ePub = Epub; // Fix for v3 branch of epub.js -> needs ePub to by a global var
 
-// TODO ADD PROCESSING INFO FOR SLOW / LARGER BOOKS ?
+const getColor = (props) => {
+  if (props.isDragAccept) {
+      return '#00e676';
+  }
+  if (props.isDragReject) {
+      return '#ff1744';
+  }
+  if (props.isDragActive) {
+      return '#2196f3';
+  }
+  return '#eeeeee';
+}
+
+const Container = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-width: 2px;
+  border-radius: 2px;
+  border-color: ${props => getColor(props)};
+  border-style: dashed;
+  background-color: #fafafa;
+  color: #bdbdbd;
+  outline: none;
+  transition: border .24s ease-in-out;
+`;
+
+function StyledDropzone(props) {
+
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    isDragAccept,
+    isDragReject
+  } = useDropzone(props);
+  
+  return (
+    <div className="container">
+      <Container {...getRootProps({isDragActive, isDragAccept, isDragReject})}>
+        <input {...getInputProps()} />
+        <p>Drag 'n' drop some files here, or click to select files</p>
+      </Container>
+    </div>
+  );
+}
+
+
+
 class FileParser extends Component {
   constructor(props) {
     super(props);
 
     ctx = this;
 
+    // let pageNumber = typeof(this.props.pageNumber) !== typeof(undefined) && typeof(this.props.pageNumber) !== typeof(null) ? this.props.pageNumber : 0;
+    let pageNumber = 0;
+
+    this.setPage = this.setPage.bind(this);
+    this.updateSettings = this.updateSettings.bind(this);
+    this.turnToPage = this.turnToPage.bind(this);
+
     this.state = {
       fileLoaded: false,
       currentFile: undefined,
       updateCallback: this.props.updateCallback,
-      verbose: this.props.verbose
+      verbose: this.props.verbose,
+      pageNumber: pageNumber,
+      pages: [],
     };
 
+
+    /* TODO move this out of hte file Parser Constructor */
     this.onDrop = files => {
       this.setState({
         fileLoaded: false,
@@ -42,108 +100,136 @@ class FileParser extends Component {
 
       const file = files[0];
 
-      if (ctx.state.verbose) {
-        console.log('FILEPARSER FILE:', file);
-      }
-
       const fUrl = URL.createObjectURL(file);
-
-      if (ctx.state.verbose) {
-        console.log('FILEPARSER FILE URL:', fUrl);
-      }
-
-      // TODO update callback with text from page
 
       this.setState({
         fileLoaded: true,
         currentFile: file,
-        currentFileUrl: fUrl
+        currentFileUrl: fUrl,
       });
     };
 
-    this.state = {
-      files: []
-    };
   }
 
   componentWillReceiveProps({ someProp }) {
     this.setState({ ...this.state, someProp });
   }
 
-  render() {
-    // TODO trim these out?
-    const {
-      url,
-      title,
-      showToc,
-      loadingView,
-      epubOptions,
-      styles,
-      getRendition,
-      locationChanged,
-      location,
-      swipeable
-    } = this.props;
+  /*
+    Callback function that takes a settings object from child and updates duplicate keys in object state
+  */
+  updateSettings(newSettings) {
+    this.setState(newSettings, () => {
+      this.turnToPage(this.state.pageNumber);
+    })
+  }
 
-    const files = this.state.files.map(file => (
-      <li key={file.name}>
-        {file.name} - {file.size} bytes
-      </li>
-    ));
+
+  // allows a user to dynamically set a page number 
+  setPage(e) {
+    let num = parseInt(e.target.value) ? parseInt(e.target.value) : '';
+
+    this.turnToPage(num);
+  }
+
+  turnToPage(num){
+    if (num === '' || isNaN(num) || num >= ctx.state.pages.length || num < 0){ return; }; 
+
+    const content = ctx.state.pages[num]; 
+
+    this.setState({pageNumber: num}, () => {
+      // use callback and write new content. 
+      ctx.props.updateCallback({
+        content: content,
+      })
+    })
+  }
+
+
+  render() {
 
     return (
       <div className="FileParser-canvas">
-        <Dropzone onDrop={this.onDrop} accept={allowedFiletypes}>
-          {({ getRootProps, getInputProps }) => (
-            <section className="container">
-              <div {...getRootProps({ className: 'dropzone' })}>
-                <input {...getInputProps()} />
-                <p>Drag 'n' drop some files here, or click to select files</p>
-              </div>
 
-              <aside>
-                <h4>File</h4>
-                <ul>{files}</ul>
-              </aside>
-            </section>
-          )}
-        </Dropzone>
+        <StyledDropzone 
+          className="UploadBox" 
+          onDrop={this.onDrop} 
+          accept={allowedFiletypes}
+        />
+        
+        {/* 
+        <aside>
+        {
+          (this.state.currentFile !== undefined) ?  <div><h4>File</h4><ul>{this.state.currentFile.name}</ul></div> : <span></span>
+        }                
+        </aside>
+        */}
 
         {this.state.fileLoaded && this.state.currentFile.type === EPUBTYPE ? (
+
           // render epub view!
 
-          <EpubParser
-            className="false"
-            file={this.state.currentFile}
-            // epub parser
-            ref={this.readerRef}
-            url={this.state.currentFileUrl}
-            location={location}
-            loadingView={loadingView}
-            tocChanged={this.onTocChange}
-            locationChanged={locationChanged}
-            epubOptions={{}}
-            getRendition={getRendition}
-            verbose={true} // TODO set back to normal.
-          />
+            <EpubParser
+              className=""
+              file={this.state.currentFile}
+              ref={this.readerRef}
+              url={this.state.currentFileUrl}
+              tocChanged={this.onTocChange}
+              epubOptions={{}}
+              verbose={this.props.verbose} // TODO set back to normal.
+            />
+
         ) : (
           // else
           <span></span>
         )}
 
-        {this.state.fileLoaded && this.state.currentFile.type === PDFTYPE ? (
+        { this.state.fileLoaded && this.state.currentFile.type === PDFTYPE ? (
           // render PDF text!
+          <div> 
 
-          <PDFParser
-            className="false"
-            file={this.state.currentFile}
-            ref={this.readerRef}
-            url={this.state.currentFileUrl}
-            updateCallback={this.props.updateCallback}
-            // verbose={this.props.verbose}
-            verbose={true}
-          />
+            <PDFParser
+              className="false"
+              file={this.state.currentFile}
+              ref={this.readerRef}
+              url={this.state.currentFileUrl}
+              // pageNumber={this.state.pageNumber}
+              updateCallback={this.updateSettings}
+              verbose={this.props.verbose}
+            />
+
+            
+          </div>
         ) : (
+          // else
+          <span></span>
+        )}
+
+        {this.state.fileLoaded ? (  
+
+          <div style={{'display': 'inline-block'}}> 
+            
+            <div 
+              className="arrow prev"
+              onClick={()=>{ this.turnToPage(ctx.state.pageNumber - 1)}}
+            >
+              ‹
+            </div>
+
+            <p> 
+            Page : {this.state.pageNumber}
+            </p> 
+            
+            <div
+              className="arrow next"
+              onClick={()=>{ this.turnToPage(ctx.state.pageNumber + 1)}}
+            >
+              › 
+            </div>
+
+          </div>
+
+          )  : (
           // else
           <span></span>
         )}

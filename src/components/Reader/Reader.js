@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import LoadingBar from 'react-top-loading-bar';
 
 import {
   Editor,
@@ -6,22 +7,14 @@ import {
   ContentState,
   Modifier,
   RichUtils
-  //SelectionState,
-  // convertFromHTML,
 } from 'draft-js';
 
-// import {useRef, useEffect} from 'react';
-import diff from 'deep-diff'
-
-import './Reader.css';
-// import '../Editor/Editor.css';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
-// import SettingsPanel from '../SettingsPanel/SettingsPanel';
-
-import LoadingBar from 'react-top-loading-bar';
 
 import * as CONSTANTS from '../constants';
+
+import './Reader.css';
 
 const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 
@@ -55,6 +48,7 @@ class Reader extends Component {
     this.onEditorChange = this.onEditorChange.bind(this);
     this.highlightSelection = this.highlightSelection.bind(this);
     this.setGradient = this.setGradient.bind(this);
+
 
     this.state = {
       index: 0,
@@ -92,12 +86,12 @@ class Reader extends Component {
     this.setState(props, this.propHandler);
   }
 
-  // required function for draftjs
+  // required function for draft.js
   setEditor = editor => {
     this.editor = editor;
   };
 
-  // change handler for drafjs, this strips out all the styles from the content and applies the new editor state.
+  // change handler for draftjs, this strips out all the styles from the content and applies the new editor state.
   onEditorChange = function(editorState) {
     let text = '';
 
@@ -114,6 +108,7 @@ class Reader extends Component {
     let textEdited = editorText !== this.state.bodyText;
 
     if (textEdited) {
+
       if (ctx.state.verbose) {
         console.log('no text change from editor');
       }
@@ -125,7 +120,6 @@ class Reader extends Component {
     // pass text along to content handler.
     this.contentHandler(text);
 
-    // not sure why this works but whatever.
     this.setState({
       editorState: editorState
     });
@@ -138,7 +132,7 @@ class Reader extends Component {
   // handler function for text pasted
   contentHandler(text, override) {
     if (ctx.state.verbose) {
-      console.log('CONTENT HANDLER');
+      console.log('CONTENT HANDLER RECEIVED TEXT: ', text);
     }
 
     if (text === this.state.bodyText && override !== true) {
@@ -156,12 +150,10 @@ class Reader extends Component {
     });
   }
 
-  // TODO combine processCorpus and contentHandler
   // processes a new text sample and updates the state objects
   processCorpus(text) {
     if (ctx.state.verbose) {
       console.log('PARSING TEXT : ', text.substring(0, 20), '...');
-
       console.log('SPEED ON PROCESSCORPUS: ', this.state.readingSpeed);
     }
 
@@ -169,8 +161,8 @@ class Reader extends Component {
 
     this.setState({
       bodyText: text,
-      corpusArr: arr
-    });
+      corpusArr: arr, 
+    }, this.reset);
   }
 
   hyphenate(word) {
@@ -178,20 +170,25 @@ class Reader extends Component {
     let len = word.length;
 
     // TODO idfk why I can't tear this disgusting thing apart without it breaking
+     
     ret =
       len < MAX_DISPLAY_SIZE
         ? word
         : len < 11
         ? word.slice(0, len - 3) + '- ' + word.slice(len - 3)
         : word.slice(0, 7) + '- ' + this.hyphenate(word.slice(7));
-
-    // if (len >= 7 && len < 11) {
-    // ret = word.slice(0, len - 3) + '- ' + word.slice(len - 3)
-    // }
-
-    // if (len > 11) {
-    // ret = word.slice(0, 7) + '- ' + hyphenate(word.slice(7))
-    // }
+  
+    /* 
+    if(len < MAX_DISPLAY_SIZE) {
+      ret = word;
+    } else {
+      if (len < 11) {
+        word = word.slice(0, len - 3) + '- ' + word.slice(len - 3);
+      } else {
+        word = word.slice(0, 7) + '- ' + ctx.hyphenate(word.slice(7));
+      }
+    }
+    */
 
     return ret;
   }
@@ -217,10 +214,6 @@ class Reader extends Component {
 
     if (typeof this.state !== typeof undefined) {
       speed = Number(this.props.readingSpeed);
-
-      if (ctx.state.verbose) {
-        console.log('SPEED IS : ', speed);
-      }
     }
 
     let t = 60000 / speed;
@@ -422,12 +415,6 @@ class Reader extends Component {
     });
   }
 
-  // TODO remove this?
-  /*
-  onLoaderFinished = () => {
-    this.setState({ loadingBarProgress: 0 });
-  };
-  */
 
   render() {
     // TODO Move some of this out of here and into CSS classes?
@@ -448,6 +435,11 @@ class Reader extends Component {
         WebkitBackgroundClip: 'text',
         BackgroundClip: 'text',
         WebkitTextFillColor: 'transparent'
+      },
+
+      current: {
+        fontWeight: 'bold',
+        fontSize: '1.5em',
       }
     };
 
@@ -527,8 +519,8 @@ class Reader extends Component {
         <LoadingBar
           progress={(this.state.index / this.state.corpusArr.length) * 100}
           height={3}
-          color="red"
-          // background={this.colorStyleMap.gradient.background}
+          // color="red"
+          background={this.colorStyleMap.gradient.background}
         />
 
         <div className="editor" onClick={this.focusEditor}>

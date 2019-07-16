@@ -36,7 +36,8 @@ class SettingsPanel extends Component {
     this.state = {
       readingSpeed: Number(this.props.readingSpeed),
       baseColorStop: String(this.props.baseColorStop),
-      finalColorStop: String(this.props.finalColorStop)
+      finalColorStop: String(this.props.finalColorStop),
+      settingsEnabled: Boolean(this.props.settingsEnabled),
     };
   }
 
@@ -105,6 +106,22 @@ class SettingsPanel extends Component {
                 defaultValue={this.state.finalColorStop}
               />
             </fieldset>
+
+
+            {/*
+            <fieldset className="form-group">
+              <label>Scrolling </label>
+              <input 
+                type="checkbox"
+                className="form-control"
+                name="scrollingEnabled"
+                // placeholder={this.state.scrollingEnabled}
+                defaultValue={this.state.scrollingEnabled}
+                 this.state.scrollingEnabled ? checked : '' 
+              />
+            </fieldset>
+            */}
+
           </SettingsPage>
 
           <br />

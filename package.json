@@ -62,6 +62,7 @@
     "resolve": "1.10.0",
     "sass-loader": "^7.1.0",
     "style-loader": "0.23.1",
+    "styled-components": "^4.3.2",
     "terser-webpack-plugin": "1.2.3",
     "ts-pnp": "1.1.2",
     "typescript": "^3.5.3",
@@ -154,7 +155,5 @@
       "react-app"
     ]
   },
-  "devDependencies": {
-    "deep-diff": "^1.0.2"
-  }
+  "devDependencies": {}
 }

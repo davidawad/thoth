@@ -1,5 +1,6 @@
 .Reader {
-  width: 600px;
+  /* width: 600px; */
+  width: 100%;
   margin: 0 auto;
   font-family: Courier;
   margin: 0;
@@ -20,7 +21,6 @@
 .Reader-word-content {
   /* overflow:auto; */
   padding: 20px;
-
   width: 600px;
   height: 350px;
   border: 1px solid;
@@ -33,10 +33,6 @@
 * styles all text in the v tag to be red.
 * This is a horrible way to do this.
 */
-.red {
-  color: red;
-}
-
 .public-DraftEditor-content {
   max-height: 350px;
   overflow: auto;
@@ -44,6 +40,10 @@
 
 .center {
   text-align: center;
+}
+
+.red {
+  color: red;
 }
 
 .editor {
@@ -64,51 +64,3 @@
   font-weight: bold;
   color: 'rgba(180, 180, 0, 1.0)';
 }
-
-/*
-DraftEditorBlock {
-  color: red;
-}
-*/
-
-/* adding gradients */
-
-/* linear-gradient(direction, color-stop1, color-stop2, ...); */
-
-/* background: -webkit-linear-gradient(#00AD00, #0077AD); */
-
-/*
-.EditorRoot,
-.public-DraftStyleDefault-block,
-.public-DraftStyleDefault-ltr {
-
-  background: rgb(2,0,36); 
-  background: linear-gradient(90deg, rgba(2,0,36,1) 0%, #00AD00 50%, #0077AD 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-
-}
-*/
-
-/* white-space: pre-line; 
-  display: inline-block;
-  */
-
-/*
-.EditorRoot,
-.public-DraftStyleDefault-block,
-.public-DraftStyleDefault-ltr::first-letter {
-
-  color: red !important; 
-}
-
-
-.grad {
-  
-  background: linear-gradient(90deg, rgba(2,0,36,1) 0%, #00AD00 50%, #0077AD 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-} 
-*/
