@@ -5,6 +5,10 @@ export const SPACE_KEY = 32; // key code for space bar
 export const PLAYPAUSE_KEY = SPACE_KEY; // key code for play/pause, space bar by default.
 export const START_COLOR = '#FF0000';
 export const STOP_COLOR = '#0000FF';
+export const DEFAULT_AGE = 12;
+export const MIN_AGE = 5;
+export const MAX_AGE = 22;
+export const AGE_SCALE = 6;
 export const INTRO_TEXT = `Hello! 
 
 This is Thoth, an open source speed reading tool inspired by Zethos and Spritz ($3.5mil series A).

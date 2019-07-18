@@ -20,6 +20,8 @@ const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
 let scrollingEnabled = DEBUG ? false : true;
 scrollingEnabled = false;
 
+let age = CONSTANTS.DEFAULT_AGE;
+
 const verbose = DEBUG ? true : false;
 
 
@@ -36,6 +38,7 @@ class App extends Component {
       baseColorStop: START_COLOR,
       finalColorStop: STOP_COLOR,
       scrollingEnabled: scrollingEnabled,
+      age : age, 
       verbose: verbose
     };
   }

@@ -9,10 +9,16 @@ import {
   RichUtils
 } from 'draft-js';
 
-import PlaybackHead from '../PlaybackHead/PlaybackHead';
-import DisplayReel from '../DisplayReel';
+import daleChall from 'dale-chall';
+import spache from 'spache';
+
 
 import * as CONSTANTS from '../constants';
+
+import TextParsingTools from '../TextParsingTools';
+import utils from '../utils';
+import PlaybackHead from '../PlaybackHead/PlaybackHead';
+import DisplayReel from '../DisplayReel';
 
 import './Reader.css';
 
@@ -22,7 +28,11 @@ let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm
 let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
-let DEBUG = process.env.NODE_ENV === 'development';
+
+const MAX_AGE = CONSTANTS.MAX_AGE;
+const DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
+
+const UNICODE_WHITESPACE = '\u00a0';
 
 let ctx = {};
 
@@ -40,6 +50,7 @@ class Reader extends Component {
     this.contentHandler = this.contentHandler.bind(this);
     this.propHandler = this.propHandler.bind(this);
     this.processCorpus = this.processCorpus.bind(this);
+    // this.corpusStats = this.corpusStats.bind(this);
     this.parse = this.parse.bind(this);
     this.hyphenate = this.hyphenate.bind(this);
     this.timingBelt = this.timingBelt.bind(this);
@@ -58,7 +69,7 @@ class Reader extends Component {
         ContentState.createFromText(this.props.content)
       ),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
-      corpusArr: this.parse(this.props.content),
+      tape: this.parse(this.props.content),
       readingSpeed: READING_SPEED,
       enableSurroundingReels: true,
       displaySurroundingReels: true,
@@ -77,9 +88,60 @@ class Reader extends Component {
       finalColorStop:
         typeof this.props.finalColorStop !== typeof undefined
           ? this.props.finalColorStop
-          : '#0077AD'
+          : '#0077AD', 
+
+      measurements : {},
+      ageEstimate : DEFAULT_AGE,
     };
   }
+
+
+  corpusStats(text) {
+
+    const scores = TextParsingTools.generateTextScores(text);
+
+    // console.log("READABILITY SCORES: ", scores )
+
+    let res = 0;
+    let total = 0;
+    let numEntries = 0;
+
+    for (let key in scores) {
+      
+      const val = scores[key]; 
+
+      if (isFinite(val)) {  
+        numEntries ++;
+        total += val;
+      } 
+
+    }
+
+    const agePredictionMode = 'avg'; 
+
+    switch (agePredictionMode) {
+      case 'avg':
+        res = total / numEntries;
+        break;
+
+      case 'mean':
+        res = total / numEntries;
+        break;
+
+      default: // avg by default
+        res = total / numEntries;
+        break;
+    }
+
+    const age = res;
+
+    this.setState({
+      measurements:  scores,
+      ageEstimate:   age,
+    }) 
+
+  }
+  
 
   // when parent updates state, this component gets re-rendered
   componentWillReceiveProps(props) {
@@ -99,21 +161,6 @@ class Reader extends Component {
     const editorText = this.state.editorState
       .getCurrentContent()
       .getPlainText();
-
-    // if the current text in the editor isn't the same as the state bodyText, the user just edited it.
-    // if the prop to the component isn't the same as the current body text, it's been edited as well.
-
-    // it's possible for the user to edit the text passed a content prop to this component
-
-    let textEdited = editorText !== this.state.bodyText;
-
-    if (textEdited) {
-
-      if (ctx.state.verbose) {
-        console.log('no text change from editor');
-      }
-      return;
-    }
 
     text = editorText;
 
@@ -136,7 +183,9 @@ class Reader extends Component {
     }
 
     if (text === this.state.bodyText && override !== true) {
-      console.log('Content handler given Same Text as existing. Skipping');
+      if (ctx.state.verbose) {
+        console.log('Content handler given Same Text as existing. Skipping');
+      }
       return;
     }
 
@@ -152,16 +201,19 @@ class Reader extends Component {
 
   // processes a new text sample and updates the state objects
   processCorpus(text) {
+
     if (ctx.state.verbose) {
       console.log('PARSING TEXT : ', text.substring(0, 20), '...');
       console.log('SPEED ON PROCESSCORPUS: ', this.state.readingSpeed);
     }
 
+    this.corpusStats(text);
+
     let arr = this.parse(text);
 
     this.setState({
       bodyText: text,
-      corpusArr: arr, 
+      tape: arr, 
     }, this.reset);
   }
 
@@ -170,13 +222,11 @@ class Reader extends Component {
     let len = word.length;
 
     // TODO idfk why I can't tear this disgusting thing apart without it breaking
-     
+    // help wanted LOL. 
     ret =
-      len < MAX_DISPLAY_SIZE
-        ? word
-        : len < 11
-        ? word.slice(0, len - 3) + '- ' + word.slice(len - 3)
-        : word.slice(0, 7) + '- ' + this.hyphenate(word.slice(7));
+      len < MAX_DISPLAY_SIZE ? word
+                             : len < 11 ? word.slice(0, len - 3) + '- ' + word.slice(len - 3)
+                                        : word.slice(0, 7) + '- ' + this.hyphenate(word.slice(7));
   
     /* 
     if(len < MAX_DISPLAY_SIZE) {
@@ -193,8 +243,10 @@ class Reader extends Component {
     return ret;
   }
 
-  timingBelt = function(words, str) {
+  // creates an array of DisplayReel Objects that contain the timing and other information for word display.
+  timingBelt(words, str) {
     let focus;
+    let word = str;
     let len = str.length;
 
     // focus point
@@ -207,8 +259,6 @@ class Reader extends Component {
       }
     }
 
-    // time that this word will be displayed in milliseconds
-    // let t = 60000 / 700;
 
     let speed = READING_SPEED;
 
@@ -216,22 +266,49 @@ class Reader extends Component {
       speed = Number(this.props.readingSpeed);
     }
 
+    // time that this word will be displayed in milliseconds
     let t = 60000 / speed;
 
+    // if t is over lenth of 6, increase time by 1/4th 
     if (len > 6) {
       t += t / 4;
     }
 
+    // if t has a comma, add half time
     if (~str.indexOf(',')) {
       t += t / 2;
     }
 
+    // if t has a question mark / scale up by 1.5 
     if (/[.?!]/.test(str)) {
       t += t * 1.5;
     }
 
+    // if the word is easy according to the spache dictionary
+    // better for younger readers
+    if (TextParsingTools.easyWord(word)) {
+      // pass
+    }
+
+    const wordIsPronoun = (word.charAt(0) === word.charAt(0).toLowerCase()) ? true : false;  
+
+    // if the word is familiar according to the dale-chall dictionary
+    if (!TextParsingTools.familiarWord(word) && !wordIsPronoun) {
+      // if the word isn't familiar give the user extra time.
+      t += t * 1.5 
+    }
+
+    // scale the timing by a factor of the perceived text complexity
+    // 1 + ((18 - 14.6) / 18)
+    if (typeof this.state !== typeof undefined) {
+      const ageWeighting = (1 + (MAX_AGE - Number(ctx.state.ageEstimate)) / MAX_AGE); 
+
+      // t = t * ageWeighting;
+    }
+
     let ret = words.concat([new DisplayReel(str, focus, t)]);
 
+    // TODO I don't think this maximum was chosen scientifically whatsoever 
     if (len > 14 || len - focus > 7) {
       ret = words.concat(this.parse(this.hyphenate(str)));
     }
@@ -255,7 +332,7 @@ class Reader extends Component {
       focusKey: currentContent.getLastBlock().getKey(),
     })
 
-    let forcedEditorState = EditorState.forceSelection(this.state.editorState, selection);
+    EditorState.forceSelection(this.state.editorState, selection);
 
     this.toggleColor('gradient', selection);
   }
@@ -267,7 +344,6 @@ class Reader extends Component {
 
   // Toggles identified styles on the text in question.
   toggleColor(toggledColor, selection) {
-    // let toggledColor = 'gradient';
 
     const { editorState } = this.state;
 
@@ -276,8 +352,7 @@ class Reader extends Component {
     }
 
     // Let's just allow one color at a time. Turn off all active colors.
-    const nextContentState = Object.keys(this.colorStyleMap).reduce(
-      (contentState, color) => {
+    const nextContentState = Object.keys(this.colorStyleMap).reduce((contentState, color) => {
         return Modifier.removeInlineStyle(contentState, selection, color);
       },
       editorState.getCurrentContent()
@@ -309,8 +384,8 @@ class Reader extends Component {
     this.setState({ editorState: nextEditorState });
   }
 
-  // parses a chunk of text into an array of objects that we can use for display
-  parse = function(words) {
+  // parses a chunk of text into an array of DisplayReel objects that we can use for display
+  parse(words) {
     const timingBelt = this.timingBelt;
 
     // strings will be broken out into words
@@ -330,7 +405,7 @@ class Reader extends Component {
   // the "actual" play function.
   // Uses state information and begins rendering words through PlaybackHead
   loop() {
-    let arr = this.state.corpusArr;
+    let arr = this.state.tape;
 
     // are we at the end of the reading
     if (this.state.index === arr.length) {
@@ -397,18 +472,21 @@ class Reader extends Component {
   }
 
   handleKeyUp(event) {
+
     event.preventDefault();
 
     // use the space bar to play / pause reading session.
-    if (event.keyCode === PLAYPAUSE_KEY && !DEBUG) {
-      // toggle play_pause
-      this.playpause();
+    if (event.keyCode === PLAYPAUSE_KEY) {
+      
+      // this.playpause();
     }
+
   }
 
   reset() {
     // pick index 0 and re-display that
-    let reel = this.state.corpusArr[0];
+    let reel = this.state.tape[0];
+
     this.setState({
       index: 0,
       currentReel: reel
@@ -443,24 +521,49 @@ class Reader extends Component {
       }
     };
 
+    // estimate the amount of time it will take to read the entire text on screen
+    let totalTimeEstimate = 0; 
+    
+    // compute total display time for the text
+    this.state.tape.forEach((reel)=>{
+      totalTimeEstimate += reel.displayTime ; 
+    })
+
+    let remainingTimeEstimate = 0;
+
+    // compute remaining display time for the text
+    this.state.tape.slice(this.state.index).forEach((reel)=>{
+      remainingTimeEstimate += reel.displayTime ; 
+    })
+    
+
+    // convert to seconds
+    totalTimeEstimate /= 1000; 
+    remainingTimeEstimate /= 1000; 
+
+
     let prevWord =
-      typeof this.state.corpusArr[this.state.index - 2] !== typeof undefined
-        ? this.state.corpusArr[this.state.index - 2].text
+      typeof this.state.tape[this.state.index - 2] !== typeof undefined
+        ? this.state.tape[this.state.index - 2].text
         : '';
+
+    let postInd = (this.state.index === 0) ? 1 : this.state.index; 
+
     let postWord =
-      typeof this.state.corpusArr[this.state.index] !== typeof undefined
-        ? this.state.corpusArr[this.state.index].text
+      typeof this.state.tape[postInd] !== typeof undefined
+        ? this.state.tape[postInd].text
         : '';
 
     let preNumSpaces =
       typeof prevWord !== typeof undefined
         ? Math.max(LARGEST_WORD_SIZE - prevWord.length, 0)
         : 0;
+
     // let postNumSpaces  = typeof(postWord) !== typeof(undefined) ? LARGEST_WORD_SIZE - postWord.length : 0;
 
     // add white spaces
-    let preWsp = Array(preNumSpaces).join('\u00a0');
-    // let postWsp = Array(postNumSpaces).join("\u00a0");
+    let preWsp = Array(preNumSpaces).join(UNICODE_WHITESPACE);
+    // let postWsp = Array(postNumSpaces).join(UNICODE_WHITESPACE);
 
     // scrolling text on render
     if (!this.state.paused && this.state.scrollingEnabled) {
@@ -482,25 +585,36 @@ class Reader extends Component {
       <div className="Reader" onKeyUp={this.handleKeyUp}>
         <div className="">
           {this.state.enableSurroundingReels &&
-          this.state.displaySurroundingReels ? (
-            <span className="readerSurroundingWord">
-              {preWsp}
-              {prevWord}
-            </span>
+
+            this.state.displaySurroundingReels ? (
+
+              <span className="readerSurroundingWord">
+                {preWsp}
+                {prevWord}
+              </span>
+
           ) : (
-            <span>{Array(LARGEST_WORD_SIZE).join('\u00a0')}</span>
+            <span>{Array(LARGEST_WORD_SIZE).join(UNICODE_WHITESPACE)}</span>
           )}
+
           {/* single space after pre-word */}
-          <span className="readerSurroundingWord">{'\u00a0'}</span>
+
+          <span className="readerSurroundingWord">{UNICODE_WHITESPACE}</span>
+
+
           <PlaybackHead currentReel={this.state.currentReel} />
+
           {/* single space before post-word */}
-          <span className="readerSurroundingWord">{'\u00a0'}</span>
+            <span className="readerSurroundingWord">{UNICODE_WHITESPACE}</span>
+
           {this.state.enableSurroundingReels &&
-          this.state.displaySurroundingReels ? (
-            <span className="readerSurroundingWord">{postWord}</span>
-          ) : (
-            <span></span>
-          )}
+            this.state.displaySurroundingReels ? (
+              <span className="readerSurroundingWord">{postWord}</span>
+            ) : (
+              <span></span>
+            )}
+
+
           <br />
           <br />
           <button onClick={this.play}>Play</button>
@@ -517,7 +631,7 @@ class Reader extends Component {
         <br />
 
         <LoadingBar
-          progress={(this.state.index / this.state.corpusArr.length) * 100}
+          progress={(this.state.index / this.state.tape.length) * 100}
           height={3}
           // color="red"
           background={this.colorStyleMap.gradient.background}
@@ -525,21 +639,24 @@ class Reader extends Component {
 
         <div className="editor" onClick={this.focusEditor}>
           <Editor
-            // className={"EditorRoot " + (this.state.paused ? "" : ' ReaderScroll') }
             ref={this.setEditor}
             editorState={this.state.editorState}
             onChange={this.onEditorChange}
-            // onPaste={this.onEditorPaste}
             placeholder="Place your text content in here and press the play button!"
             enableLineBreak={true}
             spellcheck={false}
-            showUndoControl={true}
-            showRedoControl={true}
             stripPastedStyles={true}
             readOnly={!this.state.paused}
             customStyleMap={this.colorStyleMap}
           />
         </div>
+
+        <p> Age Estimate : { this.state.ageEstimate } </p> 
+        <p> Reading : { this.state.index } / { this.state.tape.length } </p> 
+        <p> { utils.roundToPrecision(totalTimeEstimate - remainingTimeEstimate, 0.01) } / { utils.roundToPrecision(totalTimeEstimate, 0.01) } seconds. </p> 
+        
+
+
       </div>
     );
   }

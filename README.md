@@ -67,14 +67,20 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/de
 This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
 
 
-## notes on dockerfile :
+### notes on dockerfile :
 
 https://medium.com/@shakyShane/lets-talk-about-docker-artifacts-27454560384f
 
 
-## Images used with attribution from freepik
+### Images used with attribution from freepik
 
 https://www.freepik.com/free-vector/egypt-symbols-gods-collection_2857150.htm
+
+
+## Related Projects
+*   [write-music](https://github.com/wooorm/write-music)
+*   [common-words](https://github.com/wooorm/common-words)
+*   [short-words](https://github.com/wooorm/short-words)
 
 
 MIT © David Awad

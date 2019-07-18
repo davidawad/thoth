@@ -13,8 +13,9 @@ import './SettingsPanel.css';
 import * as CONSTANTS from '../constants';
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
-let START_COLOR = CONSTANTS.START_COLOR;
-let STOP_COLOR = CONSTANTS.STOP_COLOR;
+let START_COLOR   = CONSTANTS.START_COLOR;
+let STOP_COLOR    = CONSTANTS.STOP_COLOR;
+let DEFAULT_AGE   = CONSTANTS.DEFAULT_AGE;
 
 // let defaults = new Settings();
 
@@ -38,6 +39,7 @@ class SettingsPanel extends Component {
       baseColorStop: String(this.props.baseColorStop),
       finalColorStop: String(this.props.finalColorStop),
       settingsEnabled: Boolean(this.props.settingsEnabled),
+      age: Number(this.props.age),
     };
   }
 
@@ -106,6 +108,17 @@ class SettingsPanel extends Component {
                 defaultValue={this.state.finalColorStop}
               />
             </fieldset>
+
+            <fieldset className="form-group">
+              <label>Age: </label>
+              <input
+                className="form-control"
+                name="age"
+                placeholder={DEFAULT_AGE}
+                defaultValue={this.props.age}
+              />
+            </fieldset>
+            
 
 
             {/*
