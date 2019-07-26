@@ -9,6 +9,7 @@ import * as CONSTANTS from './components/constants';
 import './App.css';
 
 let DEBUG = process.env.NODE_ENV === 'development';
+DEBUG = false;
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 let START_COLOR = CONSTANTS.START_COLOR;
@@ -17,8 +18,12 @@ let STOP_COLOR = CONSTANTS.STOP_COLOR;
 // if debugging is enabled, use larger corpus and disable scrolling.
 const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
 let scrollingEnabled = DEBUG ? false : true;
+scrollingEnabled = false;
+
+let age = CONSTANTS.DEFAULT_AGE;
 
 const verbose = DEBUG ? true : false;
+
 
 class App extends Component {
   constructor(props) {
@@ -33,6 +38,7 @@ class App extends Component {
       baseColorStop: START_COLOR,
       finalColorStop: STOP_COLOR,
       scrollingEnabled: scrollingEnabled,
+      age : age, 
       verbose: verbose
     };
   }
@@ -40,7 +46,6 @@ class App extends Component {
   /*
     Callback function that takes a settings object from child and updates duplicate keys in object state
   */
-
   updateSettings(newSettings) {
     this.setState(newSettings);
   }
@@ -59,6 +64,7 @@ class App extends Component {
 
           <br />
 
+          {/* File Parser so we can add content to the Reader. */}
           <FileParser
             className="App-FileParser"
             updateCallback={this.updateSettings}

@@ -8,9 +8,6 @@ import PDFJS from 'pdfjs-dist';
 
 PDFJS.GlobalWorkerOptions.workerPort = new PDFJSWorker();
 
-// nice delimeter between page contents.
-const DELIMETER = '\n\n' 
-
 let ctx = {};
 
 class PDFParser extends Component {
@@ -24,6 +21,12 @@ class PDFParser extends Component {
 
     ctx = this;
 
+    // if we get a pageNumber then let's do that.
+    let pageNumber = 0;
+    if (typeof(this.props.pageNumber) !== typeof(undefined)) {
+      pageNumber = this.props.pageNumber;
+    }
+
     this.state = {
       currentFile: currFile,
       bookLoaded: false,
@@ -31,20 +34,18 @@ class PDFParser extends Component {
       content: '',
       complete: false,
       fileName: 'PDF LOADING . . .',
-      verbose: this.props.verbose
+      verbose: this.props.verbose,
+      pageNumber: pageNumber, 
+      pages : [], // array of page text content
     };
   }
 
   componentDidMount() {
-    var reader = new FileReader();
+    const reader = new FileReader();
 
     reader.onload = this.openBook;
 
-    let inputFile = this.props.file;
-
-    // console.log("INPUT FILE : ", inputFile);
-
-    reader.readAsArrayBuffer(inputFile);
+    reader.readAsArrayBuffer(this.props.file);
   }
 
   openBook(e) {
@@ -52,6 +53,11 @@ class PDFParser extends Component {
 
     var bookData = e.target.result;
     var loadingTask = PDFJS.getDocument(bookData);
+
+    // reset bookLoaded as we now want to load a new book
+    this.setState({
+      bookLoaded: false
+    })
 
     // buffer of text from all pages
     let pagesText = [];
@@ -126,30 +132,23 @@ class PDFParser extends Component {
         return lastPromise;
       })
 
-      .then(
-        function() {
+      .then(function() {
           if (ctx.state.verbose) {
             console.log('# End of Document');
-
-            console.log('ALL PAGE TEXT : ', pagesText.join(' '));
-
-            // we now have all page text, let's now pass it back up as initialContent to the
+            console.log('ALL PAGE TEXT : ', pagesText.join(' ')); 
           }
 
-          ctx.props.updateCallback(
-            {
-              content: pagesText.join(DELIMETER)
-            },
-            function() {
-              if (ctx.state.verbose) {
-                console.log('state updated with new page text');
-              }
+          // we now have all page text, let's now add it to component state
+          ctx.setState({
+            bookLoaded: true,
+            pages: pagesText, 
+            pageNumber: 0,
 
-              this.setState({
-                bookLoaded: true
-              });
-            }
-          );
+          }, () => {
+            ctx.props.updateCallback({
+              pages: ctx.state.pages
+            })
+          });
         },
         function(err) {
           console.error('Error: ' + err);
@@ -159,8 +158,7 @@ class PDFParser extends Component {
 
   render() {
     // use empty options to avoid ArrayBuffer urls being treated as options in epub.js
-
-    return <p>{this.props.file.path}</p>;
+    return <p>{ this.state.bookLoaded ?  '' : 'loading . . . ' }</p>;
   }
 }
 

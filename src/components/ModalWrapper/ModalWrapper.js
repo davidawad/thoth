@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import SettingsPanel from '../SettingsPanel/SettingsPanel';
 
+
 import './ModalWrapper.css';
 
 const customStyles = {
@@ -72,11 +73,13 @@ class ModalWrapper extends Component {
           <h2 ref={subtitle => (this.subtitle = subtitle)}>Settings</h2>
 
           {/* pass along the callback to update reader state with new settings */}
+
+          
           <SettingsPanel
             updateCallback={this.props.updateCallback}
             {...this.props}
           />
-
+          
           <div className="closeButtonWrapper">
             <button onClick={this.closeModal}>Close</button>
           </div>
