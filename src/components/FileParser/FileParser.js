@@ -217,7 +217,7 @@ class FileParser extends Component {
             </div>
 
             <p> 
-            Page : {this.state.pageNumber}
+            Page : {this.state.pageNumber} / {  this.state.pages.length  }
             </p> 
             
             <div

@@ -117,6 +117,7 @@ class Reader extends Component {
 
     }
 
+    // TODO add multiple models to a dropdown in the settings
     const agePredictionMode = 'avg'; 
 
     switch (agePredictionMode) {
@@ -301,6 +302,7 @@ class Reader extends Component {
     // scale the timing by a factor of the perceived text complexity
     // 1 + ((18 - 14.6) / 18)
     if (typeof this.state !== typeof undefined) {
+      console.log("AGE: ", Number(ctx.state.ageEstimate))
       const ageWeighting = (1 + (MAX_AGE - Number(ctx.state.ageEstimate)) / MAX_AGE); 
 
       // t = t * ageWeighting;
