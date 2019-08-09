@@ -4,9 +4,12 @@ import Reader from './components/Reader/Reader';
 import ModalWrapper from './components/ModalWrapper/ModalWrapper';
 import FileParser from './components/FileParser/FileParser';
 
+import ReactGA from 'react-ga';
+
 import * as CONSTANTS from './components/constants';
 
 import './App.css';
+
 
 let DEBUG = process.env.NODE_ENV === 'development';
 DEBUG = false;
@@ -24,8 +27,22 @@ let age = CONSTANTS.DEFAULT_AGE;
 
 const verbose = DEBUG ? true : false;
 
+// public anyway.
+const GOOGLE_ANALYTICS_KEY = 'UA-96589312-4';
+
+// const GOOGLE_ANALYTICS_KEY = process.env.THOTH_GA_KEY;
+
+// google analytics activation, doesn't work 
+
+function initializeReactGA() {
+  ReactGA.initialize(GOOGLE_ANALYTICS_KEY);
+  ReactGA.pageview("/home");
+}
+
+
 
 class App extends Component {
+
   constructor(props) {
     super(props);
 
@@ -41,6 +58,10 @@ class App extends Component {
       age : age, 
       verbose: verbose
     };
+
+    // set up our analytics on the first render
+    
+    initializeReactGA();
   }
 
   /*
@@ -55,6 +76,10 @@ class App extends Component {
       TODO take the query parameters from the URL and pass as initial text to the Reader Class using react router?
       https://stackoverflow.com/questions/29852998/getting-query-parameters-from-react-router-hash-fragment
     */
+   // ReactGA.initialize(GOOGLE_ANALYTICS_KEY, { debug: DEBUG });
+   // ReactGA.initialize(GOOGLE_ANALYTICS_KEY);
+
+   
 
     return (
       <div className="App">
@@ -87,6 +112,8 @@ class App extends Component {
             <br /> &copy; {this.state.year}
           </p>
         </footer>
+
+
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import LoadingBar from 'react-top-loading-bar';
+import ReactGA from 'react-ga';
 
 import {
   Editor,
@@ -8,10 +9,6 @@ import {
   Modifier,
   RichUtils
 } from 'draft-js';
-
-import daleChall from 'dale-chall';
-import spache from 'spache';
-
 
 import * as CONSTANTS from '../constants';
 
@@ -27,7 +24,6 @@ const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
-
 
 const MAX_AGE = CONSTANTS.MAX_AGE;
 const DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
@@ -288,13 +284,22 @@ class Reader extends Component {
     // if the word is easy according to the spache dictionary
     // better for younger readers
     if (TextParsingTools.easyWord(word)) {
-      // pass
+      // pass for now
     }
 
     const wordIsPronoun = (word.charAt(0) === word.charAt(0).toLowerCase()) ? true : false;  
 
-    // if the word is familiar according to the dale-chall dictionary
-    if (!TextParsingTools.familiarWord(word) && !wordIsPronoun) {
+    const punctuationStrippedWord = TextParsingTools.stripPunctuation(word).toLowerCase();
+
+    // log out language parsing for word complexity 
+    // console.log("Before : ", TextParsingTools.familiarWord(word), word);
+    // console.log("After : ", TextParsingTools.familiarWord(punctuationStrippedWord), punctuationStrippedWord);
+
+
+    // if the word isn't familiar according to the dale-chall dictionary, 
+    // and is not a pronoun, 
+    // and has a length greater than 2, display it for longer
+    if (!TextParsingTools.familiarWord(punctuationStrippedWord) && !wordIsPronoun && word.length > 2) {
       // if the word isn't familiar give the user extra time.
       t += t * 1.5 
     }
@@ -418,6 +423,12 @@ class Reader extends Component {
         index: 0
       });
 
+
+      ReactGA.event({
+        category: 'User',
+        action: 'User finished reading.'
+      });
+
       return;
     }
 
@@ -443,6 +454,14 @@ class Reader extends Component {
   }
 
   play() {
+
+    // user hit play button
+    ReactGA.event({
+      category: 'User',
+      action: 'Hit Play Button'
+    });
+    
+
     // if paused, unpause and continue playing
     if (this.state.paused) {
       this.setState(
