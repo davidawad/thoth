@@ -10,14 +10,12 @@ See my presentation here for a walkthrough : https://www.youtube.com/watch?v=iyL
 
 Thoth is hosted online @ https://thoth-reader.herokuapp.com/
 
-Research Paper Draft : https://docs.google.com/document/d/10JCUZnvp0sM5dcy7k1r82r99_W0b6Yll5ffNFwZARDE/edit
+This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 
 
 ## Available Scripts
 
-
 The super short version
-
 
 ### `yarn install && yarn start`
 

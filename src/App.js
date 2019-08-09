@@ -82,7 +82,8 @@ class App extends Component {
           <p>
             Thoth is an{' '}
             <a href="https://github.com/davidawad/thoth">open source</a>{' '}
-            research project by <a href="http://davidawad.com">David Awad</a>.
+            <a href="http://arxiv.org/abs/1908.01699"> research project</a> {' '}
+            by <a href="http://davidawad.com">David Awad</a>.
             <br /> &copy; {this.state.year}
           </p>
         </footer>
