@@ -1,34 +1,32 @@
-import React, { Component }  from 'react';
-import {useDropzone} from 'react-dropzone';
-import styled from 'styled-components';
+import React, { Component } from "react";
+import { useDropzone } from "react-dropzone";
+import styled from "styled-components";
 
-
-import EpubParser from '../EpubParser/EpubParser';
+// import EpubParser from '../EpubParser/EpubParser';
 // import PDFParser from '../PDFParser/PDFParser';
 
-import './FileParser.css';
+// import "./FileParser.css";
 
-const PDFTYPE = 'application/pdf';
-const EPUBTYPE = 'application/epub+zip';
+const PDFTYPE = "application/pdf";
+const EPUBTYPE = "application/epub+zip";
 
 // const allowedFiletypes = [PDFTYPE, EPUBTYPE];
 const allowedFiletypes = [PDFTYPE];
 
 let ctx = {};
 
-
 const getColor = (props) => {
   if (props.isDragAccept) {
-      return '#00e676';
+    return "#00e676";
   }
   if (props.isDragReject) {
-      return '#ff1744';
+    return "#ff1744";
   }
   if (props.isDragActive) {
-      return '#2196f3';
+    return "#2196f3";
   }
-  return '#eeeeee';
-}
+  return "#eeeeee";
+};
 
 const Container = styled.div`
   flex: 1;
@@ -38,16 +36,15 @@ const Container = styled.div`
   padding: 20px;
   border-width: 2px;
   border-radius: 2px;
-  border-color: ${props => getColor(props)};
+  border-color: ${(props) => getColor(props)};
   border-style: dashed;
   background-color: #fafafa;
   color: #bdbdbd;
   outline: none;
-  transition: border .24s ease-in-out;
+  transition: border 0.24s ease-in-out;
 `;
 
 function StyledDropzone(props) {
-
   const {
     getRootProps,
     getInputProps,
@@ -58,15 +55,15 @@ function StyledDropzone(props) {
 
   return (
     <div className="container">
-      <Container {...getRootProps({isDragActive, isDragAccept, isDragReject})}>
+      <Container
+        {...getRootProps({ isDragActive, isDragAccept, isDragReject })}
+      >
         <input {...getInputProps()} />
         <p>Drag 'n' drop some files here, or click to select files</p>
       </Container>
     </div>
   );
 }
-
-
 
 class FileParser extends Component {
   constructor(props) {
@@ -87,12 +84,11 @@ class FileParser extends Component {
       updateCallback: this.props.updateCallback,
       verbose: this.props.verbose,
       pageNumber: pageNumber,
-      pages: [],
+      pages: []
     };
 
-
     /* TODO move this out of hte file Parser Constructor */
-    this.onDrop = files => {
+    this.onDrop = (files) => {
       this.setState({
         fileLoaded: false,
         currentFile: undefined
@@ -105,10 +101,9 @@ class FileParser extends Component {
       this.setState({
         fileLoaded: true,
         currentFile: file,
-        currentFileUrl: fUrl,
+        currentFileUrl: fUrl
       });
     };
-
   }
 
   componentWillReceiveProps({ someProp }) {
@@ -121,36 +116,34 @@ class FileParser extends Component {
   updateSettings(newSettings) {
     this.setState(newSettings, () => {
       this.turnToPage(this.state.pageNumber);
-    })
+    });
   }
-
 
   // allows a user to dynamically set a page number
   setPage(e) {
-    let num = parseInt(e.target.value) ? parseInt(e.target.value) : '';
+    let num = parseInt(e.target.value) ? parseInt(e.target.value) : "";
 
     this.turnToPage(num);
   }
 
-  turnToPage(num){
-    if (num === '' || isNaN(num) || num >= ctx.state.pages.length || num < 0){ return; };
+  turnToPage(num) {
+    if (num === "" || isNaN(num) || num >= ctx.state.pages.length || num < 0) {
+      return;
+    }
 
     const content = ctx.state.pages[num];
 
-    this.setState({pageNumber: num}, () => {
+    this.setState({ pageNumber: num }, () => {
       // use callback and write new content.
       ctx.props.updateCallback({
-        content: content,
-      })
-    })
+        content: content
+      });
+    });
   }
 
-
   render() {
-
     return (
       <div className="FileParser-canvas">
-
         <StyledDropzone
           className="UploadBox"
           onDrop={this.onDrop}
@@ -166,28 +159,25 @@ class FileParser extends Component {
         */}
 
         {this.state.fileLoaded && this.state.currentFile.type === EPUBTYPE ? (
-
           // render epub view!
 
-            <EpubParser
-              className=""
-              file={this.state.currentFile}
-              ref={this.readerRef}
-              url={this.state.currentFileUrl}
-              tocChanged={this.onTocChange}
-              epubOptions={{}}
-              verbose={this.props.verbose} // TODO set back to normal.
-            />
-
+          <EpubParser
+            className=""
+            file={this.state.currentFile}
+            ref={this.readerRef}
+            url={this.state.currentFileUrl}
+            tocChanged={this.onTocChange}
+            epubOptions={{}}
+            verbose={this.props.verbose} // TODO set back to normal.
+          />
         ) : (
           // else
           <span></span>
         )}
 
-        { this.state.fileLoaded && this.state.currentFile.type === PDFTYPE ? (
+        {this.state.fileLoaded && this.state.currentFile.type === PDFTYPE ? (
           // render PDF text!
           <div>
-
             <PDFParser
               className="false"
               file={this.state.currentFile}
@@ -197,8 +187,6 @@ class FileParser extends Component {
               updateCallback={this.updateSettings}
               verbose={this.props.verbose}
             />
-
-
           </div>
         ) : (
           // else
@@ -206,30 +194,30 @@ class FileParser extends Component {
         )}
 
         {this.state.fileLoaded ? (
-
-          <div style={{'display': 'inline-block'}}>
-
+          <div style={{ display: "inline-block" }}>
             <div
               className="arrow prev"
-              onClick={()=>{ this.turnToPage(ctx.state.pageNumber - 1)}}
+              onClick={() => {
+                this.turnToPage(ctx.state.pageNumber - 1);
+              }}
             >
               ‹
             </div>
 
             <p>
-            Page : {this.state.pageNumber} / {  this.state.pages.length  }
+              Page : {this.state.pageNumber} / {this.state.pages.length}
             </p>
 
             <div
               className="arrow next"
-              onClick={()=>{ this.turnToPage(ctx.state.pageNumber + 1)}}
+              onClick={() => {
+                this.turnToPage(ctx.state.pageNumber + 1);
+              }}
             >
               ›
             </div>
-
           </div>
-
-          )  : (
+        ) : (
           // else
           <span></span>
         )}

@@ -1,19 +1,18 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 // import ReactDOM from 'react-dom';
-import Modal from 'react-modal';
-import SettingsPanel from '../SettingsPanel/SettingsPanel';
+import Modal from "react-modal";
+import SettingsPanel from "../SettingsPanel/SettingsPanel";
 
-
-import './ModalWrapper.css';
+// import './ModalWrapper.css';
 
 const customStyles = {
   content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)'
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)"
   }
 };
 
@@ -41,7 +40,7 @@ class ModalWrapper extends Component {
 
   afterOpenModal() {
     // references are now sync'd and can be accessed.
-    this.subtitle.style.color = '#f00';
+    this.subtitle.style.color = "#f00";
   }
 
   closeModal() {
@@ -70,16 +69,15 @@ class ModalWrapper extends Component {
           style={customStyles}
           contentLabel="SettingsModal ContentLabel"
         >
-          <h2 ref={subtitle => (this.subtitle = subtitle)}>Settings</h2>
+          <h2 ref={(subtitle) => (this.subtitle = subtitle)}>Settings</h2>
 
           {/* pass along the callback to update reader state with new settings */}
 
-          
           <SettingsPanel
             updateCallback={this.props.updateCallback}
             {...this.props}
           />
-          
+
           <div className="closeButtonWrapper">
             <button onClick={this.closeModal}>Close</button>
           </div>

@@ -1,21 +1,21 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // TODO remove this jank settings pane that doesn't work.
 import {
   SettingsPane,
   SettingsPage,
   SettingsContent
-} from 'react-settings-pane';
+} from "react-settings-pane";
 
-import './SettingsPanel.css';
+// import './SettingsPanel.css';
 // import Settings from '../Settings'
 
-import * as CONSTANTS from '../constants';
+import * as CONSTANTS from "../constants";
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
-let START_COLOR   = CONSTANTS.START_COLOR;
-let STOP_COLOR    = CONSTANTS.STOP_COLOR;
-let DEFAULT_AGE   = CONSTANTS.DEFAULT_AGE;
+let START_COLOR = CONSTANTS.START_COLOR;
+let STOP_COLOR = CONSTANTS.STOP_COLOR;
+let DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
 
 // let defaults = new Settings();
 
@@ -25,8 +25,8 @@ let settings = {};
 // Define your menu
 const menu = [
   {
-    title: 'Settings', // Title that is displayed as text in the menu
-    url: '/settings' // Identifier (url-slug)
+    title: "Settings", // Title that is displayed as text in the menu
+    url: "/settings" // Identifier (url-slug)
   }
 ];
 
@@ -39,7 +39,7 @@ class SettingsPanel extends Component {
       baseColorStop: String(this.props.baseColorStop),
       finalColorStop: String(this.props.finalColorStop),
       settingsEnabled: Boolean(this.props.settingsEnabled),
-      age: Number(this.props.age),
+      age: Number(this.props.age)
     };
   }
 
@@ -51,8 +51,8 @@ class SettingsPanel extends Component {
       // do something with the settings, e.g. save via ajax.
 
       // save our settings after they've been changed.
-      this.props.updateCallback(newSettings, function() {
-        console.log('state updated with : ', newSettings);
+      this.props.updateCallback(newSettings, function () {
+        console.log("state updated with : ", newSettings);
       });
     }
   };
@@ -84,7 +84,7 @@ class SettingsPanel extends Component {
               <input
                 className="form-control"
                 name="readingSpeed"
-                placeholder={String(READING_SPEED) + ' Words Per Minute (WPM)'}
+                placeholder={String(READING_SPEED) + " Words Per Minute (WPM)"}
                 defaultValue={this.state.readingSpeed}
               />
             </fieldset>
@@ -118,23 +118,20 @@ class SettingsPanel extends Component {
                 defaultValue={this.props.age}
               />
             </fieldset>
-            
-
 
             {/*
             <fieldset className="form-group">
               <label>Scrolling </label>
-              <input 
+              <input
                 type="checkbox"
                 className="form-control"
                 name="scrollingEnabled"
                 // placeholder={this.state.scrollingEnabled}
                 defaultValue={this.state.scrollingEnabled}
-                 this.state.scrollingEnabled ? checked : '' 
+                 this.state.scrollingEnabled ? checked : ''
               />
             </fieldset>
             */}
-
           </SettingsPage>
 
           <br />

@@ -47,6 +47,7 @@
     "jest-watch-typeahead": "0.3.0",
     "lint-staged": "^9.2.0",
     "mini-css-extract-plugin": "0.5.0",
+    "next": "^13.0.4",
     "optimize-css-assets-webpack-plugin": "5.0.1",
     "pnp-webpack-plugin": "1.2.1",
     "postcss-flexbugs-fixes": "4.1.0",
@@ -55,14 +56,13 @@
     "postcss-preset-env": "6.6.0",
     "postcss-safe-parser": "4.0.1",
     "prop-types": "^15.7.2",
-    "react": "^16.8.6",
+    "react": "^18.3.0",
     "react-app-polyfill": "^1.0.1",
     "react-dev-utils": "^9.0.1",
-    "react-dom": "^16.8.6",
+    "react-dom": "^18.3.0-next-fecc288b7-20221025",
     "react-dropzone": "^10.1.5",
     "react-ga": "^2.6.0",
     "react-modal": "^3.8.1",
-    "react-scripts": "^3.0.1",
     "react-settings-pane": "^0.1.5",
     "react-top-loading-bar": "^1.0.6",
     "resolve": "1.10.0",
@@ -91,13 +91,10 @@
     ]
   },
   "scripts": {
-    "start": "node --max_old_space_size=1024 scripts/start.js",
-    "build": "node --max_old_space_size=1024 scripts/build.js",
-    "test": "node scripts/test.js",
-    "heroku-postbuild": "react-scripts build"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "browserslist": {
     "production": [
@@ -159,11 +156,6 @@
     "watchPlugins": [
       "jest-watch-typeahead/filename",
       "jest-watch-typeahead/testname"
-    ]
-  },
-  "babel": {
-    "presets": [
-      "react-app"
     ]
   },
   "devDependencies": {}
