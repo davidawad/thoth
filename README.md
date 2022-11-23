@@ -1,24 +1,21 @@
 # Thoth
 
-###  Seek truth, but faster.
-
+### Seek truth, but faster.
 
 Thoth is a speed reading tool that enables you to read PDF's and text selections faster than you otherwise would.
 It contains a bevy of settings and features for customizing your experience.
 
 See my presentation here for a walkthrough : https://www.youtube.com/watch?v=iyLc0WiCYn4
 
-Thoth is hosted online @ https://thoth-reader.herokuapp.com/
+Thoth is hosted online @ https://vercel.com/me-davidawad/thoth
 
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
-
 
 ## Available Scripts
 
 The super short version
 
 ### `yarn install && yarn start`
-
 
 In the project directory, you can run:
 
@@ -45,29 +42,24 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-
 ## Learn More
 
 ### Deployment
 
 This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
 
-
 ### notes on dockerfile :
 
 https://medium.com/@shakyShane/lets-talk-about-docker-artifacts-27454560384f
-
 
 ### Images used with attribution from freepik
 
 https://www.freepik.com/free-vector/egypt-symbols-gods-collection_2857150.htm
 
-
 ## Related Projects
-*   [write-music](https://github.com/wooorm/write-music)
-*   [common-words](https://github.com/wooorm/common-words)
-*   [short-words](https://github.com/wooorm/short-words)
 
+- [write-music](https://github.com/wooorm/write-music)
+- [common-words](https://github.com/wooorm/common-words)
+- [short-words](https://github.com/wooorm/short-words)
 
 MIT © David Awad
-
