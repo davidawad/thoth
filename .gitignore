@@ -2,6 +2,11 @@
 
 .vscode
 
+### NextJS ###
+# Next build dir
+.next/
+
+
 # dependencies
 /node_modules
 /.pnp
