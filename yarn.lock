@@ -8838,7 +8838,7 @@ react@^15.3.1:
     object-assign "^4.1.0"
     prop-types "^15.5.10"
 
-react@^18.3.0:
+react@^18.3.0-next-fecc288b7-20221025:
   version "18.3.0-next-fecc288b7-20221025"
   resolved "https://registry.yarnpkg.com/react/-/react-18.3.0-next-fecc288b7-20221025.tgz#8da77f8c8221bb2761ed817b7638feb108ba791c"
   integrity sha512-lKvCNWRO9XPy8q7hLd0ODK/4Oqr54r3Vr49Y7EyNBz/kfsmNT6Vx0F69KRz/eGcbt1XDvtbA7KZd+mh8w3wONQ==
