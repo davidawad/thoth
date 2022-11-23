@@ -48,8 +48,6 @@
     "lint-staged": "^9.2.0",
     "mini-css-extract-plugin": "0.5.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
-    "pdfjs": "^2.3.0",
-    "pdfjs-dist": "^2.0.943",
     "pnp-webpack-plugin": "1.2.1",
     "postcss-flexbugs-fixes": "4.1.0",
     "postcss-loader": "3.0.0",

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 
 import EpubParser from '../EpubParser/EpubParser';
-import PDFParser from '../PDFParser/PDFParser';
+// import PDFParser from '../PDFParser/PDFParser';
 
 import './FileParser.css';
 
@@ -55,7 +55,7 @@ function StyledDropzone(props) {
     isDragAccept,
     isDragReject
   } = useDropzone(props);
-  
+
   return (
     <div className="container">
       <Container {...getRootProps({isDragActive, isDragAccept, isDragReject})}>
@@ -125,7 +125,7 @@ class FileParser extends Component {
   }
 
 
-  // allows a user to dynamically set a page number 
+  // allows a user to dynamically set a page number
   setPage(e) {
     let num = parseInt(e.target.value) ? parseInt(e.target.value) : '';
 
@@ -133,12 +133,12 @@ class FileParser extends Component {
   }
 
   turnToPage(num){
-    if (num === '' || isNaN(num) || num >= ctx.state.pages.length || num < 0){ return; }; 
+    if (num === '' || isNaN(num) || num >= ctx.state.pages.length || num < 0){ return; };
 
-    const content = ctx.state.pages[num]; 
+    const content = ctx.state.pages[num];
 
     this.setState({pageNumber: num}, () => {
-      // use callback and write new content. 
+      // use callback and write new content.
       ctx.props.updateCallback({
         content: content,
       })
@@ -151,17 +151,17 @@ class FileParser extends Component {
     return (
       <div className="FileParser-canvas">
 
-        <StyledDropzone 
-          className="UploadBox" 
-          onDrop={this.onDrop} 
+        <StyledDropzone
+          className="UploadBox"
+          onDrop={this.onDrop}
           accept={allowedFiletypes}
         />
-        
-        {/* 
+
+        {/*
         <aside>
         {
           (this.state.currentFile !== undefined) ?  <div><h4>File</h4><ul>{this.state.currentFile.name}</ul></div> : <span></span>
-        }                
+        }
         </aside>
         */}
 
@@ -186,7 +186,7 @@ class FileParser extends Component {
 
         { this.state.fileLoaded && this.state.currentFile.type === PDFTYPE ? (
           // render PDF text!
-          <div> 
+          <div>
 
             <PDFParser
               className="false"
@@ -198,33 +198,33 @@ class FileParser extends Component {
               verbose={this.props.verbose}
             />
 
-            
+
           </div>
         ) : (
           // else
           <span></span>
         )}
 
-        {this.state.fileLoaded ? (  
+        {this.state.fileLoaded ? (
 
-          <div style={{'display': 'inline-block'}}> 
-            
-            <div 
+          <div style={{'display': 'inline-block'}}>
+
+            <div
               className="arrow prev"
               onClick={()=>{ this.turnToPage(ctx.state.pageNumber - 1)}}
             >
               ‹
             </div>
 
-            <p> 
+            <p>
             Page : {this.state.pageNumber} / {  this.state.pages.length  }
-            </p> 
-            
+            </p>
+
             <div
               className="arrow next"
               onClick={()=>{ this.turnToPage(ctx.state.pageNumber + 1)}}
             >
-              › 
+              ›
             </div>
 
           </div>
