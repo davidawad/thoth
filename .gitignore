@@ -5,7 +5,7 @@
 ### NextJS ###
 # Next build dir
 .next/
-
+!/build/.gitkeep
 
 # dependencies
 /node_modules
