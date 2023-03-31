@@ -7,7 +7,7 @@ It contains a bevy of settings and features for customizing your experience.
 
 See my presentation here for a walkthrough : https://www.youtube.com/watch?v=iyLc0WiCYn4
 
-Thoth is hosted online @ https://vercel.com/me-davidawad/thoth
+Thoth is hosted online @ https://thoth-david-awad.vercel.app/
 
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 
