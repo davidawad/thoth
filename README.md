@@ -61,4 +61,4 @@ https://www.freepik.com/free-vector/egypt-symbols-gods-collection_2857150.htm
 - [common-words](https://github.com/wooorm/common-words)
 - [short-words](https://github.com/wooorm/short-words)
 
-MIT © David Awad
+MIT Open Source

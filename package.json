@@ -5,6 +5,13 @@
     "node": ">=20.0.0",
     "yarn": ">=1.22.0"
   },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "ci" : "echo \"CI/CD if we had it but this is a hobby project\""
+  },
   "dependencies": {
     "@babel/core": "7.4.3",
     "@typescript-eslint/eslint-plugin": "1.6.0",
@@ -88,12 +95,6 @@
       "prettier --single-quote --write",
       "git add"
     ]
-  },
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
   },
   "browserslist": {
     "production": [
