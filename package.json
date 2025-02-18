@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "ci" : "echo \"CI/CD if we had it but this is a hobby project\""
+    "ci": "echo \"CI/CD if we had it but this is a hobby project\""
   },
   "dependencies": {
     "@babel/core": "7.4.3",
@@ -158,5 +158,6 @@
       "jest-watch-typeahead/testname"
     ]
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }
