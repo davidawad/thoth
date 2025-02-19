@@ -7,7 +7,7 @@ import {
   EditorState,
   ContentState,
   Modifier,
-  RichUtils
+  RichUtils,
 } from "draft-js";
 
 import * as CONSTANTS from "../constants";
@@ -86,7 +86,7 @@ class Reader extends Component {
           : "#0077AD",
 
       measurements: {},
-      ageEstimate: DEFAULT_AGE
+      ageEstimate: DEFAULT_AGE,
     };
   }
 
@@ -129,7 +129,7 @@ class Reader extends Component {
 
     this.setState({
       measurements: scores,
-      ageEstimate: age
+      ageEstimate: age,
     });
   }
 
@@ -158,7 +158,7 @@ class Reader extends Component {
     this.contentHandler(text);
 
     this.setState({
-      editorState: editorState
+      editorState: editorState,
     });
   };
 
@@ -185,7 +185,7 @@ class Reader extends Component {
     this.setState({
       editorState: EditorState.createWithContent(
         ContentState.createFromText(text)
-      )
+      ),
     });
   }
 
@@ -203,7 +203,7 @@ class Reader extends Component {
     this.setState(
       {
         bodyText: text,
-        tape: arr
+        tape: arr,
       },
       this.reset
     );
@@ -336,7 +336,7 @@ class Reader extends Component {
       anchorOffset: 0,
 
       focusOffset: currentContent.getLastBlock().getText().length,
-      focusKey: currentContent.getLastBlock().getKey()
+      focusKey: currentContent.getLastBlock().getKey(),
     });
 
     EditorState.forceSelection(this.state.editorState, selection);
@@ -420,12 +420,12 @@ class Reader extends Component {
 
       this.setState({
         paused: true,
-        index: 0
+        index: 0,
       });
 
       ReactGA.event({
         category: "User",
-        action: "User finished reading."
+        action: "User finished reading.",
       });
 
       return;
@@ -441,7 +441,7 @@ class Reader extends Component {
 
     this.setState({
       currentReel: newReel,
-      index: this.state.index + 1
+      index: this.state.index + 1,
     });
 
     // make recursive call
@@ -456,7 +456,7 @@ class Reader extends Component {
     // user hit play button
     ReactGA.event({
       category: "User",
-      action: "Hit Play Button"
+      action: "Hit Play Button",
     });
 
     // if paused, unpause and continue playing
@@ -464,7 +464,7 @@ class Reader extends Component {
       this.setState(
         {
           paused: false,
-          displaySurroundingReels: false
+          displaySurroundingReels: false,
         },
         () => {
           this.loop();
@@ -476,7 +476,7 @@ class Reader extends Component {
   pause() {
     this.setState({
       paused: true,
-      displaySurroundingReels: true
+      displaySurroundingReels: true,
     });
   }
 
@@ -504,7 +504,7 @@ class Reader extends Component {
 
     this.setState({
       index: 0,
-      currentReel: reel
+      currentReel: reel,
     });
   }
 
@@ -514,7 +514,7 @@ class Reader extends Component {
       yellow: {
         color: "rgba(180, 180, 0, 1.0)",
         fontWeight: "bold",
-        className: "highlighted"
+        className: "highlighted",
       },
 
       gradient: {
@@ -526,13 +526,13 @@ class Reader extends Component {
           " 100%)",
         WebkitBackgroundClip: "text",
         BackgroundClip: "text",
-        WebkitTextFillColor: "transparent"
+        WebkitTextFillColor: "transparent",
       },
 
       current: {
         fontWeight: "bold",
-        fontSize: "1.5em"
-      }
+        fontSize: "1.5em",
+      },
     };
 
     // estimate the amount of time it will take to read the entire text on screen
@@ -618,15 +618,25 @@ class Reader extends Component {
           )}
           <br />
           <br />
-          <button onClick={this.play}>Play</button>
+          <button className="btn" onClick={this.play}>
+            Play
+          </button>
           &nbsp;
-          <button onClick={this.pause}>Pause</button>
+          <button className="btn" onClick={this.pause}>
+            Pause
+          </button>
           &nbsp;
-          <button onClick={this.reset}>Reset</button>
+          <button className="btn" onClick={this.reset}>
+            Reset
+          </button>
           &nbsp;
-          <button onClick={this.highlightSelection}>Highlight</button>
+          <button className="btn" onClick={this.highlightSelection}>
+            Highlight
+          </button>
           &nbsp;
-          <button onClick={this.setGradient}>Gradient</button>
+          <button className="btn" onClick={this.setGradient}>
+            Gradient
+          </button>
         </div>
 
         <br />
@@ -634,8 +644,7 @@ class Reader extends Component {
         <LoadingBar
           progress={(this.state.index / this.state.tape.length) * 100}
           height={3}
-          // color="red"
-          background={this.colorStyleMap.gradient.background}
+          color={this.colorStyleMap.gradient.background}
         />
 
         <div className="editor" onClick={this.focusEditor}>
