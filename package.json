@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "ci": "echo \"CI/CD if we had it but this is a hobby project\""
+    "ci": "echo \"CI/CD if we had it but this is a hobby project\"",
+    "dockerbuild": "bash dockerbuild.sh"
   },
   "dependencies": {
     "@babel/core": "7.26.9",
@@ -127,7 +128,9 @@
     "setupFiles": [
       "react-app-polyfill/jsdom"
     ],
-    "setupFilesAfterEnv": [],
+    "setupFilesAfterEnv": [
+      "<rootDir>/setupTests.js"
+    ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
       "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
@@ -136,7 +139,9 @@
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": "<rootDir>/node_modules/babel-jest",
       "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
+      "^(?!.*\\.(js|jsx|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js",
+      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
+      "^.+\\.(js|jsx)$": "babel-jest"
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$",
@@ -165,6 +170,9 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
     "cssnano": "^7.0.6",
     "stylelint": "^16.14.1"
   },
