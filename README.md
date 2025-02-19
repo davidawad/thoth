@@ -46,7 +46,7 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 
 This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
 
-### notes on dockerfile :
+### notes on dockerfile
 
 https://medium.com/@shakyShane/lets-talk-about-docker-artifacts-27454560384f
 
