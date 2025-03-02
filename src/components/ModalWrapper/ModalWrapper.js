@@ -49,12 +49,12 @@ class ModalWrapper extends Component {
     });
   }
 
-  // when parent updates state, this component gets re-rendered
-  /*
-  componentWillReceiveProps(props) {
-    this.setState(props)
+  // Update state when props change
+  componentDidUpdate(prevProps) {
+    if (this.props !== prevProps) {
+      this.setState(this.props);
+    }
   }
-  */
 
   render() {
     return (
