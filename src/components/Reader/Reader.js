@@ -133,9 +133,11 @@ class Reader extends Component {
     });
   }
 
-  // when parent updates state, this component gets re-rendered
-  componentWillReceiveProps(props) {
-    this.setState(props, this.propHandler);
+  // Update state when props change
+  componentDidUpdate(prevProps) {
+    if (this.props !== prevProps) {
+      this.setState(this.props, this.propHandler);
+    }
   }
 
   // required function for draft.js
