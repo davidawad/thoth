@@ -18,9 +18,11 @@ class PlaybackHead extends Component {
     this.setState({ value: e.target.value });
   }
 
-  // when parent updates state, this component gets re-rendered
-  componentWillReceiveProps({ someProp }) {
-    this.setState({ ...this.state, someProp });
+  // Update state when props change
+  componentDidUpdate(prevProps) {
+    if (prevProps.someProp !== this.props.someProp) {
+      this.setState({ ...this.state, someProp: this.props.someProp });
+    }
   }
 
   render() {
