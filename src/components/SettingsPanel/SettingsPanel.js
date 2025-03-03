@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 
 // TODO remove this jank settings pane that doesn't work.
-import {
-  SettingsPane,
-  SettingsPage,
-  SettingsContent
-} from "react-settings-pane";
+// import {
+//   SettingsPane,
+//   SettingsPage,
+//   SettingsContent
+// } from "react-settings-pane";
 
 // import './SettingsPanel.css';
 // import Settings from '../Settings'
@@ -26,8 +26,8 @@ let settings = {};
 const menu = [
   {
     title: "Settings", // Title that is displayed as text in the menu
-    url: "/settings" // Identifier (url-slug)
-  }
+    url: "/settings", // Identifier (url-slug)
+  },
 ];
 
 class SettingsPanel extends Component {
@@ -39,7 +39,7 @@ class SettingsPanel extends Component {
       baseColorStop: String(this.props.baseColorStop),
       finalColorStop: String(this.props.finalColorStop),
       settingsEnabled: Boolean(this.props.settingsEnabled),
-      age: Number(this.props.age)
+      age: Number(this.props.age),
     };
   }
 
@@ -64,8 +64,8 @@ class SettingsPanel extends Component {
   }
 
   render() {
-    // Return your Settings Pane
-    return (
+    return <></>;
+    /*
       <SettingsPane
         items={menu}
         index="/settings"
@@ -88,7 +88,6 @@ class SettingsPanel extends Component {
                 defaultValue={this.state.readingSpeed}
               />
             </fieldset>
-
             <fieldset className="form-group">
               <label>Base Color Stop: </label>
               <input
@@ -98,7 +97,6 @@ class SettingsPanel extends Component {
                 defaultValue={this.state.baseColorStop}
               />
             </fieldset>
-
             <fieldset className="form-group">
               <label>Final Color Stop: </label>
               <input
@@ -108,7 +106,6 @@ class SettingsPanel extends Component {
                 defaultValue={this.state.finalColorStop}
               />
             </fieldset>
-
             <fieldset className="form-group">
               <label>Age: </label>
               <input
@@ -118,26 +115,11 @@ class SettingsPanel extends Component {
                 defaultValue={this.props.age}
               />
             </fieldset>
-
-            {/*
-            <fieldset className="form-group">
-              <label>Scrolling </label>
-              <input
-                type="checkbox"
-                className="form-control"
-                name="scrollingEnabled"
-                // placeholder={this.state.scrollingEnabled}
-                defaultValue={this.state.scrollingEnabled}
-                 this.state.scrollingEnabled ? checked : ''
-              />
-            </fieldset>
-            */}
           </SettingsPage>
-
           <br />
         </SettingsContent>
       </SettingsPane>
-    );
+    */
   }
 }
 

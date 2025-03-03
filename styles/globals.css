@@ -1,0 +1,8 @@
+/* Note, tailwind styles will break a lot of shit */
+/* @import "tailwindcss"; */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global custom styles can be added here */

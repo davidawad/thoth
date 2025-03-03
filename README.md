@@ -42,12 +42,11 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-
 ### Deployment
 
 This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
 
-### notes on dockerfile :
+### notes on dockerfile
 
 https://medium.com/@shakyShane/lets-talk-about-docker-artifacts-27454560384f
 
@@ -60,5 +59,3 @@ https://www.freepik.com/free-vector/egypt-symbols-gods-collection_2857150.htm
 - [write-music](https://github.com/wooorm/write-music)
 - [common-words](https://github.com/wooorm/common-words)
 - [short-words](https://github.com/wooorm/short-words)
-
-MIT Open Source repository.
