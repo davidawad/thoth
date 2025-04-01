@@ -13,6 +13,9 @@ import unlerp from "unlerp";
 import * as CONSTANTS from "./constants";
 
 
+console.log("Spache words type:", typeof spacheWords);
+console.log("Spache words:", spacheWords);
+
 const scale = CONSTANTS.AGE_SCALE;
 
 const punctuationRegEx =
