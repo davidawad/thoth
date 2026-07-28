@@ -8,30 +8,67 @@ import {
   ContentState,
   Modifier,
   RichUtils,
+  type DraftStyleMap,
 } from "draft-js";
 
 import * as CONSTANTS from "../constants";
 
-import TextParsingTools from "../TextParsingTools";
-import SpeedWritingTools from "../SpeedWritingTools";
+import TextParsingTools, {
+  type ReadabilityScores,
+} from "../TextParsingTools";
+import SpeedWritingTools, {
+  type Substitution,
+} from "../SpeedWritingTools";
 import utils from "../utils";
 import PlaybackHead from "../PlaybackHead/PlaybackHead";
 import DisplayReel from "../DisplayReel";
+import type { AppSettings } from "../types";
 
 const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 
-let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
-let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
-let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
+const READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
+const MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
+const LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
 const DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
 
 const UNICODE_WHITESPACE = CONSTANTS.UNICODE_WHITESPACE;
 
-let ctx = {};
+interface ReaderProps extends Partial<AppSettings> {
+  content: string;
+}
 
-class Reader extends Component {
-  constructor(props) {
+interface ReaderState {
+  index: number;
+  paused: boolean;
+  bodyText: string;
+  editorState: EditorState;
+  currentReel: DisplayReel;
+  tape: DisplayReel[];
+  readingSpeed: number;
+  enableSurroundingReels: boolean;
+  displaySurroundingReels: boolean;
+  scrollingEnabled: boolean;
+  highlightColor: string;
+  baseColorStop: string;
+  finalColorStop: string;
+  measurements: ReadabilityScores | Record<string, never>;
+  ageEstimate: number;
+
+  // Speed Writing (paper §8.4): populated by processCorpus whenever
+  // props.speedWritingEnabled is on. Never populated silently - see
+  // render() for how these are surfaced to the user.
+  speedWritingActive: boolean;
+  speedWritingSubstitutions: Substitution[];
+}
+
+let ctx: Reader;
+
+class Reader extends Component<ReaderProps, ReaderState> {
+  editor: Editor | null = null;
+  colorStyleMap: DraftStyleMap = {};
+
+  constructor(props: ReaderProps) {
     super(props);
 
     ctx = this;
@@ -73,15 +110,9 @@ class Reader extends Component {
 
       highlightColor: "yellow",
 
-      baseColorStop:
-        typeof this.props.baseColorStop !== typeof undefined
-          ? this.props.baseColorStop
-          : "#00AD00",
+      baseColorStop: this.props.baseColorStop ?? "#00AD00",
 
-      finalColorStop:
-        typeof this.props.finalColorStop !== typeof undefined
-          ? this.props.finalColorStop
-          : "#0077AD",
+      finalColorStop: this.props.finalColorStop ?? "#0077AD",
 
       measurements: {},
       ageEstimate: DEFAULT_AGE,
@@ -94,7 +125,7 @@ class Reader extends Component {
     };
   }
 
-  corpusStats(text) {
+  corpusStats(text: string): void {
     const scores = TextParsingTools.generateTextScores(text);
 
     const metric =
@@ -103,16 +134,19 @@ class Reader extends Component {
     // if the user picked a specific formula (and it produced a real number),
     // use it directly. Otherwise fall back to averaging every finite metric -
     // this is also what "average" explicitly selects.
-    let age;
+    let age: number;
 
-    if (metric !== "average" && isFinite(scores[metric])) {
-      age = scores[metric];
+    if (
+      metric !== "average" &&
+      isFinite(scores[metric as keyof ReadabilityScores])
+    ) {
+      age = scores[metric as keyof ReadabilityScores];
     } else {
       let total = 0;
       let numEntries = 0;
 
-      for (let key in scores) {
-        const val = scores[key];
+      for (const key in scores) {
+        const val = scores[key as keyof ReadabilityScores];
 
         if (isFinite(val)) {
           numEntries++;
@@ -130,27 +164,25 @@ class Reader extends Component {
   }
 
   // Update state when props change
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: ReaderProps): void {
     if (this.props !== prevProps) {
-      this.setState(this.props, this.propHandler);
+      const { content: _content, ...settings } = this.props;
+      this.setState(
+        settings as Pick<ReaderState, keyof ReaderState>,
+        this.propHandler
+      );
     }
   }
 
   // required function for draft.js
-  setEditor = (editor) => {
+  setEditor = (editor: Editor | null): void => {
     this.editor = editor;
   };
 
   // change handler for draftjs, this strips out all the styles from the content and applies the new editor state.
-  onEditorChange = function (editorState) {
-    let text = "";
-
+  onEditorChange = (editorState: EditorState): void => {
     // get plain text from the paste event
-    const editorText = this.state.editorState
-      .getCurrentContent()
-      .getPlainText();
-
-    text = editorText;
+    const text = this.state.editorState.getCurrentContent().getPlainText();
 
     // pass text along to content handler.
     this.contentHandler(text);
@@ -160,18 +192,18 @@ class Reader extends Component {
     });
   };
 
-  propHandler() {
+  propHandler(): void {
     this.contentHandler(this.props.content, true);
   }
 
   // handler function for text pasted
-  contentHandler(text, override) {
-    if (ctx.state.verbose) {
+  contentHandler(text: string, override?: boolean): void {
+    if (ctx.props.verbose) {
       console.log("CONTENT HANDLER RECEIVED TEXT: ", text);
     }
 
     if (text === this.state.bodyText && override !== true) {
-      if (ctx.state.verbose) {
+      if (ctx.props.verbose) {
         console.log("Content handler given Same Text as existing. Skipping");
       }
       return;
@@ -188,8 +220,8 @@ class Reader extends Component {
   }
 
   // processes a new text sample and updates the state objects
-  processCorpus(text) {
-    if (ctx.state.verbose) {
+  processCorpus(text: string): void {
+    if (ctx.props.verbose) {
       console.log("PARSING TEXT : ", text.substring(0, 20), "...");
       console.log("SPEED ON PROCESSCORPUS: ", this.state.readingSpeed);
     }
@@ -216,7 +248,7 @@ class Reader extends Component {
         );
       })
       .catch((err) => {
-        if (ctx.state.verbose) {
+        if (ctx.props.verbose) {
           console.warn(
             "Speed Writing substitution failed, falling back to original text:",
             err
@@ -231,8 +263,13 @@ class Reader extends Component {
   // text plus whatever text should actually be displayed/played (identical
   // to the source when speed writing is off or unavailable), builds the
   // display tape from it, and records what (if anything) was substituted.
-  applyProcessedText(sourceText, displayText, substitutions, speedWritingActive) {
-    let arr = this.parse(displayText);
+  applyProcessedText(
+    sourceText: string,
+    displayText: string,
+    substitutions: Substitution[],
+    speedWritingActive: boolean
+  ): void {
+    const arr = this.parse(displayText);
 
     this.setState(
       {
@@ -245,12 +282,11 @@ class Reader extends Component {
     );
   }
 
-  hyphenate(word) {
-    let ret = word;
-    let len = word.length;
+  hyphenate(word: string): string {
+    const len = word.length;
 
     // fragile: rewriting this nested ternary tends to break hyphenation
-    ret =
+    const ret =
       len < MAX_DISPLAY_SIZE
         ? word
         : len < 11
@@ -261,22 +297,22 @@ class Reader extends Component {
   }
 
   // creates an array of DisplayReel Objects that contain the timing and other information for word display.
-  timingBelt(words, str) {
-    let focus;
-    let word = str;
-    let len = str.length;
+  timingBelt(words: DisplayReel[], str: string): DisplayReel[] {
+    let focus: number;
+    const word = str;
+    const len = str.length;
 
     // focus point
     // start in middle of word (default focus point)
     // move left until you hit a vowel, then stop
     for (let j = (focus = ((len - 1) / 2) | 0); j >= 0; j--) {
-      if (/[aeiou]/.test(str[j])) {
+      if (/[aeiou]/.test(str[j] ?? "")) {
         focus = j;
         break;
       }
     }
 
-    let speed = Number(this.props.readingSpeed);
+    const speed = Number(this.props.readingSpeed);
 
     // time that this word will be displayed in milliseconds
     let t = 60000 / speed;
@@ -296,8 +332,7 @@ class Reader extends Component {
       t += t * 1.5;
     }
 
-    const wordIsPronoun =
-      word.charAt(0) === word.charAt(0).toLowerCase() ? true : false;
+    const wordIsPronoun = word.charAt(0) === word.charAt(0).toLowerCase();
 
     const punctuationStrippedWord =
       TextParsingTools.stripPunctuation(word).toLowerCase();
@@ -324,12 +359,10 @@ class Reader extends Component {
   }
 
   // highlights entire editor and applies color gradient to it.
-  setGradient() {
-    let selection = undefined;
+  setGradient(): void {
+    const currentContent = this.state.editorState.getCurrentContent();
 
-    let currentContent = this.state.editorState.getCurrentContent();
-
-    selection = this.state.editorState.getSelection().merge({
+    const selection = this.state.editorState.getSelection().merge({
       anchorKey: currentContent.getFirstBlock().getKey(),
       anchorOffset: 0,
 
@@ -343,22 +376,27 @@ class Reader extends Component {
   }
 
   // highlight current selection!
-  highlightSelection() {
+  highlightSelection(): void {
     this.toggleColor(this.state.highlightColor);
   }
 
   // Toggles identified styles on the text in question.
-  toggleColor(toggledColor, selection) {
+  toggleColor(
+    toggledColor: string,
+    selection?: ReturnType<EditorState["getSelection"]>
+  ): void {
     const { editorState } = this.state;
 
-    if (typeof selection === typeof undefined) {
-      selection = editorState.getSelection();
-    }
+    const effectiveSelection = selection ?? editorState.getSelection();
 
     // Let's just allow one color at a time. Turn off all active colors.
     const nextContentState = Object.keys(this.colorStyleMap).reduce(
       (contentState, color) => {
-        return Modifier.removeInlineStyle(contentState, selection, color);
+        return Modifier.removeInlineStyle(
+          contentState,
+          effectiveSelection,
+          color
+        );
       },
       editorState.getCurrentContent()
     );
@@ -372,9 +410,13 @@ class Reader extends Component {
     const currentStyle = editorState.getCurrentInlineStyle();
 
     // Unset styles if they're enabled.
-    if (selection.isCollapsed()) {
-      nextEditorState = currentStyle.reduce((state, color) => {
-        return RichUtils.toggleInlineStyle(state, color);
+    if (effectiveSelection.isCollapsed()) {
+      // immutable@3.7.6's .reduce() types the accumulator param as `R |
+      // undefined` even with a seed value provided (an old, imprecise
+      // declaration) - a seed (nextEditorState) is always passed below, so
+      // this is never actually undefined at runtime.
+      nextEditorState = currentStyle.reduce<EditorState>((state, color) => {
+        return RichUtils.toggleInlineStyle(state as EditorState, color as string);
       }, nextEditorState);
     }
 
@@ -390,7 +432,7 @@ class Reader extends Component {
   }
 
   // parses a chunk of text into an array of DisplayReel objects that we can use for display
-  parse(words) {
+  parse(words: string): DisplayReel[] {
     const timingBelt = this.timingBelt;
 
     // strings will be broken out into words
@@ -404,13 +446,13 @@ class Reader extends Component {
       .trim()
       .replace(/([.?!])([A-Z-])/g, "$1 $2")
       .split(/\s+/)
-      .reduce(timingBelt, []);
+      .reduce(timingBelt, [] as DisplayReel[]);
   }
 
   // the "actual" play function.
   // Uses state information and begins rendering words through PlaybackHead
-  loop() {
-    let arr = this.state.tape;
+  loop(): void {
+    const arr = this.state.tape;
 
     // are we at the end of the reading
     if (this.state.index === arr.length) {
@@ -437,20 +479,24 @@ class Reader extends Component {
     // word object
     const newReel = arr[this.state.index];
 
+    if (!newReel) {
+      return;
+    }
+
     this.setState({
       currentReel: newReel,
       index: this.state.index + 1,
     });
 
     // make recursive call
-    let next_callback = function () {
+    const next_callback = () => {
       this.loop();
-    }.bind(this); // make sure we can refer to parent context.
+    };
 
     setTimeout(next_callback, newReel.displayTime);
   }
 
-  play() {
+  play(): void {
     // user hit play button
     ReactGA.event({
       category: "User",
@@ -471,7 +517,7 @@ class Reader extends Component {
     }
   }
 
-  pause() {
+  pause(): void {
     this.setState({
       paused: true,
       displaySurroundingReels: true,
@@ -479,7 +525,7 @@ class Reader extends Component {
   }
 
   // switch between paused & playing
-  playpause() {
+  playpause(): void {
     if (this.state.paused) {
       this.play();
     } else {
@@ -487,7 +533,7 @@ class Reader extends Component {
     }
   }
 
-  handleKeyUp(event) {
+  handleKeyUp(event: React.KeyboardEvent): void {
     event.preventDefault();
 
     // use the space bar to play / pause reading session.
@@ -496,9 +542,13 @@ class Reader extends Component {
     }
   }
 
-  reset() {
+  reset(): void {
     // pick index 0 and re-display that
-    let reel = this.state.tape[0];
+    const reel = this.state.tape[0];
+
+    if (!reel) {
+      return;
+    }
 
     this.setState({
       index: 0,
@@ -508,10 +558,12 @@ class Reader extends Component {
 
   render() {
     this.colorStyleMap = {
+      // draft-js's customStyleMap only supports real CSS properties, not a
+      // className field (that was already inert - draft-js has no such
+      // feature; removed rather than typed around).
       yellow: {
         color: "rgba(180, 180, 0, 1.0)",
         fontWeight: "bold",
-        className: "highlighted",
       },
 
       gradient: {
@@ -522,7 +574,7 @@ class Reader extends Component {
           this.state.finalColorStop +
           " 100%)",
         WebkitBackgroundClip: "text",
-        BackgroundClip: "text",
+        backgroundClip: "text",
         WebkitTextFillColor: "transparent",
       },
 
@@ -551,34 +603,30 @@ class Reader extends Component {
     totalTimeEstimate /= 1000;
     remainingTimeEstimate /= 1000;
 
-    let prevWord =
-      typeof this.state.tape[this.state.index - 2] !== typeof undefined
-        ? this.state.tape[this.state.index - 2].text
-        : "";
+    const prevReel = this.state.tape[this.state.index - 2];
+    const prevWord = prevReel !== undefined ? prevReel.text : "";
 
-    let postInd = this.state.index === 0 ? 1 : this.state.index;
+    const postInd = this.state.index === 0 ? 1 : this.state.index;
 
-    let postWord =
-      typeof this.state.tape[postInd] !== typeof undefined
-        ? this.state.tape[postInd].text
-        : "";
+    const postReel = this.state.tape[postInd];
+    const postWord = postReel !== undefined ? postReel.text : "";
 
-    let preNumSpaces = Math.max(LARGEST_WORD_SIZE - prevWord.length, 0);
+    const preNumSpaces = Math.max(LARGEST_WORD_SIZE - prevWord.length, 0);
 
     // add white spaces
-    let preWsp = Array(preNumSpaces).join(UNICODE_WHITESPACE);
+    const preWsp = Array(preNumSpaces).join(UNICODE_WHITESPACE);
 
     // scrolling text on render
     if (!this.state.paused && this.state.scrollingEnabled) {
-      let scrollSelector =
+      const scrollSelector =
         prevWord + " " + this.state.currentReel.text + " " + postWord;
 
       // seek through the text corpus as we read through it.
-      let matching_element = Array.from(document.querySelectorAll("span")).find(
-        (el) => el.textContent.includes(scrollSelector)
-      );
+      const matching_element = Array.from(
+        document.querySelectorAll("span")
+      ).find((el) => (el.textContent || "").includes(scrollSelector));
 
-      if (typeof matching_element !== typeof undefined) {
+      if (matching_element !== undefined) {
         // element is there, scroll to it.
         matching_element.scrollIntoView();
       }
@@ -635,17 +683,15 @@ class Reader extends Component {
         <LoadingBar
           progress={(this.state.index / this.state.tape.length) * 100}
           height={3}
-          color={this.colorStyleMap.gradient.background}
+          color={this.colorStyleMap.gradient?.background as string}
         />
 
-        <div className="editor" onClick={this.focusEditor}>
+        <div className="editor">
           <Editor
             ref={this.setEditor}
             editorState={this.state.editorState}
             onChange={this.onEditorChange}
             placeholder="Place your text content in here and press the play button!"
-            enableLineBreak={true}
-            spellcheck={false}
             stripPastedStyles={true}
             readOnly={!this.state.paused}
             customStyleMap={this.colorStyleMap}

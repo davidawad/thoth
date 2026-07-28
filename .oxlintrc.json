@@ -22,7 +22,7 @@
   },
   "overrides": [
     {
-      "files": ["src/components/Reader/Reader.js"],
+      "files": ["src/components/Reader/Reader.tsx"],
       "rules": {
         "eslint/max-lines": [
           "error",
