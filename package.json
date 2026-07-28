@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "engines": {
     "node": ">=20.0.0",
-    "yarn": ">=1.22.0"
+    "pnpm": ">=9.0.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -165,7 +165,13 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "cssnano": "^7.0.6",
-    "oxlint": "^1.76.0"
+    "oxlint": "^1.76.0",
+    "prettier": "^3.9.6"
   },
-  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
+  "pnpm": {
+    "ignoredOptionalDependencies": [
+      "canvas"
+    ]
+  },
+  "packageManager": "pnpm@9.15.4"
 }
