@@ -2,6 +2,10 @@ import React, { Component } from 'react';
 
 import Epub, { type Section } from 'epubjs/lib/index';
 import extractText from './extractText';
+import {
+  stripGutenbergBoilerplate,
+  isSkippableFrontOrBackMatter,
+} from './frontBackMatter';
 
 interface EpubParserProps {
   file: File;
@@ -105,9 +109,16 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
               return section.load(book.load.bind(book));
             })
             .then(function (contents) {
-              const pageText = extractText(contents)
-                .replace(/\s+/g, ' ')
-                .trim();
+              // Gutenberg's spine sections mark everything (including the
+              // cover and license header) linear="yes" - there's no
+              // spec-level signal to skip them, so strip the Gutenberg
+              // START/END boilerplate markers out of the raw text here
+              // (they can fall mid-page, not just on page boundaries) and
+              // let isSkippableFrontOrBackMatter drop what's left over
+              // below.
+              const pageText = stripGutenbergBoilerplate(
+                extractText(contents).replace(/\s+/g, ' ').trim(),
+              );
 
               if (ctx.state.verbose) {
                 console.log('# Section: ' + section.href);
@@ -126,21 +137,23 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
         });
       })
       .then(function (pagesText) {
-        // Drop fully empty sections (covers, nav pages, etc.) so the RSVP
-        // reader isn't handed blank pages to flip through.
-        const nonEmptyPages = (pagesText as string[]).filter(function (page) {
-          return page.length > 0;
+        // Drop empty sections and Gutenberg front/back-matter leftovers
+        // (covers, nav pages, license-header residue, etc.) so the RSVP
+        // reader isn't handed junk pages to flip through and lands on real
+        // chapter-1 content first.
+        const contentPages = (pagesText as string[]).filter(function (page) {
+          return page.length > 0 && !isSkippableFrontOrBackMatter(page);
         });
 
         if (ctx.state.verbose) {
           console.log('# End of Document');
-          console.log('ALL PAGE TEXT: ', nonEmptyPages.join(' '));
+          console.log('ALL PAGE TEXT: ', contentPages.join(' '));
         }
 
         ctx.setState(
           {
             bookLoaded: true,
-            pages: nonEmptyPages,
+            pages: contentPages,
           },
           function () {
             ctx.props.updateCallback({
