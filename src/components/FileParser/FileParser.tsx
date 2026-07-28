@@ -311,28 +311,32 @@ class FileParser extends Component<FileParserProps, FileParserState> {
         )}
 
         {fileLoaded ? (
-          <div style={{ display: 'inline-block' }}>
-            <div
-              className="arrow prev"
+          <div className="flex items-center gap-3 mt-2">
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={pageNumber <= 0}
               onClick={() => {
                 this.turnToPage(pageNumber - 1);
               }}
             >
-              ‹
-            </div>
+              ‹ Prev
+            </button>
 
-            <p>
-              Page : {pageNumber} / {pages.length}
+            <p className="text-sm opacity-70">
+              Page {pageNumber + 1} of {pages.length}
             </p>
 
-            <div
-              className="arrow next"
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={pageNumber >= pages.length - 1}
               onClick={() => {
                 this.turnToPage(pageNumber + 1);
               }}
             >
-              ›
-            </div>
+              Next ›
+            </button>
           </div>
         ) : (
           // else
