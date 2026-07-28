@@ -35,19 +35,19 @@ interface FileParserState {
 let ctx: FileParser;
 
 interface DropzoneStyleProps {
-  isDragActive?: boolean;
-  isDragAccept?: boolean;
-  isDragReject?: boolean;
+  $isDragActive?: boolean;
+  $isDragAccept?: boolean;
+  $isDragReject?: boolean;
 }
 
 const getColor = (props: DropzoneStyleProps): string => {
-  if (props.isDragAccept) {
+  if (props.$isDragAccept) {
     return '#00e676';
   }
-  if (props.isDragReject) {
+  if (props.$isDragReject) {
     return '#ff1744';
   }
-  if (props.isDragActive) {
+  if (props.$isDragActive) {
     return '#2196f3';
   }
   return '#eeeeee';
@@ -81,7 +81,10 @@ function StyledDropzone(props: DropzoneOptions) {
   return (
     <div className="container">
       <Container
-        {...getRootProps({ isDragActive, isDragAccept, isDragReject })}
+        {...getRootProps()}
+        $isDragActive={isDragActive}
+        $isDragAccept={isDragAccept}
+        $isDragReject={isDragReject}
       >
         <input {...getInputProps()} />
         <p>Drag &apos;n&apos; drop some files here, or click to select files</p>
