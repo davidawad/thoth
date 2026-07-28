@@ -1,6 +1,6 @@
-import nlp from "compromise";
+import nlp from 'compromise';
 
-import TextParsingTools from "./TextParsingTools";
+import TextParsingTools from './TextParsingTools';
 
 /*
 Speed Writing (paper §8.4 "Speed Writing" future work).
@@ -16,7 +16,7 @@ here resolves to a safe fallback (the original, unmodified text) if anything
 goes wrong (offline, slow network, malformed response, etc).
 */
 
-const DATAMUSE_ENDPOINT = "https://api.datamuse.com/words";
+const DATAMUSE_ENDPOINT = 'https://api.datamuse.com/words';
 
 // how long we're willing to wait on a single Datamuse lookup before giving up on it.
 const FETCH_TIMEOUT_MS = 2500;
@@ -35,27 +35,27 @@ const MIN_WORD_LENGTH = 4;
 // only content words are worth substituting - swapping a preposition or
 // pronoun for a "simpler" one is either meaningless or grammatically unsafe.
 const CONTENT_TAGS = {
-  Noun: "n",
-  Verb: "v",
-  Adjective: "adj",
-  Adverb: "adv",
+  Noun: 'n',
+  Verb: 'v',
+  Adjective: 'adj',
+  Adverb: 'adv',
 };
 
 // tags that mean "don't touch this term" regardless of its content category -
 // proper nouns, numbers, hyphenated compounds (substituting half of a
 // compound word produces nonsense), urls, etc.
 const EXCLUDE_TAGS = [
-  "ProperNoun",
-  "Hyphenated",
-  "Value",
-  "Url",
-  "Acronym",
-  "Abbreviation",
-  "Currency",
-  "Emoji",
-  "Emoticon",
-  "HashTag",
-  "AtMention",
+  'ProperNoun',
+  'Hyphenated',
+  'Value',
+  'Url',
+  'Acronym',
+  'Abbreviation',
+  'Currency',
+  'Emoji',
+  'Emoticon',
+  'HashTag',
+  'AtMention',
 ];
 
 const ALPHA_ONLY = /^[A-Za-z]+$/;
@@ -71,9 +71,10 @@ function clearSynonymCache() {
   synonymCache.clear();
 }
 
-// Figures out whether a compromise term is a good candidate for substitution,
-// and if so, what "category" (part of speech) it should be substituted within.
-function analyzeTermForCandidacy(term) {
+// Shape/tag-only eligibility check: is this term even worth normalizing and
+// looking up? (Split from analyzeTermForCandidacy to keep each function's
+// branch count low.)
+function findSubstitutableCategory(term) {
   const text = term && term.text;
 
   if (!text || !ALPHA_ONLY.test(text) || text.length < MIN_WORD_LENGTH) {
@@ -86,13 +87,19 @@ function analyzeTermForCandidacy(term) {
     return null;
   }
 
-  const category = Object.keys(CONTENT_TAGS).find((cat) => tags.includes(cat));
+  return Object.keys(CONTENT_TAGS).find((cat) => tags.includes(cat)) || null;
+}
+
+// Figures out whether a compromise term is a good candidate for substitution,
+// and if so, what "category" (part of speech) it should be substituted within.
+function analyzeTermForCandidacy(term) {
+  const category = findSubstitutableCategory(term);
 
   if (!category) {
     return null;
   }
 
-  const normalized = TextParsingTools.stripPunctuation(text).toLowerCase();
+  const normalized = TextParsingTools.stripPunctuation(term.text).toLowerCase();
 
   if (!normalized) {
     return null;
@@ -121,7 +128,10 @@ function matchCase(original, replacement) {
     return replacement;
   }
 
-  if (original === original.toUpperCase() && original !== original.toLowerCase()) {
+  if (
+    original === original.toUpperCase() &&
+    original !== original.toLowerCase()
+  ) {
     return replacement.toUpperCase();
   }
 
@@ -142,7 +152,7 @@ function matchCase(original, replacement) {
 // associations, e.g. "chef" ~ "kitchen"). We try rel_syn first and only fall
 // back to ml, see resolveReplacement().
 async function fetchDatamuseRelation(relation, word) {
-  if (typeof fetch !== "function") {
+  if (typeof fetch !== 'function') {
     return [];
   }
 
@@ -150,18 +160,18 @@ async function fetchDatamuseRelation(relation, word) {
   let timeoutId;
 
   try {
-    if (typeof AbortController !== "undefined") {
+    if (typeof AbortController !== 'undefined') {
       controller = new AbortController();
       timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     }
 
     const url = `${DATAMUSE_ENDPOINT}?${relation}=${encodeURIComponent(
-      word
+      word,
     )}&md=p&max=${MAX_CANDIDATES}`;
 
     const response = await fetch(
       url,
-      controller ? { signal: controller.signal } : undefined
+      controller ? { signal: controller.signal } : undefined,
     );
 
     if (!response || !response.ok) {
@@ -171,7 +181,7 @@ async function fetchDatamuseRelation(relation, word) {
     const data = await response.json();
 
     return Array.isArray(data) ? data : [];
-  } catch (err) {
+  } catch {
     // network failure, timeout/abort, JSON parse error, whatever - fail open.
     return [];
   } finally {
@@ -185,31 +195,34 @@ async function fetchDatamuseRelation(relation, word) {
 // first (highest relevance) candidate that: shares the original word's part
 // of speech, and is itself a "familiar"/"easy" word per the existing
 // Dale-Chall / Spache lists - that's what makes it actually simpler.
+// A candidate word is usable if: it's a real alphabetic word distinct from
+// the original, it matches the original's part of speech (when known), and
+// it's itself familiar/easy per the existing readability wordlists.
+function isUsableCandidate(result, originalLower, posTag) {
+  const word = typeof result.word === 'string' ? result.word.toLowerCase() : '';
+
+  if (!word || !ALPHA_ONLY.test(word) || word === originalLower) {
+    return false;
+  }
+
+  const tags = Array.isArray(result.tags) ? result.tags : [];
+
+  if (posTag && !tags.includes(posTag)) {
+    return false;
+  }
+
+  return TextParsingTools.familiarWord(word) || TextParsingTools.easyWord(word);
+}
+
 function pickBestSynonym(originalWord, datamuseResults, category) {
   const posTag = CONTENT_TAGS[category];
   const originalLower = originalWord.toLowerCase();
 
-  for (const result of datamuseResults) {
-    const word = typeof result.word === "string" ? result.word.toLowerCase() : "";
+  const match = datamuseResults.find((result) =>
+    isUsableCandidate(result, originalLower, posTag),
+  );
 
-    if (!word || !ALPHA_ONLY.test(word) || word === originalLower) {
-      continue;
-    }
-
-    const tags = Array.isArray(result.tags) ? result.tags : [];
-
-    if (posTag && !tags.includes(posTag)) {
-      continue;
-    }
-
-    if (!(TextParsingTools.familiarWord(word) || TextParsingTools.easyWord(word))) {
-      continue;
-    }
-
-    return word;
-  }
-
-  return null;
+  return match ? match.word.toLowerCase() : null;
 }
 
 // Resolves (looks up + picks) a replacement for a single candidate, using/
@@ -229,14 +242,14 @@ async function resolveReplacement(candidate) {
   }
 
   const synonymResults = await fetchDatamuseRelation(
-    "rel_syn",
-    candidate.normalized
+    'rel_syn',
+    candidate.normalized,
   );
 
   const replacement = pickBestSynonym(
     candidate.normalized,
     synonymResults,
-    candidate.category
+    candidate.category,
   );
 
   if (synonymCache.size < MAX_CACHE_SIZE) {
@@ -264,7 +277,7 @@ empty substitutions list - callers should always be able to just use
 async function substituteText(text) {
   const fallback = { text, substitutions: [], changed: false };
 
-  if (typeof text !== "string" || text.trim().length === 0) {
+  if (typeof text !== 'string' || text.trim().length === 0) {
     return fallback;
   }
 
@@ -279,7 +292,7 @@ async function substituteText(text) {
       sentence.terms.map((term) => ({
         term,
         candidate: analyzeTermForCandidacy(term),
-      }))
+      })),
     );
 
     const uniqueCandidates = new Map();
@@ -298,7 +311,7 @@ async function substituteText(text) {
 
     const candidatesToResolve = Array.from(uniqueCandidates.values()).slice(
       0,
-      MAX_LOOKUPS
+      MAX_LOOKUPS,
     );
 
     await Promise.all(candidatesToResolve.map(resolveReplacement));
@@ -306,7 +319,7 @@ async function substituteText(text) {
     const substitutions = [];
     const substitutionsByKey = new Map();
 
-    let rebuilt = "";
+    let rebuilt = '';
 
     annotated.forEach((sentenceTerms) => {
       sentenceTerms.forEach(({ term, candidate }) => {
@@ -327,7 +340,7 @@ async function substituteText(text) {
           }
         }
 
-        rebuilt += (term.pre || "") + outputText + (term.post || "");
+        rebuilt += (term.pre || '') + outputText + (term.post || '');
       });
     });
 
@@ -336,7 +349,7 @@ async function substituteText(text) {
     }
 
     return { text: rebuilt, substitutions, changed: true };
-  } catch (err) {
+  } catch {
     // speed writing is an enhancement - never let it break the base reading
     // experience.
     return fallback;

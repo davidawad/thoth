@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: oxlint
+        name: oxlint (staged)
+        entry: npx oxlint --deny-warnings
+        language: system
+        types_or: [javascript, jsx]
+        pass_filenames: true
+      - id: prettier
+        name: prettier (staged)
+        entry: npx prettier --single-quote --write
+        language: system
+        types_or: [javascript, jsx, json, css, scss, markdown]
+        pass_filenames: true

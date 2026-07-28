@@ -1,14 +1,14 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
-import Reader from "../src/components/Reader/Reader";
-import ModalWrapper from "../src/components/ModalWrapper/ModalWrapper";
-import FileParser from "../src/components/FileParser/FileParser";
+import Reader from '../src/components/Reader/Reader';
+import ModalWrapper from '../src/components/ModalWrapper/ModalWrapper';
+import FileParser from '../src/components/FileParser/FileParser';
 
-import ReactGA from "react-ga";
+import ReactGA from 'react-ga';
 
-import * as CONSTANTS from "../src/components/constants";
+import * as CONSTANTS from '../src/components/constants';
 
-let DEBUG = process.env.NODE_ENV === "development";
+let DEBUG = process.env.NODE_ENV === 'development';
 DEBUG = false;
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
@@ -24,11 +24,11 @@ let age = CONSTANTS.DEFAULT_AGE;
 const verbose = DEBUG ? true : false;
 
 // public anyway.
-const GOOGLE_ANALYTICS_KEY = "UA-96589312-4";
+const GOOGLE_ANALYTICS_KEY = 'UA-96589312-4';
 
 function initializeReactGA() {
   ReactGA.initialize(GOOGLE_ANALYTICS_KEY);
-  ReactGA.pageview("/home");
+  ReactGA.pageview('/home');
 }
 
 class App extends Component {
@@ -64,12 +64,12 @@ class App extends Component {
   // Restore the user's saved readability metric choice after mount (avoids
   // an SSR/client hydration mismatch from reading localStorage up-front).
   componentDidMount() {
-    if (typeof window === "undefined") {
+    if (typeof window === 'undefined') {
       return;
     }
 
     const storedMetric = window.localStorage.getItem(
-      CONSTANTS.READABILITY_METRIC_STORAGE_KEY
+      CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
     );
 
     if (storedMetric && storedMetric !== this.state.readabilityMetric) {
@@ -78,13 +78,13 @@ class App extends Component {
 
     try {
       const storedSpeedWriting = window.localStorage.getItem(
-        CONSTANTS.SPEED_WRITING_STORAGE_KEY
+        CONSTANTS.SPEED_WRITING_STORAGE_KEY,
       );
 
       if (storedSpeedWriting !== null) {
-        this.setState({ speedWritingEnabled: storedSpeedWriting === "true" });
+        this.setState({ speedWritingEnabled: storedSpeedWriting === 'true' });
       }
-    } catch (err) {
+    } catch {
       // localStorage unavailable (private browsing, disabled, etc) - keep
       // the safe (disabled) default.
     }
@@ -95,12 +95,12 @@ class App extends Component {
   */
   updateSettings(newSettings) {
     if (
-      typeof window !== "undefined" &&
-      Object.prototype.hasOwnProperty.call(newSettings, "readabilityMetric")
+      typeof window !== 'undefined' &&
+      Object.prototype.hasOwnProperty.call(newSettings, 'readabilityMetric')
     ) {
       window.localStorage.setItem(
         CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
-        newSettings.readabilityMetric
+        newSettings.readabilityMetric,
       );
     }
 
@@ -129,9 +129,9 @@ class App extends Component {
 
         <footer>
           <p>
-            Thoth is an{" "}
-            <a href="https://github.com/davidawad/thoth">open source</a>{" "}
-            <a href="http://arxiv.org/abs/1908.01699"> research project</a> by{" "}
+            Thoth is an{' '}
+            <a href="https://github.com/davidawad/thoth">open source</a>{' '}
+            <a href="http://arxiv.org/abs/1908.01699"> research project</a> by{' '}
             <a href="http://davidawad.com">David Awad</a>.
             <br /> &copy; {this.state.year}
           </p>

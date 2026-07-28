@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from 'react';
 
-import TextParsingTools from "../TextParsingTools";
+import TextParsingTools from '../TextParsingTools';
 import {
   THEMES,
   THEME_STORAGE_KEY,
@@ -9,46 +9,95 @@ import {
   LEGIBILITY_REFERENCES,
   DEFAULT_READABILITY_METRIC,
   SPEED_WRITING_STORAGE_KEY,
-} from "../constants";
+} from '../constants';
 
 // Reads the theme currently applied to <html data-theme="..."> - set before
 // first paint by the inline script in pages/_document.js - so this selector
 // starts in sync with what's already on screen rather than flashing to a
 // default value once the component mounts.
 function getActiveTheme() {
-  if (typeof document === "undefined") {
+  if (typeof document === 'undefined') {
     return DEFAULT_THEME;
   }
 
-  return document.documentElement.getAttribute("data-theme") || DEFAULT_THEME;
+  return document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
 }
 
 // Applies + persists a theme. Swapping `data-theme` is daisyui's own
 // mechanism (see tailwind.config.js `daisyui.themes`) - no parallel
 // CSS-variable system needed.
 function applyTheme(themeId) {
-  if (typeof document === "undefined") {
+  if (typeof document === 'undefined') {
     return;
   }
 
-  document.documentElement.setAttribute("data-theme", themeId);
+  document.documentElement.setAttribute('data-theme', themeId);
 
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, themeId);
-  } catch (e) {
+  } catch {
     // localStorage can throw (private browsing, storage disabled, quota,
     // etc). The theme still applies for this session, it just won't
     // persist across visits.
   }
 }
 
+function TypefaceSection() {
+  return (
+    <section className="mb-6">
+      <h3 className="text-lg font-semibold mb-2">Typeface</h3>
+      <p className="text-sm">
+        Body text is set in{' '}
+        <a
+          href={FONT_ATTRIBUTION.url}
+          target="_blank"
+          rel="noreferrer"
+          className="link link-primary"
+        >
+          {FONT_ATTRIBUTION.name}
+        </a>
+        , designed by {FONT_ATTRIBUTION.designer}. Distributed free via{' '}
+        {FONT_ATTRIBUTION.source} under the {FONT_ATTRIBUTION.license}.
+      </p>
+    </section>
+  );
+}
+
+function LegibilityResearchSection() {
+  return (
+    <section>
+      <h3 className="text-lg font-semibold mb-2">Legibility research</h3>
+      <p className="text-sm mb-2">
+        Thoth&apos;s typography (font, size, line height, line length, contrast)
+        is informed by the following sources. Where a finding wasn&apos;t
+        clearly actionable, the note below says so instead of forcing it.
+      </p>
+      <ul className="text-xs space-y-2 list-disc list-inside opacity-80 max-h-48 overflow-y-auto pr-2">
+        {LEGIBILITY_REFERENCES.map((reference) => (
+          <li key={reference.url}>
+            <a
+              href={reference.url}
+              target="_blank"
+              rel="noreferrer"
+              className="link"
+            >
+              {reference.citation}
+            </a>
+            {reference.note ? <> &mdash; {reference.note}</> : null}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 const SettingsPanel = (props) => {
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [readabilityMetric, setReadabilityMetric] = useState(
-    props.readabilityMetric || DEFAULT_READABILITY_METRIC
+    props.readabilityMetric || DEFAULT_READABILITY_METRIC,
   );
   const [speedWritingEnabled, setSpeedWritingEnabled] = useState(
-    Boolean(props.speedWritingEnabled)
+    Boolean(props.speedWritingEnabled),
   );
 
   // Sync from the DOM once mounted (client-only - avoids SSR/client
@@ -82,7 +131,7 @@ const SettingsPanel = (props) => {
       setReadabilityMetric(nextMetric);
       props.updateCallback({ readabilityMetric: nextMetric });
     },
-    [props]
+    [props],
   );
 
   // Speed Writing (paper §8.4 "Speed Writing"): opt-in, OFF by default.
@@ -94,22 +143,22 @@ const SettingsPanel = (props) => {
       setSpeedWritingEnabled(enabled);
 
       try {
-        if (typeof window !== "undefined" && window.localStorage) {
+        if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem(
             SPEED_WRITING_STORAGE_KEY,
-            String(enabled)
+            String(enabled),
           );
         }
-      } catch (err) {
+      } catch {
         // localStorage unavailable (private browsing, disabled, etc) - the
         // toggle still works for this session, it just won't persist.
       }
 
-      if (typeof props.updateCallback === "function") {
+      if (typeof props.updateCallback === 'function') {
         props.updateCallback({ speedWritingEnabled: enabled });
       }
     },
-    [props]
+    [props],
   );
 
   return (
@@ -117,7 +166,10 @@ const SettingsPanel = (props) => {
       <section className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Display</h3>
 
-        <label className="form-control w-full max-w-xs" htmlFor="thoth-theme-select">
+        <label
+          className="form-control w-full max-w-xs"
+          htmlFor="thoth-theme-select"
+        >
           <span className="label-text block mb-1">Theme</span>
         </label>
         <select
@@ -134,8 +186,7 @@ const SettingsPanel = (props) => {
           ))}
         </select>
         <p className="text-sm opacity-70 mt-2">
-          Saved to this browser and applied automatically next time you
-          visit.
+          Saved to this browser and applied automatically next time you visit.
         </p>
       </section>
 
@@ -181,56 +232,16 @@ const SettingsPanel = (props) => {
           </span>
         </label>
         <p className="text-sm opacity-70 mt-2">
-          When enabled, Thoth looks up simpler, familiar synonyms for
-          unfamiliar words in your text and shows you exactly what it
-          changed before you read - your original text is never edited
-          silently. Off by default. Requires network access (uses the
-          Datamuse synonym API); if it's unavailable, reading falls back to
-          your original text automatically.
+          When enabled, Thoth looks up simpler, familiar synonyms for unfamiliar
+          words in your text and shows you exactly what it changed before you
+          read - your original text is never edited silently. Off by default.
+          Requires network access (uses the Datamuse synonym API); if it's
+          unavailable, reading falls back to your original text automatically.
         </p>
       </section>
 
-      <section className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Typeface</h3>
-        <p className="text-sm">
-          Body text is set in{" "}
-          <a
-            href={FONT_ATTRIBUTION.url}
-            target="_blank"
-            rel="noreferrer"
-            className="link link-primary"
-          >
-            {FONT_ATTRIBUTION.name}
-          </a>
-          , designed by {FONT_ATTRIBUTION.designer}. Distributed free via{" "}
-          {FONT_ATTRIBUTION.source} under the {FONT_ATTRIBUTION.license}.
-        </p>
-      </section>
-
-      <section>
-        <h3 className="text-lg font-semibold mb-2">Legibility research</h3>
-        <p className="text-sm mb-2">
-          Thoth&apos;s typography (font, size, line height, line length,
-          contrast) is informed by the following sources. Where a finding
-          wasn&apos;t clearly actionable, the note below says so instead of
-          forcing it.
-        </p>
-        <ul className="text-xs space-y-2 list-disc list-inside opacity-80 max-h-48 overflow-y-auto pr-2">
-          {LEGIBILITY_REFERENCES.map((reference) => (
-            <li key={reference.url}>
-              <a
-                href={reference.url}
-                target="_blank"
-                rel="noreferrer"
-                className="link"
-              >
-                {reference.citation}
-              </a>
-              {reference.note ? <> &mdash; {reference.note}</> : null}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <TypefaceSection />
+      <LegibilityResearchSection />
     </div>
   );
 };

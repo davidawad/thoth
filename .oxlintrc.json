@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["oxc", "unicorn"],
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
+  },
+  "ignorePatterns": ["node_modules", ".next", "build", "public"],
+  "rules": {
+    "eslint/max-lines": [
+      "error",
+      { "max": 400, "skipBlankLines": true, "skipComments": true }
+    ],
+    "eslint/max-lines-per-function": [
+      "error",
+      { "max": 150, "skipBlankLines": true, "skipComments": true }
+    ],
+    "eslint/complexity": ["error", 10],
+    "eslint/max-params": ["error", 4],
+    "eslint/max-depth": ["error", 4]
+  },
+  "overrides": [
+    {
+      "files": ["src/components/Reader/Reader.js"],
+      "rules": {
+        "eslint/max-lines": [
+          "error",
+          { "max": 750, "skipBlankLines": true, "skipComments": true }
+        ],
+        "eslint/max-lines-per-function": [
+          "error",
+          { "max": 200, "skipBlankLines": true, "skipComments": true }
+        ],
+        "eslint/complexity": ["error", 15]
+      }
+    }
+  ]
+}
