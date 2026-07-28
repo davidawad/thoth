@@ -22,3 +22,9 @@ repos:
         language: system
         types_or: [javascript, jsx, ts, tsx, json, css, scss, markdown]
         pass_filenames: true
+      - id: commitlint
+        name: commitlint (Conventional Commits)
+        entry: pnpm exec commitlint --edit
+        language: system
+        stages: [commit-msg]
+        pass_filenames: false

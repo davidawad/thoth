@@ -18,7 +18,8 @@
     "fuzz:pdf": "NODE_OPTIONS=--experimental-strip-types jazzer fuzz/pdf-document-parse.fuzz.js --disableBugDetectors=prototype-pollution -- -max_total_time=30",
     "bench": "vitest bench --run --compare=bench/baseline.json",
     "bench:update": "vitest bench --run --outputJson=bench/baseline.json",
-    "ci": "echo \"CI/CD if we had it but this is a hobby project\"",
+    "commitlint": "commitlint --edit",
+    "release": "semantic-release",
     "dockerbuild": "bash dockerbuild.sh",
     "postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.js public/pdf.worker.min.js"
   },
@@ -115,7 +116,11 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^8.0.1",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@jazzer.js/core": "^4.0.0",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@testing-library/dom": "^10.4.0",
@@ -135,6 +140,7 @@
     "jsdom": "^30.0.0",
     "oxlint": "^1.76.0",
     "prettier": "^3.9.6",
+    "semantic-release": "^25.0.8",
     "tinybench": "^6.1.2",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
