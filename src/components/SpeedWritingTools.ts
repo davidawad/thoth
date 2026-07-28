@@ -102,7 +102,7 @@ function clearSynonymCache(): void {
 // looking up? (Split from analyzeTermForCandidacy to keep each function's
 // branch count low.)
 function findSubstitutableCategory(
-  term: CompromiseTerm
+  term: CompromiseTerm,
 ): ContentCategory | null {
   const text = term && term.text;
 
@@ -117,7 +117,7 @@ function findSubstitutableCategory(
   }
 
   const found = (Object.keys(CONTENT_TAGS) as ContentCategory[]).find((cat) =>
-    tags.includes(cat)
+    tags.includes(cat),
   );
 
   return found || null;
@@ -186,7 +186,7 @@ function matchCase(original: string, replacement: string): string {
 // back to ml, see resolveReplacement().
 async function fetchDatamuseRelation(
   relation: string,
-  word: string
+  word: string,
 ): Promise<DatamuseResult[]> {
   if (typeof fetch !== 'function') {
     return [];
@@ -202,12 +202,12 @@ async function fetchDatamuseRelation(
     }
 
     const url = `${DATAMUSE_ENDPOINT}?${relation}=${encodeURIComponent(
-      word
+      word,
     )}&md=p&max=${MAX_CANDIDATES}`;
 
     const response = await fetch(
       url,
-      controller ? { signal: controller.signal } : undefined
+      controller ? { signal: controller.signal } : undefined,
     );
 
     if (!response || !response.ok) {
@@ -237,7 +237,7 @@ async function fetchDatamuseRelation(
 function isUsableCandidate(
   result: DatamuseResult,
   originalLower: string,
-  posTag: string | undefined
+  posTag: string | undefined,
 ): boolean {
   const word = typeof result.word === 'string' ? result.word.toLowerCase() : '';
 
@@ -257,13 +257,13 @@ function isUsableCandidate(
 function pickBestSynonym(
   originalWord: string,
   datamuseResults: DatamuseResult[],
-  category: ContentCategory
+  category: ContentCategory,
 ): string | null {
   const posTag = CONTENT_TAGS[category];
   const originalLower = originalWord.toLowerCase();
 
   const match = datamuseResults.find((result) =>
-    isUsableCandidate(result, originalLower, posTag)
+    isUsableCandidate(result, originalLower, posTag),
   );
 
   return match ? match.word.toLowerCase() : null;
@@ -280,20 +280,22 @@ function pickBestSynonym(
 // solves word-sense disambiguation, so the safer tradeoff is fewer
 // substitutions (words with no strict synonym are simply left alone)
 // rather than confident-looking wrong ones.
-async function resolveReplacement(candidate: Candidate): Promise<string | null> {
+async function resolveReplacement(
+  candidate: Candidate,
+): Promise<string | null> {
   if (synonymCache.has(candidate.key)) {
     return synonymCache.get(candidate.key) ?? null;
   }
 
   const synonymResults = await fetchDatamuseRelation(
     'rel_syn',
-    candidate.normalized
+    candidate.normalized,
   );
 
   const replacement = pickBestSynonym(
     candidate.normalized,
     synonymResults,
-    candidate.category
+    candidate.category,
   );
 
   if (synonymCache.size < MAX_CACHE_SIZE) {
@@ -324,7 +326,11 @@ empty substitutions list - callers should always be able to just use
 `result.text` as a drop-in replacement for the original.
 */
 async function substituteText(text: string): Promise<SubstitutionResult> {
-  const fallback: SubstitutionResult = { text, substitutions: [], changed: false };
+  const fallback: SubstitutionResult = {
+    text,
+    substitutions: [],
+    changed: false,
+  };
 
   if (typeof text !== 'string' || text.trim().length === 0) {
     return fallback;
@@ -341,7 +347,7 @@ async function substituteText(text: string): Promise<SubstitutionResult> {
       sentence.terms.map((term) => ({
         term,
         candidate: analyzeTermForCandidacy(term),
-      }))
+      })),
     );
 
     const uniqueCandidates = new Map<string, Candidate>();
@@ -360,7 +366,7 @@ async function substituteText(text: string): Promise<SubstitutionResult> {
 
     const candidatesToResolve = Array.from(uniqueCandidates.values()).slice(
       0,
-      MAX_LOOKUPS
+      MAX_LOOKUPS,
     );
 
     await Promise.all(candidatesToResolve.map(resolveReplacement));
@@ -414,6 +420,10 @@ async function substituteText(text: string): Promise<SubstitutionResult> {
 const funcs = {
   substituteText,
   clearSynonymCache,
+  // Exported in addition to the above purely so property tests can exercise
+  // them directly - not otherwise part of the module's public surface.
+  matchCase,
+  findSubstitutableCategory,
 };
 
 export default funcs;

@@ -121,6 +121,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "@vitest/coverage-v8": "^4.1.10",
     "cssnano": "^7.0.6",
+    "fast-check": "^4.9.0",
     "jsdom": "^30.0.0",
     "oxlint": "^1.76.0",
     "prettier": "^3.9.6",

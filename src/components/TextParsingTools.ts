@@ -1,19 +1,19 @@
 // All of these except compromise/unlerp are ESM-only packages with named
 // exports (no default) - importing them as default silently resolves to
 // undefined under Next.js's bundler and crashes at call time.
-import nlp from "compromise";
-import { syllable } from "syllable";
-import { daleChall as daleChallWords } from "dale-chall";
-import { daleChallFormula, daleChallGradeLevel } from "dale-chall-formula";
-import { colemanLiau } from "coleman-liau";
-import { flesch } from "flesch";
-import { smogFormula as smog } from "smog-formula";
-import { gunningFog } from "gunning-fog";
-import { spache as spacheWords } from "spache";
-import { spacheFormula } from "spache-formula";
-import { automatedReadability as ari } from "automated-readability";
-import unlerp from "unlerp";
-import * as CONSTANTS from "./constants";
+import nlp from 'compromise';
+import { syllable } from 'syllable';
+import { daleChall as daleChallWords } from 'dale-chall';
+import { daleChallFormula, daleChallGradeLevel } from 'dale-chall-formula';
+import { colemanLiau } from 'coleman-liau';
+import { flesch } from 'flesch';
+import { smogFormula as smog } from 'smog-formula';
+import { gunningFog } from 'gunning-fog';
+import { spache as spacheWords } from 'spache';
+import { spacheFormula } from 'spache-formula';
+import { automatedReadability as ari } from 'automated-readability';
+import unlerp from 'unlerp';
+import * as CONSTANTS from './constants';
 
 const scale = CONSTANTS.AGE_SCALE;
 
@@ -49,7 +49,7 @@ export interface ReadabilityScores {
   lexicalDensity: number;
 }
 
-export type ReadabilityMetricKey = "average" | keyof ReadabilityScores;
+export type ReadabilityMetricKey = 'average' | keyof ReadabilityScores;
 
 export interface ReadabilityMetricOption {
   key: ReadabilityMetricKey;
@@ -103,7 +103,7 @@ function lexicalDensityToAge(density: number): number {
 
 // computes an object containing the number of sentences / etc.
 const computeCounts = function computeStatsOnTextCorpus(
-  text: string
+  text: string,
 ): TextCounts {
   const langObj = nlp(text);
 
@@ -195,7 +195,7 @@ const computeCounts = function computeStatsOnTextCorpus(
 
 // takes counts and returns the different reabability scores of all the items within it.
 const generateScores = function computeReadabilityScoresBasedOnCounts(
-  counts: TextCounts
+  counts: TextCounts,
 ): ReadabilityScores {
   return {
     daleChall: gradeToAge(daleChallGradeLevel(daleChallFormula(counts))[1]),
@@ -206,7 +206,7 @@ const generateScores = function computeReadabilityScoresBasedOnCounts(
     gunningFog: gradeToAge(gunningFog(counts)),
     spacheFormula: gradeToAge(spacheFormula(counts)),
     lexicalDensity: lexicalDensityToAge(
-      counts.word > 0 ? counts.contentWord / counts.word : 0
+      counts.word > 0 ? counts.contentWord / counts.word : 0,
     ),
   };
 };
@@ -217,20 +217,20 @@ const generateScores = function computeReadabilityScoresBasedOnCounts(
 // match the keys generateScores() returns, plus the synthetic "average"
 // option (mean of every finite metric - the long-standing default).
 const READABILITY_METRICS: ReadabilityMetricOption[] = [
-  { key: "average", label: "Average of all metrics" },
-  { key: "daleChall", label: "Dale-Chall" },
-  { key: "spacheFormula", label: "Spache" },
-  { key: "flesch", label: "Flesch-Kincaid" },
-  { key: "smog", label: "SMOG" },
-  { key: "gunningFog", label: "Gunning Fog" },
-  { key: "colemanLiau", label: "Coleman-Liau" },
-  { key: "automatedReadability", label: "Automated Readability Index" },
-  { key: "lexicalDensity", label: "Lexical Density (POS-based)" },
+  { key: 'average', label: 'Average of all metrics' },
+  { key: 'daleChall', label: 'Dale-Chall' },
+  { key: 'spacheFormula', label: 'Spache' },
+  { key: 'flesch', label: 'Flesch-Kincaid' },
+  { key: 'smog', label: 'SMOG' },
+  { key: 'gunningFog', label: 'Gunning Fog' },
+  { key: 'colemanLiau', label: 'Coleman-Liau' },
+  { key: 'automatedReadability', label: 'Automated Readability Index' },
+  { key: 'lexicalDensity', label: 'Lexical Density (POS-based)' },
 ];
 
 const generateWeight = function generateWeightFromScores(
   age: number,
-  val: number
+  val: number,
 ): number {
   const min = age;
   const max = age + scale;
@@ -241,7 +241,7 @@ const generateWeight = function generateWeightFromScores(
 // takes counts and returns the different readability scores of all the items within it.
 // returns them in terms of age (in years).
 const generateTextScores = function computeReadabilityScoresBasedOnText(
-  text: string
+  text: string,
 ): ReadabilityScores {
   return generateScores(computeCounts(text));
 };
@@ -250,14 +250,14 @@ const generateTextScores = function computeReadabilityScoresBasedOnText(
 // of familiar/easy words, per how dale-chall/spache ship theirs).
 const wordInDictionary = function wordInDictionary(
   dictionary: string[],
-  w: string
+  w: string,
 ): boolean {
   return dictionary.includes(w);
 };
 
 // return true for words that are familiar (dale-chall dictionary)
 const familiarWord = function checkAgainstDaleChallDictionary(
-  w: string
+  w: string,
 ): boolean {
   return wordInDictionary(daleChallWords, w);
 };
@@ -277,7 +277,7 @@ const easyWord = function checkAgainstSpacheDictionary(w: string): boolean {
 //     treated as harder than words that are unfamiliar in only one.
 // All weights are tunable constants (see constants.ts), not hardcoded here.
 const wordDifficultyMultiplier = function computeWordDifficultyMultiplier(
-  word: string
+  word: string,
 ): number {
   const stripped = stripPunctuation(word).toLowerCase();
 
@@ -318,9 +318,9 @@ returns
 This is an example of a string with punctuation
 */
 const stripPunctuation = function stripAllFormattingChars(
-  text: string
+  text: string,
 ): string {
-  return text.replace(punctuationRegEx, "").replace(/(\s){2,}/g, "$1");
+  return text.replace(punctuationRegEx, '').replace(/(\s){2,}/g, '$1');
 };
 
 const funcs = {
@@ -333,5 +333,12 @@ const funcs = {
   stripPunctuation,
   wordDifficultyMultiplier,
   READABILITY_METRICS,
+  // Exported in addition to the above purely so property tests can exercise
+  // them directly - not otherwise part of the module's public surface.
+  gradeToAge,
+  fleschToAge,
+  smogToAge,
+  lexicalDensityToAge,
+  wordInDictionary,
 };
 export default funcs;
