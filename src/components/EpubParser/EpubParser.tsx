@@ -1,34 +1,7 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
-import Epub, { type Section } from "epubjs/lib/index";
-
-/*
-  Pull plain text out of a parsed epub.js section.
-
-  In the normal case `section.load()` (see openBook below) resolves with
-  `xml.documentElement` - a real DOM Element that epub.js already parsed
-  via DOMParser. `.textContent` on that element walks the whole subtree and
-  concatenates text nodes, which strips every tag for free - no manual HTML
-  stripping needed.
-
-  Some spine item extensions aren't recognized by epub.js's archive/request
-  layer (see node_modules/epubjs/lib/archive.js handleResponse) and come
-  back as a raw markup string instead of a parsed Element. For that case we
-  fall back to parsing the string ourselves and stripping tags by reading
-  `.textContent` off the parsed body.
-*/
-function extractText(contents: Element | string | null | undefined): string {
-  if (!contents) {
-    return "";
-  }
-
-  if (typeof contents !== "string") {
-    return contents.textContent || "";
-  }
-
-  const parsed = new DOMParser().parseFromString(contents, "text/html");
-  return (parsed.body && parsed.body.textContent) || "";
-}
+import Epub, { type Section } from 'epubjs/lib/index';
+import extractText from './extractText';
 
 interface EpubParserProps {
   file: File;
@@ -57,7 +30,7 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
 
     this.state = {
       bookLoaded: false,
-      fileName: "EPUB LOADING . . .",
+      fileName: 'EPUB LOADING . . .',
       verbose: this.props.verbose,
       pages: [], // array of chapter/section text content
       error: null,
@@ -69,7 +42,7 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
     // FileParser dropzone hands us a Blob, but this keeps us defensive
     // instead of silently failing inside FileReader.
     if (!(this.props.file instanceof Blob)) {
-      this.setState({ error: "No EPUB file was provided to load." });
+      this.setState({ error: 'No EPUB file was provided to load.' });
       return;
     }
 
@@ -77,7 +50,7 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
 
     reader.onload = this.openBook;
     reader.onerror = function () {
-      ctx.setState({ error: "Could not read the uploaded EPUB file." });
+      ctx.setState({ error: 'Could not read the uploaded EPUB file.' });
     };
 
     reader.readAsArrayBuffer(this.props.file);
@@ -90,8 +63,8 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
     try {
       book = Epub(bookData);
     } catch (err) {
-      console.error("Error opening EPUB: " + err);
-      this.setState({ error: "This file could not be opened as an EPUB." });
+      console.error('Error opening EPUB: ' + err);
+      this.setState({ error: 'This file could not be opened as an EPUB.' });
       return;
     }
 
@@ -103,15 +76,15 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
     // (it calls `this.open(...).catch(err => emit(OPEN_FAILED))` and never
     // rejects `book.ready`), so a malformed epub would otherwise hang
     // forever instead of surfacing an error - listen for the event instead.
-    book.on("openFailed", function (err: unknown) {
-      console.error("EPUB open failed: " + err);
-      ctx.setState({ error: "This file could not be opened as an EPUB." });
+    book.on('openFailed', function (err: unknown) {
+      console.error('EPUB open failed: ' + err);
+      ctx.setState({ error: 'This file could not be opened as an EPUB.' });
     });
 
     book.ready
       .then(function () {
         if (ctx.state.verbose) {
-          console.log("# EPUB Loaded");
+          console.log('# EPUB Loaded');
         }
 
         const sections: Section[] = [];
@@ -132,10 +105,12 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
               return section.load(book.load.bind(book));
             })
             .then(function (contents) {
-              const pageText = extractText(contents).replace(/\s+/g, " ").trim();
+              const pageText = extractText(contents)
+                .replace(/\s+/g, ' ')
+                .trim();
 
               if (ctx.state.verbose) {
-                console.log("# Section: " + section.href);
+                console.log('# Section: ' + section.href);
                 console.log(pageText);
               }
 
@@ -158,8 +133,8 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
         });
 
         if (ctx.state.verbose) {
-          console.log("# End of Document");
-          console.log("ALL PAGE TEXT: ", nonEmptyPages.join(" "));
+          console.log('# End of Document');
+          console.log('ALL PAGE TEXT: ', nonEmptyPages.join(' '));
         }
 
         ctx.setState(
@@ -171,14 +146,14 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
             ctx.props.updateCallback({
               pages: ctx.state.pages,
             });
-          }
+          },
         );
       })
       .catch(function (err) {
-        console.error("Error extracting EPUB text: " + err);
+        console.error('Error extracting EPUB text: ' + err);
         const message = err instanceof Error ? err.message : String(err);
         ctx.setState({
-          error: "Error reading EPUB contents: " + message,
+          error: 'Error reading EPUB contents: ' + message,
         });
       });
   }
@@ -188,7 +163,7 @@ class EpubParser extends Component<EpubParserProps, EpubParserState> {
       return <p className="EpubParser-error">{this.state.error}</p>;
     }
 
-    return <p>{this.state.bookLoaded ? "" : "loading . . . "}</p>;
+    return <p>{this.state.bookLoaded ? '' : 'loading . . . '}</p>;
   }
 }
 
