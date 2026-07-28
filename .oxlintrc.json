@@ -6,7 +6,15 @@
     "es2022": true,
     "node": true
   },
-  "ignorePatterns": ["node_modules", ".next", "build", "public"],
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "build",
+    "public",
+    // Next.js's own auto-generated boilerplate, rewritten on every
+    // dev/build run - not something to hand-edit or lint.
+    "next-env.d.ts"
+  ],
   "rules": {
     // The typescript plugin's no-this-alias rule flags the `let ctx = this`
     // singleton pattern used in Reader/FileParser/PDFParser/EpubParser -
