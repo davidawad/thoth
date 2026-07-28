@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import FileParser from './FileParser';
 
@@ -16,32 +16,36 @@ vi.mock('../PDFParser/PDFParser', () => ({
 }));
 
 describe('FileParser / StyledDropzone', () => {
-  it('does not leak react-dropzone drag-state booleans onto the DOM element', () => {
-    const { container } = render(
-      <FileParser updateCallback={() => {}} verbose={false} />,
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('does not trigger the "does not recognize the ... prop" React DOM warning', () => {
+    // A hasAttribute() check on the rendered DOM can't tell a fixed
+    // component from a broken one here: React drops an unrecognized
+    // camelCase prop from the actual DOM output either way and only logs a
+    // dev warning about it (verified directly - rendering a plain <div
+    // isDragActive={true} /> produces `<div></div>`, no literal attribute,
+    // alongside the console.error warning). The only real signal is that
+    // warning itself, so assert against console.error's actual call args
+    // (React logs it as a printf-style template + separate substitution
+    // args, not a pre-interpolated string).
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    render(<FileParser updateCallback={() => {}} verbose={false} />);
+
+    const offendingProps = ['isDragActive', 'isDragAccept', 'isDragReject'];
+    const domPropWarnings = consoleErrorSpy.mock.calls.filter(
+      ([template]) =>
+        typeof template === 'string' &&
+        template.includes('does not recognize the `%s` prop on a DOM element'),
     );
 
-    // Container is the styled.div rendered inside the ".container" wrapper -
-    // getRootProps() spreads onto it, so this is exactly the element that
-    // used to receive isDragActive/isDragAccept/isDragReject as raw DOM
-    // attributes before they were converted to transient ($-prefixed) props.
-    const dropzoneEl = container.querySelector('.container > div');
-    expect(dropzoneEl).not.toBeNull();
-
-    const leakedAttrNames = [
-      'isDragActive',
-      'isDragAccept',
-      'isDragReject',
-      'isdragactive',
-      'isdragaccept',
-      'isdragreject',
-      '$isDragActive',
-      '$isDragAccept',
-      '$isDragReject',
-    ];
-
-    for (const attr of leakedAttrNames) {
-      expect(dropzoneEl?.hasAttribute(attr)).toBe(false);
+    for (const propName of offendingProps) {
+      const match = domPropWarnings.find((args) => args.includes(propName));
+      expect(match).toBeUndefined();
     }
   });
 });
