@@ -60,7 +60,12 @@ export const DEFAULT_THEME = 'light';
 // Themes available in the selector. "light" and "dark" are daisyui's built-in
 // themes (see tailwind.config.js); "sepia" is a custom warm/paper-like theme
 // defined alongside them, tuned for long reading sessions.
-export const THEMES = [
+export interface ThemeOption {
+  id: string;
+  label: string;
+}
+
+export const THEMES: ThemeOption[] = [
   { id: 'light', label: 'Light' },
   { id: 'dark', label: 'Dark' },
   { id: 'sepia', label: 'Sepia (reading)' },
@@ -71,7 +76,15 @@ export const THEMES = [
 // SettingsPanel so the sources backing the typography choices are visible.
 // ---------------------------------------------------------------------------
 
-export const FONT_ATTRIBUTION = {
+export interface FontAttribution {
+  name: string;
+  designer: string;
+  source: string;
+  url: string;
+  license: string;
+}
+
+export const FONT_ATTRIBUTION: FontAttribution = {
   name: 'Atkinson Hyperlegible',
   designer:
     'Applied Design Works, commissioned by the Braille Institute of America',
@@ -80,10 +93,16 @@ export const FONT_ATTRIBUTION = {
   license: 'SIL Open Font License 1.1 (free for commercial & personal use)',
 };
 
+export interface LegibilityReference {
+  citation: string;
+  url: string;
+  note: string;
+}
+
 // Papers + standards consulted for the legibility pass. `note` records what,
 // if anything, was actually changed in the app as a result, or why a finding
 // was left as a judgment call rather than implemented.
-export const LEGIBILITY_REFERENCES = [
+export const LEGIBILITY_REFERENCES: LegibilityReference[] = [
   {
     citation:
       'Wallace, S. et al. (2022). Towards Individuated Reading Experiences: Different Fonts Increase Reading Speed for Different Individuals. ACM TOCHI 29(4).',

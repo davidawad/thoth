@@ -20,10 +20,41 @@ const scale = CONSTANTS.AGE_SCALE;
 const punctuationRegEx =
   /[!-/:-@[-`{-~¡-©«-¬®-±´¶-¸»¿×÷˂-˅˒-˟˥-˫˭˯-˿͵;΄-΅·϶҂՚-՟։-֊־׀׃׆׳-״؆-؏؛؞-؟٪-٭۔۩۽-۾܀-܍߶-߹।-॥॰৲-৳৺૱୰௳-௺౿ೱ-ೲ൹෴฿๏๚-๛༁-༗༚-༟༴༶༸༺-༽྅྾-࿅࿇-࿌࿎-࿔၊-၏႞-႟჻፠-፨᎐-᎙᙭-᙮᚛-᚜᛫-᛭᜵-᜶។-៖៘-៛᠀-᠊᥀᥄-᥅᧞-᧿᨞-᨟᭚-᭪᭴-᭼᰻-᰿᱾-᱿᾽᾿-῁῍-῏῝-῟῭-`´-῾\u2000-\u206e⁺-⁾₊-₎₠-₵℀-℁℃-℆℈-℉℔№-℘℞-℣℥℧℩℮℺-℻⅀-⅄⅊-⅍⅏←-⏧␀-␦⑀-⑊⒜-ⓩ─-⚝⚠-⚼⛀-⛃✁-✄✆-✉✌-✧✩-❋❍❏-❒❖❘-❞❡-❵➔➘-➯➱-➾⟀-⟊⟌⟐-⭌⭐-⭔⳥-⳪⳹-⳼⳾-⳿⸀-\u2e7e⺀-⺙⺛-⻳⼀-⿕⿰-⿻\u3000-〿゛-゜゠・㆐-㆑㆖-㆟㇀-㇣㈀-㈞㈪-㉃㉐㉠-㉿㊊-㊰㋀-㋾㌀-㏿䷀-䷿꒐-꓆꘍-꘏꙳꙾꜀-꜖꜠-꜡꞉-꞊꠨-꠫꡴-꡷꣎-꣏꤮-꤯꥟꩜-꩟﬩﴾-﴿﷼-﷽︐-︙︰-﹒﹔-﹦﹨-﹫！-／：-＠［-｀｛-･￠-￦￨-￮￼-�]|\ud800[\udd00-\udd02\udd37-\udd3f\udd79-\udd89\udd90-\udd9b\uddd0-\uddfc\udf9f\udfd0]|\ud802[\udd1f\udd3f\ude50-\ude58]|\ud809[\udc00-\udc7e]|\ud834[\udc00-\udcf5\udd00-\udd26\udd29-\udd64\udd6a-\udd6c\udd83-\udd84\udd8c-\udda9\uddae-\udddd\ude00-\ude41\ude45\udf00-\udf56]|\ud835[\udec1\udedb\udefb\udf15\udf35\udf4f\udf6f\udf89\udfa9\udfc3]|\ud83c[\udc00-\udc2b\udc30-\udc93]/g;
 
-var floor = Math.floor;
-var round = Math.round;
-var ceil = Math.ceil;
-var sqrt = Math.sqrt;
+const floor = Math.floor;
+const round = Math.round;
+const ceil = Math.ceil;
+const sqrt = Math.sqrt;
+
+export interface TextCounts {
+  character: number;
+  letter: number;
+  syllable: number;
+  word: number;
+  polysillabicWord: number;
+  complexPolysillabicWord: number;
+  sentence: number;
+  unfamiliarWord: number;
+  difficultWord: number;
+  contentWord: number;
+}
+
+export interface ReadabilityScores {
+  daleChall: number;
+  automatedReadability: number;
+  colemanLiau: number;
+  flesch: number;
+  smog: number;
+  gunningFog: number;
+  spacheFormula: number;
+  lexicalDensity: number;
+}
+
+export type ReadabilityMetricKey = "average" | keyof ReadabilityScores;
+
+export interface ReadabilityMetricOption {
+  key: ReadabilityMetricKey;
+  label: string;
+}
 
 // polysillabic (three or more syllables)
 
@@ -40,25 +71,25 @@ var sqrt = Math.sqrt;
 // Calculate the typical starting age (on the higher-end) when someone joins
 // `grade` grade, in the US.
 // See <https://en.wikipedia.org/wiki/Educational_stage#United_States>.
-function gradeToAge(grade) {
+function gradeToAge(grade: number): number {
   return round(grade + 5);
 }
 
 // Calculate the age relating to a Flesch result.
-function fleschToAge(value) {
+function fleschToAge(value: number): number {
   return 20 - floor(value / 10);
 }
 
 // Calculate the age relating to a SMOG result.
 // See <http://www.readabilityformulas.com/smog-readability-formula.php>.
-function smogToAge(value) {
+function smogToAge(value: number): number {
   return ceil(sqrt(value) + 2.5);
 }
 
 // Calculate the age relating to a lexical density ratio (proportion of
 // content words - nouns/verbs/adjectives/adverbs - to total words).
 // Linearly maps the configured density range onto the configured age range.
-function lexicalDensityToAge(density) {
+function lexicalDensityToAge(density: number): number {
   const minDensity = CONSTANTS.MIN_LEXICAL_DENSITY;
   const maxDensity = CONSTANTS.MAX_LEXICAL_DENSITY;
   const minAge = CONSTANTS.LEXICAL_DENSITY_MIN_AGE;
@@ -71,12 +102,12 @@ function lexicalDensityToAge(density) {
 }
 
 // computes an object containing the number of sentences / etc.
-const computeCounts = function computeStatsOnTextCorpus(text) {
-  let ret = {};
-
+const computeCounts = function computeStatsOnTextCorpus(
+  text: string
+): TextCounts {
   const langObj = nlp(text);
 
-  let numSentences = langObj.sentences().length;
+  const numSentences = langObj.sentences().length;
 
   let numWords = 0;
   let numCharacters = 0;
@@ -84,9 +115,9 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
   let numPolySyllabicWords = 0; // polysyllabic (three or more syllables)
   let numComplexPolysillabicWords = 0;
 
-  var familiarWords = {};
-  var easyWord = {};
-  var familiarWordCount = 0;
+  const familiarWords: Record<string, boolean> = {};
+  const easyWord: Record<string, boolean> = {};
+  let familiarWordCount = 0;
   let easyWordCount = 0;
 
   // to compute number of words and characters
@@ -95,9 +126,9 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
     .data()
     .forEach((elem) => {
       // Normalized forms live per-term, not on the sentence itself.
-      let normalizedWords = elem.terms.map((t) => t.normal);
+      const normalizedWords = elem.terms.map((t) => t.normal);
 
-      let numWordsThisSentence = normalizedWords.length;
+      const numWordsThisSentence = normalizedWords.length;
 
       numWords += numWordsThisSentence;
 
@@ -114,7 +145,7 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
         if (numSyllablesThisWord >= 3) {
           numPolySyllabicWords++;
 
-          let firstLetter = w.charAt(0);
+          const firstLetter = w.charAt(0);
 
           // if the word is not a proper noun, it's considered "complex".
           // slightly over-eager way to measure this.
@@ -130,18 +161,14 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
         }
 
         // Find familiar words for dale-chall.
-        if (
-          ((Array.isArray(daleChallWords) && daleChallWords.includes(w)) ||
-            (typeof daleChallWords === "object" && w in daleChallWords)) &&
-          easyWord[w] !== true
-        ) {
+        if (daleChallWords.includes(w) && easyWord[w] !== true) {
           familiarWords[w] = true;
           familiarWordCount++;
         }
       });
     });
 
-  let numLetters = numCharacters;
+  const numLetters = numCharacters;
 
   // Content words (nouns, verbs, adjectives, adverbs) via compromise's POS
   // tagging - used to compute lexical density, a free extra difficulty
@@ -152,7 +179,7 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
     langObj.adjectives().length +
     langObj.adverbs().length;
 
-  ret = {
+  return {
     character: numCharacters,
     letter: numLetters,
     syllable: numSyllables,
@@ -164,18 +191,14 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
     difficultWord: numWords - easyWordCount,
     contentWord: numContentWords,
   };
-
-  return ret;
 };
 
 // takes counts and returns the different reabability scores of all the items within it.
-const generateScores = function computeReadabilityScoresBasedOnCounts(counts) {
-  let ret = {};
-
-  ret = {
-    daleChall: gradeToAge(
-      daleChallGradeLevel(daleChallFormula(counts))[1]
-    ),
+const generateScores = function computeReadabilityScoresBasedOnCounts(
+  counts: TextCounts
+): ReadabilityScores {
+  return {
+    daleChall: gradeToAge(daleChallGradeLevel(daleChallFormula(counts))[1]),
     automatedReadability: gradeToAge(ari(counts)),
     colemanLiau: gradeToAge(colemanLiau(counts)),
     flesch: fleschToAge(flesch(counts)),
@@ -186,8 +209,6 @@ const generateScores = function computeReadabilityScoresBasedOnCounts(counts) {
       counts.word > 0 ? counts.contentWord / counts.word : 0
     ),
   };
-
-  return ret;
 };
 
 // The set of difficulty/readability metrics a user can pick between to
@@ -195,7 +216,7 @@ const generateScores = function computeReadabilityScoresBasedOnCounts(counts) {
 // them - single source of truth for the SettingsPanel combobox. Keys must
 // match the keys generateScores() returns, plus the synthetic "average"
 // option (mean of every finite metric - the long-standing default).
-const READABILITY_METRICS = [
+const READABILITY_METRICS: ReadabilityMetricOption[] = [
   { key: "average", label: "Average of all metrics" },
   { key: "daleChall", label: "Dale-Chall" },
   { key: "spacheFormula", label: "Spache" },
@@ -207,7 +228,10 @@ const READABILITY_METRICS = [
   { key: "lexicalDensity", label: "Lexical Density (POS-based)" },
 ];
 
-const generateWeight = function generateWeightFromScores(age, val) {
+const generateWeight = function generateWeightFromScores(
+  age: number,
+  val: number
+): number {
   const min = age;
   const max = age + scale;
 
@@ -216,28 +240,30 @@ const generateWeight = function generateWeightFromScores(age, val) {
 
 // takes counts and returns the different readability scores of all the items within it.
 // returns them in terms of age (in years).
-const generateTextScores = function computeReadabilityScoresBasedOnText(text) {
+const generateTextScores = function computeReadabilityScoresBasedOnText(
+  text: string
+): ReadabilityScores {
   return generateScores(computeCounts(text));
 };
 
-// Check whether a word appears in a readability dictionary. These word lists
-// ship as either an array of words or an object keyed by word, so handle both.
-const wordInDictionary = function wordInDictionary(dictionary, w) {
-  if (Array.isArray(dictionary)) {
-    return dictionary.includes(w);
-  } else if (dictionary && typeof dictionary === "object") {
-    return w in dictionary;
-  }
-  return false;
+// Check whether a word appears in a readability dictionary (a plain array
+// of familiar/easy words, per how dale-chall/spache ship theirs).
+const wordInDictionary = function wordInDictionary(
+  dictionary: string[],
+  w: string
+): boolean {
+  return dictionary.includes(w);
 };
 
 // return true for words that are familiar (dale-chall dictionary)
-const familiarWord = function checkAgainstDaleChallDictionary(w) {
+const familiarWord = function checkAgainstDaleChallDictionary(
+  w: string
+): boolean {
   return wordInDictionary(daleChallWords, w);
 };
 
 // Find easy words using spache.
-const easyWord = function checkAgainstSpacheDictionary(w) {
+const easyWord = function checkAgainstSpacheDictionary(w: string): boolean {
   return wordInDictionary(spacheWords, w);
 };
 
@@ -249,10 +275,10 @@ const easyWord = function checkAgainstSpacheDictionary(w) {
 //   - dictionary familiarity tier: words absent from spache (the easier,
 //     younger-reader list) AND dale-chall (the general familiar list) are
 //     treated as harder than words that are unfamiliar in only one.
-// All weights are tunable constants (see constants.js), not hardcoded here.
+// All weights are tunable constants (see constants.ts), not hardcoded here.
 const wordDifficultyMultiplier = function computeWordDifficultyMultiplier(
-  word
-) {
+  word: string
+): number {
   const stripped = stripPunctuation(word).toLowerCase();
 
   if (!stripped) {
@@ -291,8 +317,10 @@ stripPunctuation("This., -/ is #! an $ % ^ & * example ;: {} of a = -_ string wi
 returns
 This is an example of a string with punctuation
 */
-const stripPunctuation = function stripAllFormattingChars(string) {
-  return string.replace(punctuationRegEx, "").replace(/(\s){2,}/g, "$1");
+const stripPunctuation = function stripAllFormattingChars(
+  text: string
+): string {
+  return text.replace(punctuationRegEx, "").replace(/(\s){2,}/g, "$1");
 };
 
 const funcs = {

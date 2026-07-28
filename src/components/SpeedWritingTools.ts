@@ -1,4 +1,5 @@
 import nlp from 'compromise';
+import type { CompromiseTerm } from 'compromise';
 
 import TextParsingTools from './TextParsingTools';
 
@@ -32,9 +33,11 @@ const MAX_LOOKUPS = 60;
 // and hyphenation/timing already special-cases short words elsewhere.
 const MIN_WORD_LENGTH = 4;
 
+type ContentCategory = 'Noun' | 'Verb' | 'Adjective' | 'Adverb';
+
 // only content words are worth substituting - swapping a preposition or
 // pronoun for a "simpler" one is either meaningless or grammatically unsafe.
-const CONTENT_TAGS = {
+const CONTENT_TAGS: Record<ContentCategory, string> = {
   Noun: 'n',
   Verb: 'v',
   Adjective: 'adj',
@@ -60,21 +63,47 @@ const EXCLUDE_TAGS = [
 
 const ALPHA_ONLY = /^[A-Za-z]+$/;
 
+interface Candidate {
+  key: string;
+  normalized: string;
+  category: ContentCategory;
+}
+
+export interface Substitution {
+  original: string;
+  replacement: string;
+  count: number;
+}
+
+export interface SubstitutionResult {
+  text: string;
+  substitutions: Substitution[];
+  changed: boolean;
+}
+
+interface DatamuseResult {
+  word: string;
+  score?: number;
+  tags?: string[];
+}
+
 // in-memory cache so re-processing the same text (e.g. toggling settings)
 // doesn't repeatedly hit the network for words we've already resolved this
 // session. Keyed by `${normalizedWord}::${category}` -> replacement|null.
-const synonymCache = new Map();
+const synonymCache = new Map<string, string | null>();
 const MAX_CACHE_SIZE = 1000;
 
 // Exposed for tests so each test can start from a clean cache.
-function clearSynonymCache() {
+function clearSynonymCache(): void {
   synonymCache.clear();
 }
 
 // Shape/tag-only eligibility check: is this term even worth normalizing and
 // looking up? (Split from analyzeTermForCandidacy to keep each function's
 // branch count low.)
-function findSubstitutableCategory(term) {
+function findSubstitutableCategory(
+  term: CompromiseTerm
+): ContentCategory | null {
   const text = term && term.text;
 
   if (!text || !ALPHA_ONLY.test(text) || text.length < MIN_WORD_LENGTH) {
@@ -87,12 +116,16 @@ function findSubstitutableCategory(term) {
     return null;
   }
 
-  return Object.keys(CONTENT_TAGS).find((cat) => tags.includes(cat)) || null;
+  const found = (Object.keys(CONTENT_TAGS) as ContentCategory[]).find((cat) =>
+    tags.includes(cat)
+  );
+
+  return found || null;
 }
 
 // Figures out whether a compromise term is a good candidate for substitution,
 // and if so, what "category" (part of speech) it should be substituted within.
-function analyzeTermForCandidacy(term) {
+function analyzeTermForCandidacy(term: CompromiseTerm): Candidate | null {
   const category = findSubstitutableCategory(term);
 
   if (!category) {
@@ -123,7 +156,7 @@ function analyzeTermForCandidacy(term) {
 
 // Preserve the original word's casing on the replacement (Title Case,
 // UPPERCASE, or lowercase).
-function matchCase(original, replacement) {
+function matchCase(original: string, replacement: string): string {
   if (!original) {
     return replacement;
   }
@@ -135,7 +168,7 @@ function matchCase(original, replacement) {
     return replacement.toUpperCase();
   }
 
-  if (original[0] === original[0].toUpperCase()) {
+  if (original[0] === original[0]?.toUpperCase()) {
     return replacement.charAt(0).toUpperCase() + replacement.slice(1);
   }
 
@@ -151,36 +184,39 @@ function matchCase(original, replacement) {
 // looser semantic-relatedness match, higher recall but includes non-synonym
 // associations, e.g. "chef" ~ "kitchen"). We try rel_syn first and only fall
 // back to ml, see resolveReplacement().
-async function fetchDatamuseRelation(relation, word) {
+async function fetchDatamuseRelation(
+  relation: string,
+  word: string
+): Promise<DatamuseResult[]> {
   if (typeof fetch !== 'function') {
     return [];
   }
 
-  let controller;
-  let timeoutId;
+  let controller: AbortController | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   try {
     if (typeof AbortController !== 'undefined') {
       controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      timeoutId = setTimeout(() => controller?.abort(), FETCH_TIMEOUT_MS);
     }
 
     const url = `${DATAMUSE_ENDPOINT}?${relation}=${encodeURIComponent(
-      word,
+      word
     )}&md=p&max=${MAX_CANDIDATES}`;
 
     const response = await fetch(
       url,
-      controller ? { signal: controller.signal } : undefined,
+      controller ? { signal: controller.signal } : undefined
     );
 
     if (!response || !response.ok) {
       return [];
     }
 
-    const data = await response.json();
+    const data: unknown = await response.json();
 
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(data) ? (data as DatamuseResult[]) : [];
   } catch {
     // network failure, timeout/abort, JSON parse error, whatever - fail open.
     return [];
@@ -198,7 +234,11 @@ async function fetchDatamuseRelation(relation, word) {
 // A candidate word is usable if: it's a real alphabetic word distinct from
 // the original, it matches the original's part of speech (when known), and
 // it's itself familiar/easy per the existing readability wordlists.
-function isUsableCandidate(result, originalLower, posTag) {
+function isUsableCandidate(
+  result: DatamuseResult,
+  originalLower: string,
+  posTag: string | undefined
+): boolean {
   const word = typeof result.word === 'string' ? result.word.toLowerCase() : '';
 
   if (!word || !ALPHA_ONLY.test(word) || word === originalLower) {
@@ -214,12 +254,16 @@ function isUsableCandidate(result, originalLower, posTag) {
   return TextParsingTools.familiarWord(word) || TextParsingTools.easyWord(word);
 }
 
-function pickBestSynonym(originalWord, datamuseResults, category) {
+function pickBestSynonym(
+  originalWord: string,
+  datamuseResults: DatamuseResult[],
+  category: ContentCategory
+): string | null {
   const posTag = CONTENT_TAGS[category];
   const originalLower = originalWord.toLowerCase();
 
   const match = datamuseResults.find((result) =>
-    isUsableCandidate(result, originalLower, posTag),
+    isUsableCandidate(result, originalLower, posTag)
   );
 
   return match ? match.word.toLowerCase() : null;
@@ -236,20 +280,20 @@ function pickBestSynonym(originalWord, datamuseResults, category) {
 // solves word-sense disambiguation, so the safer tradeoff is fewer
 // substitutions (words with no strict synonym are simply left alone)
 // rather than confident-looking wrong ones.
-async function resolveReplacement(candidate) {
+async function resolveReplacement(candidate: Candidate): Promise<string | null> {
   if (synonymCache.has(candidate.key)) {
-    return synonymCache.get(candidate.key);
+    return synonymCache.get(candidate.key) ?? null;
   }
 
   const synonymResults = await fetchDatamuseRelation(
     'rel_syn',
-    candidate.normalized,
+    candidate.normalized
   );
 
   const replacement = pickBestSynonym(
     candidate.normalized,
     synonymResults,
-    candidate.category,
+    candidate.category
   );
 
   if (synonymCache.size < MAX_CACHE_SIZE) {
@@ -257,6 +301,11 @@ async function resolveReplacement(candidate) {
   }
 
   return replacement;
+}
+
+interface AnnotatedTerm {
+  term: CompromiseTerm;
+  candidate: Candidate | null;
 }
 
 /*
@@ -274,8 +323,8 @@ Datamuse unreachable, etc) it resolves to the original text unchanged with an
 empty substitutions list - callers should always be able to just use
 `result.text` as a drop-in replacement for the original.
 */
-async function substituteText(text) {
-  const fallback = { text, substitutions: [], changed: false };
+async function substituteText(text: string): Promise<SubstitutionResult> {
+  const fallback: SubstitutionResult = { text, substitutions: [], changed: false };
 
   if (typeof text !== 'string' || text.trim().length === 0) {
     return fallback;
@@ -288,14 +337,14 @@ async function substituteText(text) {
     // Single pass: annotate every term with its substitution candidacy (or
     // null) up front, so the "gather unique words" pass and the "rebuild
     // text" pass can never disagree with each other.
-    const annotated = sentences.map((sentence) =>
+    const annotated: AnnotatedTerm[][] = sentences.map((sentence) =>
       sentence.terms.map((term) => ({
         term,
         candidate: analyzeTermForCandidacy(term),
-      })),
+      }))
     );
 
-    const uniqueCandidates = new Map();
+    const uniqueCandidates = new Map<string, Candidate>();
 
     annotated.forEach((sentenceTerms) => {
       sentenceTerms.forEach(({ candidate }) => {
@@ -311,13 +360,13 @@ async function substituteText(text) {
 
     const candidatesToResolve = Array.from(uniqueCandidates.values()).slice(
       0,
-      MAX_LOOKUPS,
+      MAX_LOOKUPS
     );
 
     await Promise.all(candidatesToResolve.map(resolveReplacement));
 
-    const substitutions = [];
-    const substitutionsByKey = new Map();
+    const substitutions: Substitution[] = [];
+    const substitutionsByKey = new Map<string, Substitution>();
 
     let rebuilt = '';
 
@@ -331,10 +380,16 @@ async function substituteText(text) {
           const cased = matchCase(term.text, replacement);
           outputText = cased;
 
-          if (substitutionsByKey.has(candidate.key)) {
-            substitutionsByKey.get(candidate.key).count += 1;
+          const existing = substitutionsByKey.get(candidate.key);
+
+          if (existing) {
+            existing.count += 1;
           } else {
-            const entry = { original: term.text, replacement: cased, count: 1 };
+            const entry: Substitution = {
+              original: term.text,
+              replacement: cased,
+              count: 1,
+            };
             substitutionsByKey.set(candidate.key, entry);
             substitutions.push(entry);
           }
