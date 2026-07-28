@@ -20,6 +20,49 @@ export const EPUB_MIME_TYPE = 'application/epub+zip';
 // small enough to reject something dropped in by mistake before it ever
 // reaches pdfjs-dist/epub.js.
 export const MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+
+// ---------------------------------------------------------------------------
+// Sample books - shipped under public/sample-books/ so someone can try the
+// reader without hunting down their own file. Each one was individually
+// checked for a clean public-domain provenance before being added here (not
+// just "the author died a long time ago" - a modern translation/edition can
+// carry its own copyright even when the underlying work doesn't). All three
+// are Project Gutenberg releases; `source` links to the original Gutenberg
+// ebook page for attribution.
+export interface SampleBook {
+  id: string;
+  title: string;
+  author: string;
+  translator?: string;
+  filename: string; // relative to /public/sample-books/
+  source: string;
+}
+
+export const SAMPLE_BOOKS: SampleBook[] = [
+  {
+    id: 'phaedo',
+    title: 'Phaedo',
+    author: 'Plato',
+    translator: 'Benjamin Jowett',
+    filename: 'phaedo-plato.epub',
+    source: 'https://www.gutenberg.org/ebooks/1658',
+  },
+  {
+    id: 'meditations',
+    title: 'Meditations',
+    author: 'Marcus Aurelius',
+    filename: 'meditations-marcus-aurelius.epub',
+    source: 'https://www.gutenberg.org/ebooks/2680',
+  },
+  {
+    id: 'zarathustra',
+    title: 'Thus Spake Zarathustra',
+    author: 'Friedrich Nietzsche',
+    translator: 'Thomas Common',
+    filename: 'thus-spake-zarathustra-nietzsche.epub',
+    source: 'https://www.gutenberg.org/ebooks/1998',
+  },
+];
 export const DEFAULT_AGE = 12;
 export const MAX_AGE = 22;
 export const AGE_SCALE = 6;

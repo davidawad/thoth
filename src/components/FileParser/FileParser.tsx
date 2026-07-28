@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import * as CONSTANTS from '../constants';
 import { uploadedFileSchema } from '../schemas';
 import type { UpdateCallback } from '../types';
+import type { SampleBook } from '../constants';
 
 import EpubParser from '../EpubParser/EpubParser';
 import PDFParser from '../PDFParser/PDFParser';
@@ -28,6 +29,7 @@ interface FileParserState {
   pageNumber: number;
   pages: string[];
   uploadError: string | null;
+  loadingSampleId: string | null;
 }
 
 let ctx: FileParser;
@@ -99,6 +101,8 @@ class FileParser extends Component<FileParserProps, FileParserState> {
     this.setPage = this.setPage.bind(this);
     this.updateSettings = this.updateSettings.bind(this);
     this.turnToPage = this.turnToPage.bind(this);
+    this.loadFile = this.loadFile.bind(this);
+    this.loadSampleBook = this.loadSampleBook.bind(this);
 
     this.state = {
       fileLoaded: false,
@@ -108,15 +112,10 @@ class FileParser extends Component<FileParserProps, FileParserState> {
       pageNumber: 0,
       pages: [],
       uploadError: null,
+      loadingSampleId: null,
     };
 
     this.onDrop = (files) => {
-      this.setState({
-        fileLoaded: false,
-        currentFile: undefined,
-        uploadError: null,
-      });
-
       // react-dropzone hands us only the accepted files; a rejected or empty
       // drop yields []. Bail before URL.createObjectURL(undefined) throws.
       if (!Array.isArray(files) || files.length === 0) {
@@ -129,33 +128,73 @@ class FileParser extends Component<FileParserProps, FileParserState> {
         return;
       }
 
-      // react-dropzone's `accept` prop already filters by MIME type/
-      // extension, but that's a UI-level filter the user can bypass (e.g.
-      // dragging in a renamed file) - validate the actual shape of what we
-      // were handed before trusting it enough to hand off to pdfjs-dist/
-      // epub.js.
-      const validation = uploadedFileSchema.safeParse({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
+      this.loadFile(file);
+    };
+  }
 
-      if (!validation.success) {
-        this.setState({
-          uploadError:
-            "This file couldn't be loaded - only PDF and EPUB files up to 100MB are supported.",
-        });
-        return;
+  // Shared by drag-drop uploads and the shipped sample-book picker - both
+  // hand this a real File, and from here on the two paths are identical.
+  loadFile(file: File): void {
+    this.setState({
+      fileLoaded: false,
+      currentFile: undefined,
+      uploadError: null,
+    });
+
+    // react-dropzone's `accept` prop already filters by MIME type/
+    // extension, but that's a UI-level filter the user can bypass (e.g.
+    // dragging in a renamed file) - validate the actual shape of what we
+    // were handed before trusting it enough to hand off to pdfjs-dist/
+    // epub.js.
+    const validation = uploadedFileSchema.safeParse({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
+    if (!validation.success) {
+      this.setState({
+        uploadError:
+          "This file couldn't be loaded - only PDF and EPUB files up to 100MB are supported.",
+      });
+      return;
+    }
+
+    const fUrl = URL.createObjectURL(file);
+
+    this.setState({
+      fileLoaded: true,
+      currentFile: file,
+      currentFileUrl: fUrl,
+    });
+  }
+
+  // Fetches one of the epubs shipped under public/sample-books/ and feeds it
+  // through the exact same loadFile() path a dropped file takes, so someone
+  // can try the reader without hunting down their own book first.
+  async loadSampleBook(book: SampleBook): Promise<void> {
+    this.setState({ loadingSampleId: book.id, uploadError: null });
+
+    try {
+      const response = await fetch(`/sample-books/${book.filename}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch sample book: ${response.status}`);
       }
 
-      const fUrl = URL.createObjectURL(file);
-
-      this.setState({
-        fileLoaded: true,
-        currentFile: file,
-        currentFileUrl: fUrl,
+      const blob = await response.blob();
+      const file = new File([blob], book.filename, {
+        type: CONSTANTS.EPUB_MIME_TYPE,
       });
-    };
+
+      this.loadFile(file);
+    } catch {
+      this.setState({
+        uploadError: `Couldn't load "${book.title}" - try again in a moment.`,
+      });
+    } finally {
+      this.setState({ loadingSampleId: null });
+    }
   }
 
   /*
@@ -206,11 +245,35 @@ class FileParser extends Component<FileParserProps, FileParserState> {
       pageNumber,
       pages,
       uploadError,
+      loadingSampleId,
     } = this.state;
 
     return (
       <div className="FileParser-canvas">
         <StyledDropzone onDrop={this.onDrop} accept={allowedFiletypes} />
+
+        {!fileLoaded ? (
+          <div className="SampleBooks mt-3 text-sm">
+            <p className="opacity-70 mb-1">Or try a public-domain sample:</p>
+            <div className="flex flex-wrap gap-2">
+              {CONSTANTS.SAMPLE_BOOKS.map((book) => (
+                <button
+                  key={book.id}
+                  type="button"
+                  className="btn btn-xs btn-outline"
+                  disabled={loadingSampleId !== null}
+                  onClick={() => {
+                    this.loadSampleBook(book);
+                  }}
+                >
+                  {loadingSampleId === book.id
+                    ? 'Loading…'
+                    : `${book.title} (${book.author})`}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {uploadError ? <p className="FileParser-error">{uploadError}</p> : null}
 
