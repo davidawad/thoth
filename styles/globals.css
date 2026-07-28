@@ -1,8 +1,138 @@
 /* Note, tailwind styles will break a lot of shit */
-/* @import "tailwindcss"; */
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ---------------------------------------------------------------------------
+ * Theming (daisyui v5, Tailwind v4 native CSS plugin syntax)
+ *
+ * "light" and "dark" are daisyui's built-in themes; "sepia" is a custom
+ * warm/paper-like theme tuned for long reading sessions, defined below via
+ * `@plugin "daisyui/theme"`. Applied by setting `data-theme` on <html> - see
+ * pages/_document.js (avoids a flash of the wrong theme on load) and
+ * src/components/SettingsPanel/SettingsPanel.js (the selector control) and
+ * src/components/constants.js (the THEMES list, kept in sync with this file
+ * by hand since daisyui's theme list can't be read from JS).
+ * ------------------------------------------------------------------------ */
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, sepia;
+}
 
-/* Global custom styles can be added here */
+@plugin "daisyui/theme" {
+  name: "sepia";
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #f4ecd8;
+  --color-base-200: #ece0c4;
+  --color-base-300: #ddcda2;
+  --color-base-content: #3b2f1e;
+  --color-primary: #8a5a2b;
+  --color-primary-content: #fdf6e3;
+  --color-secondary: #6b4f2a;
+  --color-secondary-content: #fdf6e3;
+  --color-accent: #a13d3d;
+  --color-accent-content: #fdf6e3;
+  --color-neutral: #3b2f1e;
+  --color-neutral-content: #f4ecd8;
+  --color-info: #2f5f8a;
+  --color-info-content: #f4ecd8;
+  --color-success: #3f6b3f;
+  --color-success-content: #f4ecd8;
+  --color-warning: #a8711d;
+  --color-warning-content: #3b2f1e;
+  --color-error: #a13d3d;
+  --color-error-content: #f4ecd8;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Design tokens
+ *
+ * A small, pragmatic set of tokens on top of daisyui/tailwind rather than a
+ * parallel design system - spacing/typography scale + the handful of custom
+ * properties the legibility pass below relies on. Theme colors themselves
+ * come from daisyui (`data-theme`, see tailwind.config.js) and are NOT
+ * duplicated here - only non-color tokens live in :root.
+ * ------------------------------------------------------------------------ */
+:root {
+  /* Typography.
+   * 12pt = 16px at the standard 96 CSS-px/inch reference (1pt = 4/3 px);
+   * 11.5pt ~= 15.3px. We use 1rem (16px browser default = 12pt) as the
+   * sitewide base size - the top of the requested 11.5-12pt range, which
+   * also happens to match the common accessibility baseline of a >=16px
+   * minimum body text size (Section508.gov typography guidance). */
+  --font-size-body: 1rem;
+  /* W3C WCAG 1.4.12 (Text Spacing) baseline: line-height >= 1.5x font size.
+   * Also within the repo owner's requested 1.35-1.5 range. */
+  --line-height-body: 1.5;
+  /* Reading measure: ~55-75 characters per line (W3C/Section 508 guidance),
+   * applied via the `.reading-measure` utility below and the `max-w-measure*`
+   * tailwind utilities (tailwind.config.js). */
+  --measure: 70ch;
+  --measure-narrow: 55ch;
+
+  /* Spacing scale (rem-based, 4px grid) used by the settings UI. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+}
+
+html {
+  /* Respect the browser/user font-size setting instead of overriding it -
+   * 1rem below therefore tracks the user's own zoom/base-size preference. */
+  font-size: 100%;
+}
+
+body {
+  /* daisyui's theme background/text color (bg-base-100/text-base-content)
+   * is applied as a className directly on <body> in pages/_document.js
+   * rather than via `@apply` here - `@apply`-ing daisyui's dynamic,
+   * theme-driven utility classes isn't reliably supported by this project's
+   * Tailwind v4 + daisyui v4 (v3-plugin-API) combination (see the note in
+   * src/App.css for the same issue in per-component stylesheets). */
+  font-family: "Atkinson Hyperlegible", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--font-size-body);
+  font-weight: 400; /* Atkinson Hyperlegible only ships 400/700 - never use a lighter weight. */
+  line-height: var(--line-height-body);
+  text-align: left; /* never fully-justify body text - hurts legibility (Section 508 guidance) */
+  min-height: 100vh;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Reading-measure utility: keeps paragraphs of body text at ~55-75 characters
+ * per line. Intentionally NOT applied to the single-word RSVP display
+ * (.Reader-canvas in Reader.css), which is a different kind of UI element
+ * with its own sizing rules. */
+.reading-measure {
+  max-width: var(--measure);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.reading-measure-narrow {
+  max-width: var(--measure-narrow);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Paragraphs of reading/settings copy get generous spacing per WCAG 1.4.12
+ * (paragraph spacing >= 2x font size). */
+.reading-measure p {
+  margin-bottom: 2em;
+}
+
+.reading-measure p:last-child {
+  margin-bottom: 0;
+}

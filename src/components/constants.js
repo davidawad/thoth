@@ -42,7 +42,128 @@ export const MIN_LEXICAL_DENSITY = 0.35;
 export const MAX_LEXICAL_DENSITY = 0.75;
 export const LEXICAL_DENSITY_MIN_AGE = 8;
 export const LEXICAL_DENSITY_MAX_AGE = 20;
-export const INTRO_TEXT = `Hello! 
+
+// ---------------------------------------------------------------------------
+// Theming (daisyui `data-theme`) - see src/components/SettingsPanel/SettingsPanel.js
+// ---------------------------------------------------------------------------
+
+// localStorage key used to persist the user's chosen theme across visits.
+export const THEME_STORAGE_KEY = 'thoth-theme';
+
+// Fallback theme used when nothing is stored yet and the OS has no preference.
+export const DEFAULT_THEME = 'light';
+
+// Themes available in the selector. "light" and "dark" are daisyui's built-in
+// themes (see tailwind.config.js); "sepia" is a custom warm/paper-like theme
+// defined alongside them, tuned for long reading sessions.
+export const THEMES = [
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+  { id: 'sepia', label: 'Sepia (reading)' },
+];
+
+// ---------------------------------------------------------------------------
+// Typography attribution + legibility research citations, rendered in
+// SettingsPanel so the sources backing the typography choices are visible.
+// ---------------------------------------------------------------------------
+
+export const FONT_ATTRIBUTION = {
+  name: 'Atkinson Hyperlegible',
+  designer:
+    'Applied Design Works, commissioned by the Braille Institute of America',
+  source: 'Google Fonts',
+  url: 'https://fonts.google.com/specimen/Atkinson+Hyperlegible',
+  license: 'SIL Open Font License 1.1 (free for commercial & personal use)',
+};
+
+// Papers + standards consulted for the legibility pass. `note` records what,
+// if anything, was actually changed in the app as a result, or why a finding
+// was left as a judgment call rather than implemented.
+export const LEGIBILITY_REFERENCES = [
+  {
+    citation:
+      'Wallace, S. et al. (2022). Towards Individuated Reading Experiences: Different Fonts Increase Reading Speed for Different Individuals. ACM TOCHI 29(4).',
+    url: 'https://dl.acm.org/doi/full/10.1145/3502222',
+    note: 'Optimal font varies by individual (avg. 117 wpm gap between worst/best font per reader); full personalization is out of scope for this pass, noted as a follow-up idea.',
+  },
+  {
+    citation:
+      'Wallace, S. et al. (2020). Accelerating Adult Readers with Typeface. CHI EA ’20.',
+    url: 'https://dl.acm.org/doi/pdf/10.1145/3334480.3382985',
+    note: 'Preferred font is rarely the fastest-reading font for a given person - same individuation caveat as above.',
+  },
+  {
+    citation:
+      'Kadner, F. et al. (2021). AdaptiFont: Increasing Individuals’ Reading Speed with a Generative Font Model and Bayesian Optimization. CHI ’21 (free preprint: arXiv:2104.10741).',
+    url: 'https://dl.acm.org/doi/fullHtml/10.1145/3411764.3445140',
+    note: 'Proposes per-user adaptive font optimization; a good future direction, not implemented here (single fixed sitewide font per project scope).',
+  },
+  {
+    citation:
+      'Arditi, A. & Cho, J. (2005). Serifs and Font Legibility. Vision Research 45(23).',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4612630/',
+    note: 'Found no meaningful legibility difference from serifs themselves; letter spacing mattered more. Supports using a sans-serif with generous spacing (Atkinson Hyperlegible).',
+  },
+  {
+    citation:
+      'Dobres, J. et al. (2016). Utilising Psychophysical Techniques to Investigate the Effects of Age, Typeface Design, Size and Display Polarity on Glance Legibility. Ergonomics 60(6).',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5213401/',
+    note: 'Humanist typefaces with open letterforms beat geometric/grotesque ones, especially for older readers; positive polarity (dark-on-light) read ~39% faster than light-on-dark. Judgment call: dark theme is kept for user preference/eye comfort, but this is a documented tradeoff, not a legibility win.',
+  },
+  {
+    citation:
+      'Reimer, B. et al. (2014). Assessing the Impact of Typeface Design in a Text-Rich Automotive User Interface. Ergonomics 57(11).',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4267594/',
+    note: 'Same humanist-vs-grotesque result as Dobres 2016 in a different setting; Atkinson Hyperlegible’s open, distinct letterforms are consistent with this.',
+  },
+  {
+    citation:
+      'Vecino, S. et al. (2022). How Does Serif vs. Sans Serif Typeface Impact the Usability of e-Commerce Websites? PeerJ Computer Science 8:e1139.',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9680897/',
+    note: 'Found no measurable impact of serif vs. sans-serif on reading speed; only gender predicted preference. No action needed - reinforces that the serif/sans-serif choice is not a legibility-critical variable here.',
+  },
+  {
+    citation:
+      'Minakata, K. et al. (2023). The Effect of Serifs and Stroke Contrast on Low-Vision Reading. PMID 36563495.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/36563495/',
+    note: 'Uniform (low) stroke-width contrast helped low-vision readers most. Atkinson Hyperlegible was designed with low stroke contrast for this reason.',
+  },
+  {
+    citation:
+      'Kaspar, K. et al. (2015). The Effect of Serifs on the Evaluation of Scientific Abstracts. PMID 25704872.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/25704872/',
+    note: 'Sans-serif read faster but serif text was rated more favorably - a preference/perception effect, not a speed-reading concern for this app.',
+  },
+  {
+    citation:
+      'Beymer, D., Russell, D. & Orton, P. (2008). An Eye Tracking Study of How Font Size and Type Influence Online Reading. Proc. BCS HCI 2008.',
+    url: 'https://dl.acm.org/doi/10.5555/1531826.1531831',
+    note: 'Smaller fonts produced longer fixation durations; serif read marginally faster online but not significantly. Reinforces keeping body text at >=16px.',
+  },
+  {
+    citation:
+      'Gadhvi, M. et al. (2024). Font Matters: Deciphering the Impact of Font Types on Attention and Working Memory. Cureus 16(5).',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11156575/',
+    note: 'Serif fonts produced faster letter-cancellation (attention) times than sans-serif or script in this small study; comprehension/working-memory unaffected. Noted, not acted on (single sitewide sans-serif font is the project’s explicit scope).',
+  },
+  {
+    citation:
+      'A Review of Text Accessibility Standards, Guidelines, and Font Tool Limitations. ASSETS ’25.',
+    url: 'https://dl.acm.org/doi/10.1145/3663547.3759692',
+    note: 'Notes most accessibility guidelines (incl. WCAG) under-specify typography beyond color contrast, and that common guidance (e.g. left-alignment) is Western/Latin-script-centric. Informed keeping this pass’s typography changes modest and documented rather than over-prescriptive.',
+  },
+  {
+    citation: 'W3C WCAG 2.1 Success Criterion 1.4.12: Text Spacing.',
+    url: 'https://www.w3.org/WAI/WCAG21/Understanding/text-spacing',
+    note: 'Requires no loss of content when line-height >=1.5x, paragraph spacing >=2x, letter spacing >=0.12x, and word spacing >=0.16x font size. Implemented: 1.5 line-height on body copy, no fixed-height clipping on reading text.',
+  },
+  {
+    citation: 'Section508.gov: Fonts & Typography guidance.',
+    url: 'https://www.section508.gov/develop/fonts-typography/',
+    note: 'Recommends sans-serif for body text, 11-12pt/15-16px minimum, and >=4.5:1 contrast. Implemented: Atkinson Hyperlegible sans-serif at 1rem (16px = 12pt), themes chosen for AA contrast.',
+  },
+];
+export const INTRO_TEXT = `Hello!
 
 This is Thoth, an open source speed reading tool inspired by Zethos and Spritz ($3.5mil series A).
 

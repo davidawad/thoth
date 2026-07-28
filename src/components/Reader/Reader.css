@@ -2,7 +2,9 @@
   /* width: 600px; */
   width: 100%;
   margin: 0 auto;
-  font-family: Courier;
+  /* inherit the sitewide Atkinson Hyperlegible font instead of the old
+   * hardcoded Courier - see styles/globals.css. */
+  font-family: inherit;
   margin: 0;
   padding: 0;
   border: 0;
@@ -10,6 +12,9 @@
 
 .Reader-canvas {
   font-size: 40px;
+  line-height: 1.5;
+  /* `border` has no color set, so it uses currentColor (the theme's
+   * base-content) - keep it that way so it tracks light/dark/sepia. */
   border: 2px solid;
   width: 21rem;
   display: inline-block;
@@ -47,9 +52,17 @@
 }
 
 .editor {
-  border: solid gray 1px;
+  /* see the note in src/App.css about why `@apply` isn't used here -
+   * `currentColor` still tracks the active theme via inherited text color. */
+  border: 1px solid currentColor;
   min-height: 20em;
   padding: 20px;
+  /* reading measure: keep pasted paragraphs at ~55-75 characters per line
+   * (W3C/Section 508 guidance) instead of stretching full width. */
+  max-width: var(--measure, 70ch);
+  line-height: var(--line-height-body, 1.5);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .readerSurroundingWord {

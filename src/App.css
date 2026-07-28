@@ -4,9 +4,14 @@
   padding: 0;
   border: 0;
 
-  width: 600px;
+  width: 100%;
+  max-width: 40rem;
   margin: 0 auto;
-  font-family: Courier;
+  /* sitewide font is set on `body` in styles/globals.css; inherit it here
+   * rather than overriding with the old hardcoded Courier. */
+  font-family: inherit;
+  color: inherit;
+  background-color: inherit;
 }
 
 .App-logo {
@@ -31,7 +36,12 @@
 }
 
 .App-FileParser {
-  border: solid gray 1px;
+  /* `@apply`-ing daisyui utility classes doesn't work here: this stylesheet
+   * is processed as its own isolated entry by @tailwindcss/postcss (only
+   * styles/globals.css pulls in the full `@tailwind ...` utility set), so we
+   * use `currentColor` instead - it still tracks the active theme, since
+   * text color (base-content) is inherited from `body` (see globals.css). */
+  border: 1px solid currentColor;
   min-height: 20em;
   padding: 20px;
 }

@@ -1,60 +1,131 @@
-import React, { Component } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import TextParsingTools from "../TextParsingTools";
-import * as CONSTANTS from "../constants";
+import {
+  THEMES,
+  THEME_STORAGE_KEY,
+  DEFAULT_THEME,
+  FONT_ATTRIBUTION,
+  LEGIBILITY_REFERENCES,
+  DEFAULT_READABILITY_METRIC,
+} from "../constants";
 
-class SettingsPanel extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      readingSpeed: Number(this.props.readingSpeed),
-      baseColorStop: String(this.props.baseColorStop),
-      finalColorStop: String(this.props.finalColorStop),
-      settingsEnabled: Boolean(this.props.settingsEnabled),
-      age: Number(this.props.age),
-      readabilityMetric:
-        this.props.readabilityMetric || CONSTANTS.DEFAULT_READABILITY_METRIC,
-    };
-
-    this.handleReadabilityMetricChange =
-      this.handleReadabilityMetricChange.bind(this);
+// Reads the theme currently applied to <html data-theme="..."> - set before
+// first paint by the inline script in pages/_document.js - so this selector
+// starts in sync with what's already on screen rather than flashing to a
+// default value once the component mounts.
+function getActiveTheme() {
+  if (typeof document === "undefined") {
+    return DEFAULT_THEME;
   }
 
-  leavePaneHandler = (wasSaved, newSettings, oldSettings) => {
-    if (wasSaved && newSettings !== oldSettings) {
-      this.props.updateCallback(newSettings);
-    }
-  };
+  return document.documentElement.getAttribute("data-theme") || DEFAULT_THEME;
+}
 
-  componentWillReceiveProps(props) {
-    this.setState(props);
+// Applies + persists a theme. Swapping `data-theme` is daisyui's own
+// mechanism (see tailwind.config.js `daisyui.themes`) - no parallel
+// CSS-variable system needed.
+function applyTheme(themeId) {
+  if (typeof document === "undefined") {
+    return;
   }
 
-  // fires the moment the user picks a new metric - reuses the existing
+  document.documentElement.setAttribute("data-theme", themeId);
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, themeId);
+  } catch (e) {
+    // localStorage can throw (private browsing, storage disabled, quota,
+    // etc). The theme still applies for this session, it just won't
+    // persist across visits.
+  }
+}
+
+const SettingsPanel = (props) => {
+  const [theme, setTheme] = useState(DEFAULT_THEME);
+  const [readabilityMetric, setReadabilityMetric] = useState(
+    props.readabilityMetric || DEFAULT_READABILITY_METRIC
+  );
+
+  // Sync from the DOM once mounted (client-only - avoids SSR/client
+  // mismatches, since the modal this lives in isn't rendered on the server).
+  useEffect(() => {
+    setTheme(getActiveTheme());
+  }, []);
+
+  const handleThemeChange = useCallback((event) => {
+    const nextTheme = event.target.value;
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+
+    // NOTE: deliberately NOT calling props.updateCallback() here. That
+    // callback feeds into App's top-level state (pages/index.js), which is
+    // spread as props into <Reader>; Reader's componentDidUpdate treats ANY
+    // prop change (not just `content` changes) as a reason to fully
+    // re-run text parsing (TextParsingTools/compromise). Theme state is
+    // fully self-contained (DOM `data-theme` attribute + localStorage - see
+    // applyTheme() above), so there's nothing for App/Reader to react to
+    // here; routing it through updateCallback would only add risk for no
+    // benefit.
+  }, []);
+
+  // Fires the moment the user picks a new metric - reuses the existing
   // updateCallback pattern so the choice flows straight up to pages/index.js
   // state (which also persists it to localStorage).
-  handleReadabilityMetricChange(event) {
-    const readabilityMetric = event.target.value;
+  const handleReadabilityMetricChange = useCallback(
+    (event) => {
+      const nextMetric = event.target.value;
+      setReadabilityMetric(nextMetric);
+      props.updateCallback({ readabilityMetric: nextMetric });
+    },
+    [props]
+  );
 
-    this.setState({ readabilityMetric });
-    this.props.updateCallback({ readabilityMetric });
-  }
+  return (
+    <div className="reading-measure-narrow text-left">
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Display</h3>
 
-  render() {
-    return (
-      <fieldset className="form-group thoth-readability-settings">
-        <legend>Readability</legend>
+        <label className="form-control w-full max-w-xs" htmlFor="thoth-theme-select">
+          <span className="label-text block mb-1">Theme</span>
+        </label>
+        <select
+          id="thoth-theme-select"
+          data-testid="theme-select"
+          className="select select-bordered select-sm w-full max-w-xs"
+          value={theme}
+          onChange={handleThemeChange}
+        >
+          {THEMES.map((themeOption) => (
+            <option key={themeOption.id} value={themeOption.id}>
+              {themeOption.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-sm opacity-70 mt-2">
+          Saved to this browser and applied automatically next time you
+          visit.
+        </p>
+      </section>
 
-        <label htmlFor="readabilityMetric">
-          Difficulty metric driving reading speed:
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Readability</h3>
+
+        <label
+          className="form-control w-full max-w-xs"
+          htmlFor="readabilityMetric"
+        >
+          <span className="label-text block mb-1">
+            Difficulty metric driving reading speed
+          </span>
         </label>
         <select
           id="readabilityMetric"
           name="readabilityMetric"
-          className="form-control"
-          value={this.state.readabilityMetric}
-          onChange={this.handleReadabilityMetricChange}
+          data-testid="readability-metric-select"
+          className="select select-bordered select-sm w-full max-w-xs"
+          value={readabilityMetric}
+          onChange={handleReadabilityMetricChange}
         >
           {TextParsingTools.READABILITY_METRICS.map((metric) => (
             <option key={metric.key} value={metric.key}>
@@ -62,9 +133,51 @@ class SettingsPanel extends Component {
             </option>
           ))}
         </select>
-      </fieldset>
-    );
-  }
-}
+      </section>
+
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Typeface</h3>
+        <p className="text-sm">
+          Body text is set in{" "}
+          <a
+            href={FONT_ATTRIBUTION.url}
+            target="_blank"
+            rel="noreferrer"
+            className="link link-primary"
+          >
+            {FONT_ATTRIBUTION.name}
+          </a>
+          , designed by {FONT_ATTRIBUTION.designer}. Distributed free via{" "}
+          {FONT_ATTRIBUTION.source} under the {FONT_ATTRIBUTION.license}.
+        </p>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Legibility research</h3>
+        <p className="text-sm mb-2">
+          Thoth&apos;s typography (font, size, line height, line length,
+          contrast) is informed by the following sources. Where a finding
+          wasn&apos;t clearly actionable, the note below says so instead of
+          forcing it.
+        </p>
+        <ul className="text-xs space-y-2 list-disc list-inside opacity-80 max-h-48 overflow-y-auto pr-2">
+          {LEGIBILITY_REFERENCES.map((reference) => (
+            <li key={reference.url}>
+              <a
+                href={reference.url}
+                target="_blank"
+                rel="noreferrer"
+                className="link"
+              >
+                {reference.citation}
+              </a>
+              {reference.note ? <> &mdash; {reference.note}</> : null}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+};
 
 export default SettingsPanel;
