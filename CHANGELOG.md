@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/davidawad/thoth/compare/v1.0.0...v1.1.0) (2026-07-28)
+
+
+### Features
+
+* add Makefile and justfile task runners ([c38cade](https://github.com/davidawad/thoth/commit/c38cade703baa30721209ed459502873c258c87c))
+
 # 1.0.0 (2026-07-28)
 
 
