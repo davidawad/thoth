@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 
-import Epub from "epubjs/lib/index";
-
-let ctx = {};
+import Epub, { type Section } from "epubjs/lib/index";
 
 /*
   Pull plain text out of a parsed epub.js section.
@@ -19,39 +17,46 @@ let ctx = {};
   fall back to parsing the string ourselves and stripping tags by reading
   `.textContent` off the parsed body.
 */
-function extractText(contents) {
+function extractText(contents: Element | string | null | undefined): string {
   if (!contents) {
     return "";
   }
 
-  if (typeof contents.textContent === "string") {
-    return contents.textContent;
+  if (typeof contents !== "string") {
+    return contents.textContent || "";
   }
 
-  if (typeof contents === "string") {
-    const parsed = new DOMParser().parseFromString(contents, "text/html");
-    return (parsed.body && parsed.body.textContent) || "";
-  }
-
-  return "";
+  const parsed = new DOMParser().parseFromString(contents, "text/html");
+  return (parsed.body && parsed.body.textContent) || "";
 }
 
-class EpubParser extends Component {
-  constructor(props) {
+interface EpubParserProps {
+  file: File;
+  url?: string | undefined;
+  verbose: boolean | undefined;
+  updateCallback: (settings: { pages: string[] }) => void;
+}
+
+interface EpubParserState {
+  bookLoaded: boolean;
+  fileName: string;
+  verbose: boolean | undefined;
+  pages: string[];
+  error: string | null;
+}
+
+let ctx: EpubParser;
+
+class EpubParser extends Component<EpubParserProps, EpubParserState> {
+  constructor(props: EpubParserProps) {
     super(props);
 
     this.openBook = this.openBook.bind(this);
 
-    // book file passed into this component.
-    const currFile = this.props.file;
-
     ctx = this;
 
     this.state = {
-      currentFile: currFile,
       bookLoaded: false,
-      book: {},
-      complete: false,
       fileName: "EPUB LOADING . . .",
       verbose: this.props.verbose,
       pages: [], // array of chapter/section text content
@@ -59,7 +64,7 @@ class EpubParser extends Component {
     };
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     // Guard against being mounted without an actual uploaded file - the
     // FileParser dropzone hands us a Blob, but this keeps us defensive
     // instead of silently failing inside FileReader.
@@ -78,8 +83,8 @@ class EpubParser extends Component {
     reader.readAsArrayBuffer(this.props.file);
   }
 
-  openBook(e) {
-    const bookData = e.target.result;
+  openBook(e: ProgressEvent<FileReader>): void {
+    const bookData = e.target?.result as ArrayBuffer;
 
     let book;
     try {
@@ -92,14 +97,13 @@ class EpubParser extends Component {
 
     this.setState({
       bookLoaded: false,
-      book: book,
     });
 
     // epub.js's Book constructor swallows failures internally
     // (it calls `this.open(...).catch(err => emit(OPEN_FAILED))` and never
     // rejects `book.ready`), so a malformed epub would otherwise hang
     // forever instead of surfacing an error - listen for the event instead.
-    book.on("openFailed", function (err) {
+    book.on("openFailed", function (err: unknown) {
       console.error("EPUB open failed: " + err);
       ctx.setState({ error: "This file could not be opened as an EPUB." });
     });
@@ -110,17 +114,17 @@ class EpubParser extends Component {
           console.log("# EPUB Loaded");
         }
 
-        const sections = [];
+        const sections: Section[] = [];
         book.spine.each(function (section) {
           sections.push(section);
         });
 
-        const pagesText = [];
+        const pagesText: string[] = [];
 
         // Load + extract each section's text sequentially (mirrors
         // PDFParser's page-by-page promise chain) so we don't hammer the
         // archive/zip reader with concurrent requests.
-        let lastPromise = Promise.resolve();
+        let lastPromise: Promise<unknown> = Promise.resolve();
 
         sections.forEach(function (section) {
           lastPromise = lastPromise
@@ -149,7 +153,7 @@ class EpubParser extends Component {
       .then(function (pagesText) {
         // Drop fully empty sections (covers, nav pages, etc.) so the RSVP
         // reader isn't handed blank pages to flip through.
-        const nonEmptyPages = pagesText.filter(function (page) {
+        const nonEmptyPages = (pagesText as string[]).filter(function (page) {
           return page.length > 0;
         });
 
@@ -172,8 +176,9 @@ class EpubParser extends Component {
       })
       .catch(function (err) {
         console.error("Error extracting EPUB text: " + err);
+        const message = err instanceof Error ? err.message : String(err);
         ctx.setState({
-          error: "Error reading EPUB contents: " + (err && err.message ? err.message : err),
+          error: "Error reading EPUB contents: " + message,
         });
       });
   }

@@ -5,40 +5,41 @@ import React, { Component } from 'react';
 // `undefined` at runtime with `import PDFJS from 'pdfjs-dist'`).
 import * as PDFJS from 'pdfjs-dist';
 
-let ctx = {};
+interface PDFParserProps {
+  file: File;
+  url: string | undefined;
+  verbose: boolean | undefined;
+  updateCallback: (settings: { pages: string[] }) => void;
+}
 
-class PDFParser extends Component {
-  constructor(props) {
+interface PDFParserState {
+  bookLoaded: boolean;
+  fileName: string;
+  error: string | null;
+  verbose: boolean | undefined;
+  pages: string[];
+}
+
+let ctx: PDFParser;
+
+class PDFParser extends Component<PDFParserProps, PDFParserState> {
+  constructor(props: PDFParserProps) {
     super(props);
 
     this.openBook = this.openBook.bind(this);
 
-    // book file passed into this component.
-    const currFile = this.props.file;
-
     ctx = this;
 
-    // if we get a pageNumber then let's do that.
-    let pageNumber = 0;
-    if (typeof(this.props.pageNumber) !== typeof(undefined)) {
-      pageNumber = this.props.pageNumber;
-    }
-
     this.state = {
-      currentFile: currFile,
       bookLoaded: false,
-      book: {},
-      content: '',
-      complete: false,
       fileName: 'PDF LOADING . . .',
       error: null,
       verbose: this.props.verbose,
-      pageNumber: pageNumber, 
-      pages : [], // array of page text content
+      pages: [], // array of page text content
     };
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     // readAsArrayBuffer throws a TypeError on anything that isn't a Blob/File.
     // Guard the boundary rather than crash on a missing/malformed file prop.
     if (!(this.props.file instanceof Blob)) {
@@ -60,23 +61,22 @@ class PDFParser extends Component {
     reader.readAsArrayBuffer(this.props.file);
   }
 
-  openBook(e) {
+  openBook(e: ProgressEvent<FileReader>): void {
     // Loading file from file system into typed array
-
-    var bookData = e.target.result;
-    var loadingTask = PDFJS.getDocument(bookData);
+    const bookData = e.target?.result as ArrayBuffer;
+    const loadingTask = PDFJS.getDocument(bookData);
 
     // reset bookLoaded as we now want to load a new book
     this.setState({
-      bookLoaded: false
-    })
+      bookLoaded: false,
+    });
 
     // buffer of text from all pages
-    let pagesText = [];
+    const pagesText: string[] = [];
 
     loadingTask.promise
-      .then(function(doc) {
-        var numPages = doc.numPages;
+      .then(function (doc) {
+        const numPages = doc.numPages;
 
         if (ctx.state.verbose) {
           console.log('# Document Loaded');
@@ -84,17 +84,18 @@ class PDFParser extends Component {
           console.log();
         }
 
-        var lastPromise; // will be used to chain promises
+        let lastPromise: Promise<unknown>; // will be used to chain promises
 
-        lastPromise = doc.getMetadata().then(function(data) {
+        lastPromise = doc.getMetadata().then(function (data) {
           if (ctx.state.verbose) {
             console.log('# Metadata Is Loaded');
             console.log('## Info');
             console.log(JSON.stringify(data.info, null, 2));
             // data.info is absent for PDFs without a metadata dictionary; don't
             // assume the Title key (or the object) exists.
-            if (data.info && data.info.Title) {
-              ctx.setState({ fileName: data.info.Title });
+            const info = data.info as { Title?: string } | undefined;
+            if (info && info.Title) {
+              ctx.setState({ fileName: info.Title });
             }
             console.log();
           }
@@ -108,8 +109,8 @@ class PDFParser extends Component {
           }
         });
 
-        var loadPage = function(pageNum) {
-          return doc.getPage(pageNum).then(function(page) {
+        const loadPage = function (pageNum: number) {
+          return doc.getPage(pageNum).then(function (page) {
             if (ctx.state.verbose) {
               console.log('# Page ' + pageNum);
               console.log();
@@ -117,11 +118,11 @@ class PDFParser extends Component {
 
             return page
               .getTextContent()
-              .then(function(content) {
+              .then(function (content) {
                 // Content contains lots of information about the text layout and
                 // styles, but we need only strings at the moment
-                var strings = content.items.map(function(item) {
-                  return item.str;
+                const strings = content.items.map(function (item) {
+                  return 'str' in item ? item.str : '';
                 });
 
                 const pageText = strings.join(' ');
@@ -133,7 +134,7 @@ class PDFParser extends Component {
 
                 pagesText.push(pageText);
               })
-              .then(function() {
+              .then(function () {
                 console.log();
               });
           });
@@ -141,36 +142,40 @@ class PDFParser extends Component {
 
         // Loading of the first page will wait on metadata and subsequent loadings
         // will wait on the previous pages.
-        for (var i = 1; i <= numPages; i++) {
+        for (let i = 1; i <= numPages; i++) {
           lastPromise = lastPromise.then(loadPage.bind(null, i));
         }
 
         return lastPromise;
       })
 
-      .then(function() {
+      .then(
+        function () {
           if (ctx.state.verbose) {
             console.log('# End of Document');
-            console.log('ALL PAGE TEXT : ', pagesText.join(' ')); 
+            console.log('ALL PAGE TEXT : ', pagesText.join(' '));
           }
 
           // we now have all page text, let's now add it to component state
-          ctx.setState({
-            bookLoaded: true,
-            pages: pagesText, 
-            pageNumber: 0,
-
-          }, () => {
-            if (typeof ctx.props.updateCallback === 'function') {
-              ctx.props.updateCallback({
-                pages: ctx.state.pages
-              })
+          ctx.setState(
+            {
+              bookLoaded: true,
+              pages: pagesText,
+            },
+            () => {
+              if (typeof ctx.props.updateCallback === 'function') {
+                ctx.props.updateCallback({
+                  pages: ctx.state.pages,
+                });
+              }
             }
-          });
+          );
         },
-        function(err) {
+        function (err: unknown) {
           console.error('Error: ' + err);
-          ctx.setState({ error: 'Could not read this PDF (' + err + '). Try a different file.' });
+          ctx.setState({
+            error: 'Could not read this PDF (' + err + '). Try a different file.',
+          });
         }
       );
   }
@@ -179,7 +184,7 @@ class PDFParser extends Component {
     if (this.state.error) {
       return <p className="PDFParser-error">{this.state.error}</p>;
     }
-    return <p>{ this.state.bookLoaded ?  '' : 'loading . . . ' }</p>;
+    return <p>{this.state.bookLoaded ? '' : 'loading . . . '}</p>;
   }
 }
 

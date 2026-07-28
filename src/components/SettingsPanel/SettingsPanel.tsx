@@ -92,7 +92,7 @@ function LegibilityResearchSection() {
   );
 }
 
-interface SettingsPanelProps extends AppSettings {
+interface SettingsPanelProps extends Partial<AppSettings> {
   updateCallback: UpdateCallback;
 }
 

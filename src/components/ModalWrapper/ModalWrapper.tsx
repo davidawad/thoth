@@ -32,11 +32,11 @@ const customStyles: Modal.Styles = {
   },
 };
 
-interface ModalWrapperProps extends AppSettings {
+interface ModalWrapperProps extends Partial<AppSettings> {
   updateCallback: UpdateCallback;
 }
 
-interface ModalWrapperState extends AppSettings {
+interface ModalWrapperState extends Partial<AppSettings> {
   modalIsOpen: boolean;
 }
 
