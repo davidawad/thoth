@@ -1,0 +1,173 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec oxlint --deny-warnings
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+
+  test:
+    name: Test + Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  fuzz:
+    name: Fuzz (bounded smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run fuzz:epub
+      - run: pnpm run fuzz:pdf
+
+  mutation:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    # Slower and lower-signal than the unit test suite itself - runs after
+    # test/lint/typecheck already passed rather than blocking on it first.
+    needs: [lint, typecheck, test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:mutation
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 14
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      # `semgrep scan` (not `semgrep ci`) - no SEMGREP_APP_TOKEN is configured,
+      # so this stays a local, free registry-rules scan rather than trying to
+      # report to Semgrep's SaaS dashboard.
+      #
+      # continue-on-error: at the time this job was added, a full scan finds
+      # 26 pre-existing findings, effectively all "GitHub Action pinned to a
+      # major-version tag, not a full commit SHA"
+      # (yaml.github-actions.security.github-actions-mutable-action-tag) on
+      # this very workflow's own `uses:` steps - real supply-chain hardening
+      # advice, but SHA-pinning (and then keeping shas current) every action
+      # across every job is more upkeep than this hobby project's stakes
+      # justify. Two genuine findings in next.config.mjs (path-traversal /
+      # unsafe-format-string on build-config-only, non-attacker-controlled
+      # values) were reviewed and suppressed inline with `nosemgrep` +
+      # justification rather than counted here. Findings still print in the
+      # job log every run for visibility; a new class of finding showing up
+      # is the thing to actually look for, not this job's color.
+      - run: semgrep scan --config=auto
+        continue-on-error: true
+
+  dependency-scan:
+    name: Dependency Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      # continue-on-error: at the time this job was added, this repo carries
+      # 15 pre-existing high-severity advisories, all in transitive
+      # dependencies of next/eslint (postcss, sharp, brace-expansion) that
+      # aren't independently patchable from this project's package.json
+      # without an upstream Next.js/ESLint bump. GitHub's repo-level
+      # Dependabot security alerts are already active here (see the
+      # dependabot/* branches in the remote) - there's no committed
+      # dependabot.yml, so that's a repo setting, not something this
+      # workflow file controls. Findings still print in the job log every
+      # run; watch for the count going *up*, not just nonzero.
+      - run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+  secret-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
