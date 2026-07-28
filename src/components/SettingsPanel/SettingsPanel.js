@@ -8,6 +8,7 @@ import {
   FONT_ATTRIBUTION,
   LEGIBILITY_REFERENCES,
   DEFAULT_READABILITY_METRIC,
+  SPEED_WRITING_STORAGE_KEY,
 } from "../constants";
 
 // Reads the theme currently applied to <html data-theme="..."> - set before
@@ -46,6 +47,9 @@ const SettingsPanel = (props) => {
   const [readabilityMetric, setReadabilityMetric] = useState(
     props.readabilityMetric || DEFAULT_READABILITY_METRIC
   );
+  const [speedWritingEnabled, setSpeedWritingEnabled] = useState(
+    Boolean(props.speedWritingEnabled)
+  );
 
   // Sync from the DOM once mounted (client-only - avoids SSR/client
   // mismatches, since the modal this lives in isn't rendered on the server).
@@ -77,6 +81,33 @@ const SettingsPanel = (props) => {
       const nextMetric = event.target.value;
       setReadabilityMetric(nextMetric);
       props.updateCallback({ readabilityMetric: nextMetric });
+    },
+    [props]
+  );
+
+  // Speed Writing (paper §8.4 "Speed Writing"): opt-in, OFF by default.
+  // Persists the choice to localStorage and bubbles it up to the App/Reader
+  // via updateCallback (same pattern the readability metric picker uses).
+  const handleSpeedWritingToggle = useCallback(
+    (event) => {
+      const enabled = event.target.checked;
+      setSpeedWritingEnabled(enabled);
+
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.setItem(
+            SPEED_WRITING_STORAGE_KEY,
+            String(enabled)
+          );
+        }
+      } catch (err) {
+        // localStorage unavailable (private browsing, disabled, etc) - the
+        // toggle still works for this session, it just won't persist.
+      }
+
+      if (typeof props.updateCallback === "function") {
+        props.updateCallback({ speedWritingEnabled: enabled });
+      }
     },
     [props]
   );
@@ -133,6 +164,30 @@ const SettingsPanel = (props) => {
             </option>
           ))}
         </select>
+      </section>
+
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Speed Writing</h3>
+        <label className="label cursor-pointer justify-start gap-2 px-0">
+          <input
+            type="checkbox"
+            className="checkbox checkbox-sm"
+            name="speedWritingEnabled"
+            checked={speedWritingEnabled}
+            onChange={handleSpeedWritingToggle}
+          />
+          <span className="label-text">
+            Simplify difficult words before reading
+          </span>
+        </label>
+        <p className="text-sm opacity-70 mt-2">
+          When enabled, Thoth looks up simpler, familiar synonyms for
+          unfamiliar words in your text and shows you exactly what it
+          changed before you read - your original text is never edited
+          silently. Off by default. Requires network access (uses the
+          Datamuse synonym API); if it's unavailable, reading falls back to
+          your original text automatically.
+        </p>
       </section>
 
       <section className="mb-6">

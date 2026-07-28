@@ -9,6 +9,10 @@ export const STOP_COLOR = '#0000FF';
 // non-breaking space used to pad the reel / surrounding words in the reader
 export const UNICODE_WHITESPACE = '\u00a0';
 
+// Speed Writing (paper \u00a78.4): opt-in text simplification before reading.
+// localStorage key used to persist the user's opt-in choice across sessions.
+export const SPEED_WRITING_STORAGE_KEY = "thoth-speed-writing-enabled";
+
 // accepted upload MIME types (single source of truth for file-type checks)
 export const PDF_MIME_TYPE = 'application/pdf';
 export const EPUB_MIME_TYPE = 'application/epub+zip';

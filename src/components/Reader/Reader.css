@@ -81,3 +81,27 @@
 /* .btn {
   @apply font-bold py-2 px-4 rounded;
 } */
+
+/* Speed Writing (paper §8.4): substitution summary panel. */
+.speedWritingSummary {
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  padding: 10px 15px;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.speedWritingSubstitutionList {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin: 0;
+}
+
+.speedWritingOriginal {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.speedWritingReplacement {
+  font-weight: bold;
+}

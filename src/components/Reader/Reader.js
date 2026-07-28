@@ -13,6 +13,7 @@ import {
 import * as CONSTANTS from "../constants";
 
 import TextParsingTools from "../TextParsingTools";
+import SpeedWritingTools from "../SpeedWritingTools";
 import utils from "../utils";
 import PlaybackHead from "../PlaybackHead/PlaybackHead";
 import DisplayReel from "../DisplayReel";
@@ -43,6 +44,7 @@ class Reader extends Component {
     this.contentHandler = this.contentHandler.bind(this);
     this.propHandler = this.propHandler.bind(this);
     this.processCorpus = this.processCorpus.bind(this);
+    this.applyProcessedText = this.applyProcessedText.bind(this);
     this.parse = this.parse.bind(this);
     this.hyphenate = this.hyphenate.bind(this);
     this.timingBelt = this.timingBelt.bind(this);
@@ -83,6 +85,12 @@ class Reader extends Component {
 
       measurements: {},
       ageEstimate: DEFAULT_AGE,
+
+      // Speed Writing (paper §8.4): populated by processCorpus whenever
+      // props.speedWritingEnabled is on. Never populated silently - see
+      // render() for how these are surfaced to the user.
+      speedWritingActive: false,
+      speedWritingSubstitutions: [],
     };
   }
 
@@ -188,12 +196,50 @@ class Reader extends Component {
 
     this.corpusStats(text);
 
-    let arr = this.parse(text);
+    // Speed Writing (paper §8.4): opt-in text simplification, applied once
+    // per text load (not per-frame). This is an enhancement on top of the
+    // base reader - it must never block or break normal reading, so every
+    // path here (including failures) always ends by displaying *some*
+    // valid tape.
+    if (!this.props.speedWritingEnabled) {
+      this.applyProcessedText(text, text, [], false);
+      return;
+    }
+
+    SpeedWritingTools.substituteText(text)
+      .then((result) => {
+        this.applyProcessedText(
+          text,
+          result.text,
+          result.substitutions,
+          result.changed
+        );
+      })
+      .catch((err) => {
+        if (ctx.state.verbose) {
+          console.warn(
+            "Speed Writing substitution failed, falling back to original text:",
+            err
+          );
+        }
+
+        this.applyProcessedText(text, text, [], false);
+      });
+  }
+
+  // shared tail-end of processCorpus: takes the original (source-of-truth)
+  // text plus whatever text should actually be displayed/played (identical
+  // to the source when speed writing is off or unavailable), builds the
+  // display tape from it, and records what (if anything) was substituted.
+  applyProcessedText(sourceText, displayText, substitutions, speedWritingActive) {
+    let arr = this.parse(displayText);
 
     this.setState(
       {
-        bodyText: text,
+        bodyText: sourceText,
         tape: arr,
+        speedWritingSubstitutions: substitutions,
+        speedWritingActive: speedWritingActive,
       },
       this.reset
     );
@@ -619,6 +665,49 @@ class Reader extends Component {
           )}{" "}
           / {utils.roundToPrecision(totalTimeEstimate, 0.01)} seconds.{" "}
         </p>
+
+        {/*
+          Speed Writing (paper §8.4): when enabled, show exactly what was
+          changed - the paper explicitly flags the ethics of editing a
+          user's text on their behalf, so this is never applied silently.
+          Only rendered once speed writing has actually run for the current
+          text (speedWritingActive), never just because the toggle is on.
+        */}
+        {this.state.speedWritingActive && (
+          <div className="speedWritingSummary">
+            {this.state.speedWritingSubstitutions.length > 0 ? (
+              <>
+                <p>
+                  Speed Writing simplified{" "}
+                  {this.state.speedWritingSubstitutions.length} word
+                  {this.state.speedWritingSubstitutions.length === 1
+                    ? ""
+                    : "s"}{" "}
+                  before reading (your original text above is unchanged):
+                </p>
+                <ul className="speedWritingSubstitutionList">
+                  {this.state.speedWritingSubstitutions.map((sub, idx) => (
+                    <li key={sub.original + "-" + idx}>
+                      <span className="speedWritingOriginal">
+                        {sub.original}
+                      </span>
+                      {" → "}
+                      <span className="speedWritingReplacement">
+                        {sub.replacement}
+                      </span>
+                      {sub.count > 1 ? " (×" + sub.count + ")" : ""}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p>
+                Speed Writing is on, but no simpler synonyms were found for
+                this text.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     );
   }

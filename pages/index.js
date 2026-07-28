@@ -47,6 +47,13 @@ class App extends Component {
       age: age,
       verbose: verbose,
       readabilityMetric: CONSTANTS.DEFAULT_READABILITY_METRIC,
+      // Speed Writing (paper §8.4): opt-in, OFF by default. Deliberately
+      // defaults to false here (rather than reading localStorage in the
+      // constructor) so server-rendered and first-client-render markup
+      // match; the real persisted value (if any) is picked up client-side
+      // in componentDidMount, same pattern used for other browser-only
+      // setup in this app (e.g. PDF.js worker init).
+      speedWritingEnabled: false,
     };
 
     // set up our analytics on the first render
@@ -67,6 +74,19 @@ class App extends Component {
 
     if (storedMetric && storedMetric !== this.state.readabilityMetric) {
       this.setState({ readabilityMetric: storedMetric });
+    }
+
+    try {
+      const storedSpeedWriting = window.localStorage.getItem(
+        CONSTANTS.SPEED_WRITING_STORAGE_KEY
+      );
+
+      if (storedSpeedWriting !== null) {
+        this.setState({ speedWritingEnabled: storedSpeedWriting === "true" });
+      }
+    } catch (err) {
+      // localStorage unavailable (private browsing, disabled, etc) - keep
+      // the safe (disabled) default.
     }
   }
 
