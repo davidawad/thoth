@@ -3,6 +3,16 @@ import fc from 'fast-check';
 import TextParsingTools from './TextParsingTools';
 import * as CONSTANTS from './constants';
 
+describe('TextParsingTools.READABILITY_METRICS', () => {
+  it('every metric has a non-empty key and label', () => {
+    expect(TextParsingTools.READABILITY_METRICS.length).toBeGreaterThan(0);
+    TextParsingTools.READABILITY_METRICS.forEach((metric) => {
+      expect(metric.key.length).toBeGreaterThan(0);
+      expect(metric.label.length).toBeGreaterThan(0);
+    });
+  });
+});
+
 describe('TextParsingTools.stripPunctuation', () => {
   it('is idempotent', () => {
     fc.assert(
@@ -32,9 +42,24 @@ describe('TextParsingTools.stripPunctuation', () => {
       }),
     );
   });
+
+  it('collapses a run of spaces to exactly one space, not zero', () => {
+    // Distinguishes "collapse to the captured whitespace char" from a
+    // mutant that collapses to an empty string instead - both satisfy the
+    // property test above (neither leaves 2+ whitespace chars), but only
+    // one is correct.
+    expect(TextParsingTools.stripPunctuation('a  b')).toBe('a b');
+  });
 });
 
 describe('TextParsingTools.wordDifficultyMultiplier', () => {
+  it('caps at MAX_DIFFICULTY_MULTIPLIER for a pathologically long, unfamiliar word', () => {
+    const veryLongUnfamiliarWord = 'a'.repeat(200);
+    expect(
+      TextParsingTools.wordDifficultyMultiplier(veryLongUnfamiliarWord),
+    ).toBe(CONSTANTS.MAX_DIFFICULTY_MULTIPLIER);
+  });
+
   it('always returns a value within [BASE, MAX] regardless of input', () => {
     fc.assert(
       fc.property(fc.string(), (word) => {
@@ -166,6 +191,82 @@ describe('TextParsingTools.lexicalDensityToAge', () => {
           );
         },
       ),
+    );
+  });
+});
+
+describe('TextParsingTools.computeCounts', () => {
+  it('counts words, sentences, and characters for a simple sentence', () => {
+    const counts = TextParsingTools.computeCounts('The cat sat on the mat.');
+
+    expect(counts.word).toBe(6);
+    expect(counts.sentence).toBe(1);
+    expect(counts.character).toBe(17);
+    expect(counts.letter).toBe(counts.character);
+    // "easy" (spache) and "familiar" (dale-chall) are mutually exclusive
+    // tiers - an easy word is deliberately excluded from the familiar
+    // bucket (see wordDifficultyMultiplier's tiering). All 6 of these very
+    // common words land on the easier spache list, leaving only 1 in the
+    // separate "familiar-but-not-easy" dale-chall-only bucket.
+    expect(counts.difficultWord).toBe(1);
+    expect(counts.unfamiliarWord).toBe(5);
+  });
+
+  it('detects polysyllabic and complex-polysyllabic words in a harder sentence', () => {
+    const counts = TextParsingTools.computeCounts(
+      'The extraordinarily loquacious philosopher pontificated.',
+    );
+
+    expect(counts.word).toBe(5);
+    expect(counts.polysillabicWord).toBe(4);
+    expect(counts.complexPolysillabicWord).toBe(4);
+    expect(counts.syllable).toBeGreaterThan(counts.word);
+  });
+
+  it('counts nouns/verbs/adjectives/adverbs as content words', () => {
+    // "The" (determiner) and "on" (preposition) aren't content words;
+    // cat/sat/mat are noun/verb/noun.
+    const counts = TextParsingTools.computeCounts('The cat sat on the mat.');
+    expect(counts.contentWord).toBe(3);
+  });
+});
+
+describe('TextParsingTools.generateScores / generateTextScores', () => {
+  it('returns a finite number for every configured metric', () => {
+    const scores = TextParsingTools.generateTextScores(
+      'The cat sat on the mat.',
+    );
+
+    TextParsingTools.READABILITY_METRICS.filter(
+      (metric) => metric.key !== 'average',
+    ).forEach((metric) => {
+      const value = scores[metric.key as keyof typeof scores];
+      expect(Number.isFinite(value)).toBe(true);
+    });
+  });
+
+  it('a harder sentence scores an older age on every metric than a simple one', () => {
+    const simple = TextParsingTools.generateTextScores(
+      'The cat sat on the mat.',
+    );
+    const hard = TextParsingTools.generateTextScores(
+      'The extraordinarily loquacious philosopher pontificated ostentatiously.',
+    );
+
+    // Not every formula is guaranteed to move in the same direction for
+    // every possible pair of sentences, but for a stark simple-vs-hard
+    // contrast like this, every formula here agrees the harder one skews
+    // older - a real, useful regression check.
+    expect(hard.daleChall).toBeGreaterThan(simple.daleChall);
+    expect(hard.colemanLiau).toBeGreaterThan(simple.colemanLiau);
+    expect(hard.gunningFog).toBeGreaterThan(simple.gunningFog);
+    expect(hard.smog).toBeGreaterThan(simple.smog);
+  });
+
+  it('generateTextScores(text) === generateScores(computeCounts(text))', () => {
+    const text = 'A short test sentence for equivalence checking.';
+    expect(TextParsingTools.generateTextScores(text)).toEqual(
+      TextParsingTools.generateScores(TextParsingTools.computeCounts(text)),
     );
   });
 });

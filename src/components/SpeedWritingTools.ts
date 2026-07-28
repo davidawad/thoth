@@ -424,6 +424,9 @@ const funcs = {
   // them directly - not otherwise part of the module's public surface.
   matchCase,
   findSubstitutableCategory,
+  analyzeTermForCandidacy,
+  isUsableCandidate,
+  pickBestSynonym,
 };
 
 export default funcs;

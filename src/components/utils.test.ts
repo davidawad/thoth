@@ -53,6 +53,15 @@ describe('utils.roundToPrecision', () => {
     );
   });
 
+  it('a concrete example pins down the exact rounding direction', () => {
+    // Property tests alone let a mutant that negates the precision inside
+    // the modulo survive (it happens to still produce "a multiple of
+    // *some* precision" and still be idempotent) - a concrete expected
+    // value catches it.
+    expect(utils.roundToPrecision(1.23, 0.1)).toBeCloseTo(1.2, 10);
+    expect(utils.roundToPrecision(1.27, 0.1)).toBeCloseTo(1.3, 10);
+  });
+
   it('the result is always a multiple of the given precision', () => {
     fc.assert(
       fc.property(
