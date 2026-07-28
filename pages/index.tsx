@@ -1,38 +1,42 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
-import Reader from '../src/components/Reader/Reader';
-import ModalWrapper from '../src/components/ModalWrapper/ModalWrapper';
-import FileParser from '../src/components/FileParser/FileParser';
+import Reader from "../src/components/Reader/Reader";
+import ModalWrapper from "../src/components/ModalWrapper/ModalWrapper";
+import FileParser from "../src/components/FileParser/FileParser";
 
-import ReactGA from 'react-ga';
+import ReactGA from "react-ga";
 
-import * as CONSTANTS from '../src/components/constants';
+import * as CONSTANTS from "../src/components/constants";
+import type { AppSettings } from "../src/components/types";
 
-let DEBUG = process.env.NODE_ENV === 'development';
-DEBUG = false;
+const DEBUG = false;
 
-let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
-let START_COLOR = CONSTANTS.START_COLOR;
-let STOP_COLOR = CONSTANTS.STOP_COLOR;
+const READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
+const START_COLOR = CONSTANTS.START_COLOR;
+const STOP_COLOR = CONSTANTS.STOP_COLOR;
 
 const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
-let scrollingEnabled = DEBUG ? false : true;
-scrollingEnabled = false;
+const scrollingEnabled = false;
 
-let age = CONSTANTS.DEFAULT_AGE;
+const age = CONSTANTS.DEFAULT_AGE;
 
-const verbose = DEBUG ? true : false;
+const verbose = DEBUG;
 
 // public anyway.
-const GOOGLE_ANALYTICS_KEY = 'UA-96589312-4';
+const GOOGLE_ANALYTICS_KEY = "UA-96589312-4";
 
-function initializeReactGA() {
+function initializeReactGA(): void {
   ReactGA.initialize(GOOGLE_ANALYTICS_KEY);
-  ReactGA.pageview('/home');
+  ReactGA.pageview("/home");
 }
 
-class App extends Component {
-  constructor(props) {
+interface AppState extends AppSettings {
+  year: number;
+  content: string;
+}
+
+class App extends Component<Record<string, never>, AppState> {
+  constructor(props: Record<string, never>) {
     super(props);
 
     this.updateSettings = this.updateSettings.bind(this);
@@ -63,13 +67,13 @@ class App extends Component {
 
   // Restore the user's saved readability metric choice after mount (avoids
   // an SSR/client hydration mismatch from reading localStorage up-front).
-  componentDidMount() {
-    if (typeof window === 'undefined') {
+  componentDidMount(): void {
+    if (typeof window === "undefined") {
       return;
     }
 
     const storedMetric = window.localStorage.getItem(
-      CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
+      CONSTANTS.READABILITY_METRIC_STORAGE_KEY
     );
 
     if (storedMetric && storedMetric !== this.state.readabilityMetric) {
@@ -78,11 +82,11 @@ class App extends Component {
 
     try {
       const storedSpeedWriting = window.localStorage.getItem(
-        CONSTANTS.SPEED_WRITING_STORAGE_KEY,
+        CONSTANTS.SPEED_WRITING_STORAGE_KEY
       );
 
       if (storedSpeedWriting !== null) {
-        this.setState({ speedWritingEnabled: storedSpeedWriting === 'true' });
+        this.setState({ speedWritingEnabled: storedSpeedWriting === "true" });
       }
     } catch {
       // localStorage unavailable (private browsing, disabled, etc) - keep
@@ -93,18 +97,19 @@ class App extends Component {
   /*
     Callback function that takes a settings object from child and updates duplicate keys in object state
   */
-  updateSettings(newSettings) {
+  updateSettings(newSettings: Partial<AppSettings>): void {
     if (
-      typeof window !== 'undefined' &&
-      Object.prototype.hasOwnProperty.call(newSettings, 'readabilityMetric')
+      typeof window !== "undefined" &&
+      Object.prototype.hasOwnProperty.call(newSettings, "readabilityMetric") &&
+      newSettings.readabilityMetric
     ) {
       window.localStorage.setItem(
         CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
-        newSettings.readabilityMetric,
+        newSettings.readabilityMetric
       );
     }
 
-    this.setState(newSettings);
+    this.setState(newSettings as Pick<AppState, keyof AppState>);
   }
 
   render() {
@@ -112,12 +117,11 @@ class App extends Component {
       <div className="App">
         <div className="row">
           <br />
-          <Reader className="Reader" {...this.state} />
+          <Reader {...this.state} />
 
           <br />
 
           <FileParser
-            className="App-FileParser"
             updateCallback={this.updateSettings}
             verbose={this.state.verbose}
           />
@@ -129,9 +133,9 @@ class App extends Component {
 
         <footer>
           <p>
-            Thoth is an{' '}
-            <a href="https://github.com/davidawad/thoth">open source</a>{' '}
-            <a href="http://arxiv.org/abs/1908.01699"> research project</a> by{' '}
+            Thoth is an{" "}
+            <a href="https://github.com/davidawad/thoth">open source</a>{" "}
+            <a href="http://arxiv.org/abs/1908.01699"> research project</a> by{" "}
             <a href="http://davidawad.com">David Awad</a>.
             <br /> &copy; {this.state.year}
           </p>
