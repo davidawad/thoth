@@ -1,17 +1,23 @@
 import React, { Component } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
+import * as CONSTANTS from "../constants";
 
-// import EpubParser from '../EpubParser/EpubParser';
-// import PDFParser from '../PDFParser/PDFParser';
+// EpubParser is not yet wired into the RSVP reader pipeline (it renders its
+// own standalone viewer instead of calling updateCallback) - re-enable once
+// that rewrite lands.
+// import EpubParser from "../EpubParser/EpubParser";
+import PDFParser from "../PDFParser/PDFParser";
 
 // import "./FileParser.css";
 
-const PDFTYPE = "application/pdf";
-const EPUBTYPE = "application/epub+zip";
+const PDFTYPE = CONSTANTS.PDF_MIME_TYPE;
+const EPUBTYPE = CONSTANTS.EPUB_MIME_TYPE;
 
-// const allowedFiletypes = [PDFTYPE, EPUBTYPE];
-const allowedFiletypes = [PDFTYPE];
+// react-dropzone v14's `accept` prop is a MIME-type -> extensions map, not a
+// bare array (the array form silently disables the file-type filter).
+// const allowedFiletypes = { [PDFTYPE]: ['.pdf'], [EPUBTYPE]: ['.epub'] };
+const allowedFiletypes = { [PDFTYPE]: ['.pdf'] };
 
 let ctx = {};
 
@@ -94,7 +100,17 @@ class FileParser extends Component {
         currentFile: undefined
       });
 
+      // react-dropzone hands us only the accepted files; a rejected or empty
+      // drop yields []. Bail before URL.createObjectURL(undefined) throws.
+      if (!Array.isArray(files) || files.length === 0) {
+        return;
+      }
+
       const file = files[0];
+
+      if (!(file instanceof Blob)) {
+        return;
+      }
 
       const fUrl = URL.createObjectURL(file);
 
@@ -158,22 +174,8 @@ class FileParser extends Component {
         </aside>
         */}
 
-        {this.state.fileLoaded && this.state.currentFile.type === EPUBTYPE ? (
-          // render epub view!
-
-          <EpubParser
-            className=""
-            file={this.state.currentFile}
-            ref={this.readerRef}
-            url={this.state.currentFileUrl}
-            tocChanged={this.onTocChange}
-            epubOptions={{}}
-            verbose={this.props.verbose} // TODO set back to normal.
-          />
-        ) : (
-          // else
-          <span></span>
-        )}
+        {/* EpubParser isn't wired into the RSVP pipeline yet - see comment on
+            its import above. Re-enable this branch once that rewrite lands. */}
 
         {this.state.fileLoaded && this.state.currentFile.type === PDFTYPE ? (
           // render PDF text!

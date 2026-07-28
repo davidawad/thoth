@@ -1,9 +1,6 @@
 import React, { Component } from "react";
-// import ReactDOM from 'react-dom';
 import Modal from "react-modal";
 import SettingsPanel from "../SettingsPanel/SettingsPanel";
-
-// import './ModalWrapper.css';
 
 const customStyles = {
   content: {
@@ -15,9 +12,6 @@ const customStyles = {
     transform: "translate(-50%, -50%)"
   }
 };
-
-// Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
-// Modal.setAppElement('.App')
 
 class ModalWrapper extends Component {
   constructor(props) {
@@ -39,7 +33,6 @@ class ModalWrapper extends Component {
   }
 
   afterOpenModal() {
-    // references are now sync'd and can be accessed.
     this.subtitle.style.color = "#f00";
   }
 

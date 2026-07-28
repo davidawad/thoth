@@ -8,7 +8,6 @@ import ReactGA from "react-ga";
 
 import * as CONSTANTS from "../src/components/constants";
 
-// Inserted global variable definitions
 let DEBUG = process.env.NODE_ENV === "development";
 DEBUG = false;
 
@@ -26,10 +25,6 @@ const verbose = DEBUG ? true : false;
 
 // public anyway.
 const GOOGLE_ANALYTICS_KEY = "UA-96589312-4";
-
-// const GOOGLE_ANALYTICS_KEY = process.env.THOTH_GA_KEY;
-
-// google analytics activation, doesn't work
 
 function initializeReactGA() {
   ReactGA.initialize(GOOGLE_ANALYTICS_KEY);
@@ -66,13 +61,6 @@ class App extends Component {
   }
 
   render() {
-    /*
-      TODO take the query parameters from the URL and pass as initial text to the Reader Class using react router?
-      https://stackoverflow.com/questions/29852998/getting-query-parameters-from-react-router-hash-fragment
-    */
-    // ReactGA.initialize(GOOGLE_ANALYTICS_KEY, { debug: DEBUG });
-    // ReactGA.initialize(GOOGLE_ANALYTICS_KEY);
-
     return (
       <div className="App">
         <div className="row">
@@ -81,7 +69,6 @@ class App extends Component {
 
           <br />
 
-          {/* File Parser so we can add content to the Reader. */}
           <FileParser
             className="App-FileParser"
             updateCallback={this.updateSettings}
@@ -90,12 +77,10 @@ class App extends Component {
 
           <br />
 
-          {/* Modal Tag to wrap our settings pane */}
           <ModalWrapper updateCallback={this.updateSettings} {...this.state} />
         </div>
 
         <footer>
-          {/* TODO link to research paper when it's written. */}
           <p>
             Thoth is an{" "}
             <a href="https://github.com/davidawad/thoth">open source</a>{" "}

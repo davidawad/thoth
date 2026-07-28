@@ -17,18 +17,15 @@ import utils from "../utils";
 import PlaybackHead from "../PlaybackHead/PlaybackHead";
 import DisplayReel from "../DisplayReel";
 
-// import './Reader.css';
-
 const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 
 let READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 let MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 let LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
-const MAX_AGE = CONSTANTS.MAX_AGE;
 const DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
 
-const UNICODE_WHITESPACE = "\u00a0";
+const UNICODE_WHITESPACE = CONSTANTS.UNICODE_WHITESPACE;
 
 let ctx = {};
 
@@ -46,7 +43,6 @@ class Reader extends Component {
     this.contentHandler = this.contentHandler.bind(this);
     this.propHandler = this.propHandler.bind(this);
     this.processCorpus = this.processCorpus.bind(this);
-    // this.corpusStats = this.corpusStats.bind(this);
     this.parse = this.parse.bind(this);
     this.hyphenate = this.hyphenate.bind(this);
     this.timingBelt = this.timingBelt.bind(this);
@@ -93,8 +89,6 @@ class Reader extends Component {
   corpusStats(text) {
     const scores = TextParsingTools.generateTextScores(text);
 
-    // console.log("READABILITY SCORES: ", scores )
-
     let res = 0;
     let total = 0;
     let numEntries = 0;
@@ -108,7 +102,6 @@ class Reader extends Component {
       }
     }
 
-    // TODO add multiple models to a dropdown in the settings
     const agePredictionMode = "avg";
 
     switch (agePredictionMode) {
@@ -215,26 +208,13 @@ class Reader extends Component {
     let ret = word;
     let len = word.length;
 
-    // TODO idfk why I can't tear this disgusting thing apart without it breaking
-    // help wanted LOL.
+    // fragile: rewriting this nested ternary tends to break hyphenation
     ret =
       len < MAX_DISPLAY_SIZE
         ? word
         : len < 11
         ? word.slice(0, len - 3) + "- " + word.slice(len - 3)
         : word.slice(0, 7) + "- " + this.hyphenate(word.slice(7));
-
-    /*
-    if(len < MAX_DISPLAY_SIZE) {
-      ret = word;
-    } else {
-      if (len < 11) {
-        word = word.slice(0, len - 3) + '- ' + word.slice(len - 3);
-      } else {
-        word = word.slice(0, 7) + '- ' + ctx.hyphenate(word.slice(7));
-      }
-    }
-    */
 
     return ret;
   }
@@ -255,11 +235,7 @@ class Reader extends Component {
       }
     }
 
-    let speed = READING_SPEED;
-
-    if (typeof this.state !== typeof undefined) {
-      speed = Number(this.props.readingSpeed);
-    }
+    let speed = Number(this.props.readingSpeed);
 
     // time that this word will be displayed in milliseconds
     let t = 60000 / speed;
@@ -291,10 +267,6 @@ class Reader extends Component {
     const punctuationStrippedWord =
       TextParsingTools.stripPunctuation(word).toLowerCase();
 
-    // log out language parsing for word complexity
-    // console.log("Before : ", TextParsingTools.familiarWord(word), word);
-    // console.log("After : ", TextParsingTools.familiarWord(punctuationStrippedWord), punctuationStrippedWord);
-
     // if the word isn't familiar according to the dale-chall dictionary,
     // and is not a pronoun,
     // and has a length greater than 2, display it for longer
@@ -307,19 +279,12 @@ class Reader extends Component {
       t += t * 1.5;
     }
 
-    // scale the timing by a factor of the perceived text complexity
-    // 1 + ((18 - 14.6) / 18)
-    if (typeof this.state !== typeof undefined) {
-      console.log("AGE: ", Number(ctx.state.ageEstimate));
-      const ageWeighting =
-        1 + (MAX_AGE - Number(ctx.state.ageEstimate)) / MAX_AGE;
-
-      // t = t * ageWeighting;
-    }
+    // TODO scale the timing by a factor of the perceived text complexity:
+    // t = t * (1 + (MAX_AGE - Number(ctx.state.ageEstimate)) / MAX_AGE)
 
     let ret = words.concat([new DisplayReel(str, focus, t)]);
 
-    // TODO I don't think this maximum was chosen scientifically whatsoever
+    // note: these length thresholds are arbitrary, not empirically tuned
     if (len > 14 || len - focus > 7) {
       ret = words.concat(this.parse(this.hyphenate(str)));
     }
@@ -511,7 +476,6 @@ class Reader extends Component {
   }
 
   render() {
-    // TODO Move some of this out of here and into CSS classes?
     this.colorStyleMap = {
       yellow: {
         color: "rgba(180, 180, 0, 1.0)",
@@ -568,16 +532,10 @@ class Reader extends Component {
         ? this.state.tape[postInd].text
         : "";
 
-    let preNumSpaces =
-      typeof prevWord !== typeof undefined
-        ? Math.max(LARGEST_WORD_SIZE - prevWord.length, 0)
-        : 0;
-
-    // let postNumSpaces  = typeof(postWord) !== typeof(undefined) ? LARGEST_WORD_SIZE - postWord.length : 0;
+    let preNumSpaces = Math.max(LARGEST_WORD_SIZE - prevWord.length, 0);
 
     // add white spaces
     let preWsp = Array(preNumSpaces).join(UNICODE_WHITESPACE);
-    // let postWsp = Array(postNumSpaces).join(UNICODE_WHITESPACE);
 
     // scrolling text on render
     if (!this.state.paused && this.state.scrollingEnabled) {

@@ -1,12 +1,18 @@
 export const MAX_DISPLAY_SIZE = 8; // max length in characters before separating a word.
 export const LARGEST_WORD_SIZE = 10; // number of spaces before / after displayhead
 export const DEFAULT_READING_SPEED = 500; // in words-per-minute (wpm)
-export const SPACE_KEY = 32; // key code for space bar
+const SPACE_KEY = 32; // key code for space bar
 export const PLAYPAUSE_KEY = SPACE_KEY; // key code for play/pause, space bar by default.
 export const START_COLOR = '#FF0000';
 export const STOP_COLOR = '#0000FF';
+
+// non-breaking space used to pad the reel / surrounding words in the reader
+export const UNICODE_WHITESPACE = '\u00a0';
+
+// accepted upload MIME types (single source of truth for file-type checks)
+export const PDF_MIME_TYPE = 'application/pdf';
+export const EPUB_MIME_TYPE = 'application/epub+zip';
 export const DEFAULT_AGE = 12;
-export const MIN_AGE = 5;
 export const MAX_AGE = 22;
 export const AGE_SCALE = 6;
 export const INTRO_TEXT = `Hello! 

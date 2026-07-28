@@ -5,6 +5,7 @@ import PlaybackHead from "./PlaybackHead";
 // Mock the constants so that MAX_DISPLAY_SIZE is predictable.
 jest.mock("../constants", () => ({
   MAX_DISPLAY_SIZE: 10,
+  UNICODE_WHITESPACE: '\u00a0',
 }));
 
 describe("PlaybackHead Component", () => {

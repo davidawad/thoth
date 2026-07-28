@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
 
-// NOTE: using tool to import web worker directly due to CRA restrictions.
-// eslint-disable-next-line
-import PDFJSWorker from 'worker-loader!pdfjs-dist/build/pdf.worker.js'; // eslint-disable-line import/no-webpack-loader-syntax
-
-import PDFJS from 'pdfjs-dist';
-
-PDFJS.GlobalWorkerOptions.workerPort = new PDFJSWorker();
+// Namespace import, not default - pdfjs-dist's UMD build doesn't reliably
+// expose a default export under Next.js's bundler (it did resolve to
+// `undefined` at runtime with `import PDFJS from 'pdfjs-dist'`).
+import * as PDFJS from 'pdfjs-dist';
 
 let ctx = {};
 
@@ -34,6 +31,7 @@ class PDFParser extends Component {
       content: '',
       complete: false,
       fileName: 'PDF LOADING . . .',
+      error: null,
       verbose: this.props.verbose,
       pageNumber: pageNumber, 
       pages : [], // array of page text content
@@ -41,6 +39,20 @@ class PDFParser extends Component {
   }
 
   componentDidMount() {
+    // readAsArrayBuffer throws a TypeError on anything that isn't a Blob/File.
+    // Guard the boundary rather than crash on a missing/malformed file prop.
+    if (!(this.props.file instanceof Blob)) {
+      console.error('PDFParser: expected a File/Blob, got', this.props.file);
+      return;
+    }
+
+    // Set once per page load, not at module scope, so this never runs during
+    // Next.js SSR / static page-data collection (no Worker/window there).
+    // The CRA `worker-loader!` inline-loader syntax doesn't resolve under
+    // Next.js, so `postinstall` copies pdf.worker.min.js into public/ instead
+    // and we point pdfjs at it directly by URL.
+    PDFJS.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
     const reader = new FileReader();
 
     reader.onload = this.openBook;
@@ -79,7 +91,11 @@ class PDFParser extends Component {
             console.log('# Metadata Is Loaded');
             console.log('## Info');
             console.log(JSON.stringify(data.info, null, 2));
-            ctx.setState({ fileName: data.info.Title });
+            // data.info is absent for PDFs without a metadata dictionary; don't
+            // assume the Title key (or the object) exists.
+            if (data.info && data.info.Title) {
+              ctx.setState({ fileName: data.info.Title });
+            }
             console.log();
           }
 
@@ -145,19 +161,24 @@ class PDFParser extends Component {
             pageNumber: 0,
 
           }, () => {
-            ctx.props.updateCallback({
-              pages: ctx.state.pages
-            })
+            if (typeof ctx.props.updateCallback === 'function') {
+              ctx.props.updateCallback({
+                pages: ctx.state.pages
+              })
+            }
           });
         },
         function(err) {
           console.error('Error: ' + err);
+          ctx.setState({ error: 'Could not read this PDF (' + err + '). Try a different file.' });
         }
       );
   }
 
   render() {
-    // use empty options to avoid ArrayBuffer urls being treated as options in epub.js
+    if (this.state.error) {
+      return <p className="PDFParser-error">{this.state.error}</p>;
+    }
     return <p>{ this.state.bookLoaded ?  '' : 'loading . . . ' }</p>;
   }
 }

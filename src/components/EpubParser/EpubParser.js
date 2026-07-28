@@ -51,11 +51,18 @@ class EpubParser extends Component {
       console.log("COMPONENT MOUNT.");
     }
 
+    let inputFile = this.props.file;
+
+    // readAsArrayBuffer throws a TypeError if handed anything that isn't a
+    // Blob/File. Guard the boundary rather than crash on a missing/bad prop.
+    if (!(inputFile instanceof Blob)) {
+      console.error("EpubParser: expected a File/Blob, got", inputFile);
+      return;
+    }
+
     var reader = new FileReader();
 
     reader.onload = this.openBook;
-
-    let inputFile = this.props.file;
 
     reader.readAsArrayBuffer(inputFile);
   }

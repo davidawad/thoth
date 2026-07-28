@@ -1,28 +1,25 @@
+// All of these except compromise/unlerp are ESM-only packages with named
+// exports (no default) - importing them as default silently resolves to
+// undefined under Next.js's bundler and crashes at call time.
 import nlp from "compromise";
-import syllable from "syllable";
-import daleChallWords from "dale-chall";
-import daleChallFormula from "dale-chall-formula";
-import colemanLiau from "coleman-liau";
-import flesch from "flesch";
-import smog from "smog-formula";
-import gunningFog from "gunning-fog";
-import spacheWords from "spache";
-import spacheFormula from "spache-formula";
-import ari from "automated-readability";
+import { syllable } from "syllable";
+import { daleChall as daleChallWords } from "dale-chall";
+import { daleChallFormula, daleChallGradeLevel } from "dale-chall-formula";
+import { colemanLiau } from "coleman-liau";
+import { flesch } from "flesch";
+import { smogFormula as smog } from "smog-formula";
+import { gunningFog } from "gunning-fog";
+import { spache as spacheWords } from "spache";
+import { spacheFormula } from "spache-formula";
+import { automatedReadability as ari } from "automated-readability";
 import unlerp from "unlerp";
 import * as CONSTANTS from "./constants";
-
-
-console.log("Spache words type:", typeof spacheWords);
-console.log("Spache words:", spacheWords);
 
 const scale = CONSTANTS.AGE_SCALE;
 
 const punctuationRegEx =
   /[!-/:-@[-`{-~¡-©«-¬®-±´¶-¸»¿×÷˂-˅˒-˟˥-˫˭˯-˿͵;΄-΅·϶҂՚-՟։-֊־׀׃׆׳-״؆-؏؛؞-؟٪-٭۔۩۽-۾܀-܍߶-߹।-॥॰৲-৳৺૱୰௳-௺౿ೱ-ೲ൹෴฿๏๚-๛༁-༗༚-༟༴༶༸༺-༽྅྾-࿅࿇-࿌࿎-࿔၊-၏႞-႟჻፠-፨᎐-᎙᙭-᙮᚛-᚜᛫-᛭᜵-᜶។-៖៘-៛᠀-᠊᥀᥄-᥅᧞-᧿᨞-᨟᭚-᭪᭴-᭼᰻-᰿᱾-᱿᾽᾿-῁῍-῏῝-῟῭-`´-῾\u2000-\u206e⁺-⁾₊-₎₠-₵℀-℁℃-℆℈-℉℔№-℘℞-℣℥℧℩℮℺-℻⅀-⅄⅊-⅍⅏←-⏧␀-␦⑀-⑊⒜-ⓩ─-⚝⚠-⚼⛀-⛃✁-✄✆-✉✌-✧✩-❋❍❏-❒❖❘-❞❡-❵➔➘-➯➱-➾⟀-⟊⟌⟐-⭌⭐-⭔⳥-⳪⳹-⳼⳾-⳿⸀-\u2e7e⺀-⺙⺛-⻳⼀-⿕⿰-⿻\u3000-〿゛-゜゠・㆐-㆑㆖-㆟㇀-㇣㈀-㈞㈪-㉃㉐㉠-㉿㊊-㊰㋀-㋾㌀-㏿䷀-䷿꒐-꓆꘍-꘏꙳꙾꜀-꜖꜠-꜡꞉-꞊꠨-꠫꡴-꡷꣎-꣏꤮-꤯꥟꩜-꩟﬩﴾-﴿﷼-﷽︐-︙︰-﹒﹔-﹦﹨-﹫！-／：-＠［-｀｛-･￠-￦￨-￮￼-�]|\ud800[\udd00-\udd02\udd37-\udd3f\udd79-\udd89\udd90-\udd9b\uddd0-\uddfc\udf9f\udfd0]|\ud802[\udd1f\udd3f\ude50-\ude58]|\ud809[\udc00-\udc7e]|\ud834[\udc00-\udcf5\udd00-\udd26\udd29-\udd64\udd6a-\udd6c\udd83-\udd84\udd8c-\udda9\uddae-\udddd\ude00-\ude41\ude45\udf00-\udf56]|\ud835[\udec1\udedb\udefb\udf15\udf35\udf4f\udf6f\udf89\udfa9\udfc3]|\ud83c[\udc00-\udc2b\udc30-\udc93]/g;
 
-// var max = Math.max
-// var min = Math.min
 var floor = Math.floor;
 var round = Math.round;
 var ceil = Math.ceil;
@@ -82,7 +79,8 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
     .sentences()
     .data()
     .forEach((elem) => {
-      let normalizedWords = elem.normal.split(" ");
+      // Normalized forms live per-term, not on the sentence itself.
+      let normalizedWords = elem.terms.map((t) => t.normal);
 
       let numWordsThisSentence = normalizedWords.length;
 
@@ -112,7 +110,6 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
 
         // Find easy words from spache.
         if (spacheWords.includes(w) && familiarWords[w] !== true) {
-          // TODO do we need to build a hash table of the words? or do we only need the counts?
           easyWord[w] = true;
           easyWordCount++;
         }
@@ -123,7 +120,6 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
             (typeof daleChallWords === "object" && w in daleChallWords)) &&
           easyWord[w] !== true
         ) {
-          // TODO do we need to build a hash table of the words? or do we only need the counts?
           familiarWords[w] = true;
           familiarWordCount++;
         }
@@ -153,7 +149,7 @@ const generateScores = function computeReadabilityScoresBasedOnCounts(counts) {
 
   ret = {
     daleChall: gradeToAge(
-      daleChallFormula.gradeLevel(daleChallFormula(counts))[1]
+      daleChallGradeLevel(daleChallFormula(counts))[1]
     ),
     automatedReadability: gradeToAge(ari(counts)),
     colemanLiau: gradeToAge(colemanLiau(counts)),
@@ -179,25 +175,25 @@ const generateTextScores = function computeReadabilityScoresBasedOnText(text) {
   return generateScores(computeCounts(text));
 };
 
-// return true for words that are familiar
-const familiarWord = function checkAgainstDaleChallDictionary(w) {
-  if (Array.isArray(daleChallWords)) {
-    return daleChallWords.includes(w);
-  } else if (daleChallWords && typeof daleChallWords === "object") {
-    return w in daleChallWords;
+// Check whether a word appears in a readability dictionary. These word lists
+// ship as either an array of words or an object keyed by word, so handle both.
+const wordInDictionary = function wordInDictionary(dictionary, w) {
+  if (Array.isArray(dictionary)) {
+    return dictionary.includes(w);
+  } else if (dictionary && typeof dictionary === "object") {
+    return w in dictionary;
   }
   return false;
 };
 
+// return true for words that are familiar (dale-chall dictionary)
+const familiarWord = function checkAgainstDaleChallDictionary(w) {
+  return wordInDictionary(daleChallWords, w);
+};
+
 // Find easy words using spache.
 const easyWord = function checkAgainstSpacheDictionary(w) {
-  // Handle both array and object cases
-  if (Array.isArray(spacheWords)) {
-    return spacheWords.includes(w);
-  } else if (spacheWords && typeof spacheWords === "object") {
-    return w in spacheWords;
-  }
-  return false;
+  return wordInDictionary(spacheWords, w);
 };
 
 /*
