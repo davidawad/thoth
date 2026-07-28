@@ -1,3 +1,14 @@
+## [1.1.1](https://github.com/davidawad/thoth/compare/v1.1.0...v1.1.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* rework page navigation into real, accessible, clearly-labeled buttons ([a651685](https://github.com/davidawad/thoth/commit/a65168537058591f3d119482e0e750359d76dee2))
+* skip cover/license front-matter and Gutenberg back-matter when parsing EPUBs ([21ce1ae](https://github.com/davidawad/thoth/commit/21ce1ae34a0970f291f5cbf813e4579f93ba1a71))
+* spacebar play/pause outside inputs, stop neighbor words shifting the pivot word ([3343976](https://github.com/davidawad/thoth/commit/334397616025279ed1af4ba685ee6bdbe0ac87a3))
+* stop leaking dropzone drag-state as invalid DOM attributes ([e07a243](https://github.com/davidawad/thoth/commit/e07a243d1b857282828415cbdc522af791ef8497))
+* use a solid color for the reading progress bar ([ef0a949](https://github.com/davidawad/thoth/commit/ef0a949726b38e603615ca6f436a7581868fc763)), closes [#FF0000](https://github.com/davidawad/thoth/issues/FF0000)
+
 # [1.1.0](https://github.com/davidawad/thoth/compare/v1.0.0...v1.1.0) (2026-07-28)
 
 
