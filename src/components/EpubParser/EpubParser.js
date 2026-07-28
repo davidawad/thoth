@@ -1,287 +1,189 @@
 import React, { Component } from "react";
-// import { EpubView } from "react-reader";
 
-// eslint-disable-next-line
-import PropTypes from "prop-types";
-// eslint-disable-next-line
-import Epub, { Rendition } from "epubjs/lib/index";
-
-// TODO remove this one too
-// import JSZip from "jszip";
-
-// TODO remove this package
-// import parser from '@gxl/epub-parser'
-
-global.ePub = Epub; // Fix for v3 branch of epub.js -> needs ePub to by a global var
-// window.epub = Epub;
-const ePub = Epub;
-
-let epubOptions = {
-  store: "epubjs-test",
-  restore: true,
-  storage: true
-};
-
-epubOptions = {};
+import Epub from "epubjs/lib/index";
 
 let ctx = {};
+
+/*
+  Pull plain text out of a parsed epub.js section.
+
+  In the normal case `section.load()` (see openBook below) resolves with
+  `xml.documentElement` - a real DOM Element that epub.js already parsed
+  via DOMParser. `.textContent` on that element walks the whole subtree and
+  concatenates text nodes, which strips every tag for free - no manual HTML
+  stripping needed.
+
+  Some spine item extensions aren't recognized by epub.js's archive/request
+  layer (see node_modules/epubjs/lib/archive.js handleResponse) and come
+  back as a raw markup string instead of a parsed Element. For that case we
+  fall back to parsing the string ourselves and stripping tags by reading
+  `.textContent` off the parsed body.
+*/
+function extractText(contents) {
+  if (!contents) {
+    return "";
+  }
+
+  if (typeof contents.textContent === "string") {
+    return contents.textContent;
+  }
+
+  if (typeof contents === "string") {
+    const parsed = new DOMParser().parseFromString(contents, "text/html");
+    return (parsed.body && parsed.body.textContent) || "";
+  }
+
+  return "";
+}
 
 class EpubParser extends Component {
   constructor(props) {
     super(props);
 
     this.openBook = this.openBook.bind(this);
-    this.makeRangeCfi = this.makeRangeCfi.bind(this);
-
-    ctx = this;
 
     // book file passed into this component.
     const currFile = this.props.file;
+
+    ctx = this;
 
     this.state = {
       currentFile: currFile,
       bookLoaded: false,
       book: {},
-      verbose: this.props.verbose
+      complete: false,
+      fileName: "EPUB LOADING . . .",
+      verbose: this.props.verbose,
+      pages: [], // array of chapter/section text content
+      error: null,
     };
   }
 
   componentDidMount() {
-    if (ctx.state.verbose) {
-      console.log("COMPONENT MOUNT.");
-    }
-
-    let inputFile = this.props.file;
-
-    // readAsArrayBuffer throws a TypeError if handed anything that isn't a
-    // Blob/File. Guard the boundary rather than crash on a missing/bad prop.
-    if (!(inputFile instanceof Blob)) {
-      console.error("EpubParser: expected a File/Blob, got", inputFile);
+    // Guard against being mounted without an actual uploaded file - the
+    // FileParser dropzone hands us a Blob, but this keeps us defensive
+    // instead of silently failing inside FileReader.
+    if (!(this.props.file instanceof Blob)) {
+      this.setState({ error: "No EPUB file was provided to load." });
       return;
     }
 
-    var reader = new FileReader();
+    const reader = new FileReader();
 
     reader.onload = this.openBook;
-
-    reader.readAsArrayBuffer(inputFile);
-  }
-
-  makeRangeCfi(a, b) {
-    const CFI = new ePub.CFI();
-    const start = CFI.parse(a),
-      end = CFI.parse(b);
-    const cfi = {
-      range: true,
-      base: start.base,
-      path: {
-        steps: [],
-        terminal: null
-      },
-      start: start.path,
-      end: end.path
+    reader.onerror = function () {
+      ctx.setState({ error: "Could not read the uploaded EPUB file." });
     };
-    const len = cfi.start.steps.length;
-    for (let i = 0; i < len; i++) {
-      if (CFI.equalStep(cfi.start.steps[i], cfi.end.steps[i])) {
-        if (i === len - 1) {
-          // Last step is equal, check terminals
-          if (cfi.start.terminal === cfi.end.terminal) {
-            // CFI's are equal
-            cfi.path.steps.push(cfi.start.steps[i]);
-            // Not a range
-            cfi.range = false;
-          }
-        } else cfi.path.steps.push(cfi.start.steps[i]);
-      } else break;
-    }
-    cfi.start.steps = cfi.start.steps.slice(cfi.path.steps.length);
-    cfi.end.steps = cfi.end.steps.slice(cfi.path.steps.length);
 
-    return (
-      "epubcfi(" +
-      CFI.segmentString(cfi.base) +
-      "!" +
-      CFI.segmentString(cfi.path) +
-      "," +
-      CFI.segmentString(cfi.start) +
-      "," +
-      CFI.segmentString(cfi.end) +
-      ")"
-    );
+    reader.readAsArrayBuffer(this.props.file);
   }
 
   openBook(e) {
-    let book = {};
+    const bookData = e.target.result;
 
-    var bookData = e.target.result;
-
-    if (ctx.state.verbose) {
-      console.log("BOOKDATA: ", bookData);
+    let book;
+    try {
+      book = Epub(bookData);
+    } catch (err) {
+      console.error("Error opening EPUB: " + err);
+      this.setState({ error: "This file could not be opened as an EPUB." });
+      return;
     }
 
-    // user uploaded book
-    book = Epub(bookData, epubOptions);
+    this.setState({
+      bookLoaded: false,
+      book: book,
+    });
 
-    // sample book, this works and fetches text
-    // book = ePub("https://s3.amazonaws.com/epubjs/books/moby-dick/OPS/package.opf", epubOptions);
+    // epub.js's Book constructor swallows failures internally
+    // (it calls `this.open(...).catch(err => emit(OPEN_FAILED))` and never
+    // rejects `book.ready`), so a malformed epub would otherwise hang
+    // forever instead of surfacing an error - listen for the event instead.
+    book.on("openFailed", function (err) {
+      console.error("EPUB open failed: " + err);
+      ctx.setState({ error: "This file could not be opened as an EPUB." });
+    });
 
-    console.log("EPUB PARSER BOOK: ", book);
-
-    var $viewer = document.getElementById("viewer");
-    var $next = document.getElementById("next");
-    var $prev = document.getElementById("prev");
-
-    var currentSection;
-    var currentSectionIndex = 6;
-
-    book.loaded.navigation.then(function (toc) {
-      var $select = document.getElementById("toc"),
-        docfrag = document.createDocumentFragment();
-
-      toc.forEach(function (chapter) {
-        // lets the user select a chapter to read.
-        var option = document.createElement("option");
-
-        option.textContent = chapter.label;
-        option.ref = chapter.href;
-
-        docfrag.appendChild(option);
-      });
-
-      $select.appendChild(docfrag);
-
-      $select.onchange = function () {
-        var index = $select.selectedIndex,
-          url = $select.options[index].ref;
-
-        // shitty hack to save time
-        let nextUrl = $select.options[index].ref;
-        if (typeof $select.options[index + 1] !== typeof undefined) {
-          nextUrl = $select.options[index + 1].ref;
+    book.ready
+      .then(function () {
+        if (ctx.state.verbose) {
+          console.log("# EPUB Loaded");
         }
 
-        console.log("next url", nextUrl);
-
-        // TODO get the cfi string for that chapter and get it rendered with the callback~
-        console.log("DISPLAYING A THING CALLED URL", url);
-
-        // This rendering doesn't work for some reason.
-        let rendition = book.renderTo("fodder");
-
-        console.log("LOCATION: ", rendition);
-
-        // TODO this library is shit.
-
-        /*
-        let currChapterCFIStr = book.spine.get(url).cfiBase;
-
-        console.log("CURRENT CHAPTER", currChapterCFIStr);
-
-        let nextChapterCFIStr = book.spine.get(nextUrl).cfiBase;
-
-        console.log("NEXT CHAPTER", nextChapterCFIStr);
-        */
-
-        // See this github issue for getting rendering
-        // https://github.com/futurepress/epub.js/issues/363
-
-        // only code example here.
-
-        // https://github.com/search?q=makeRangeCfi&type=Code
-        // https://github.com/johnfactotum/foliate/blob/22fdcfa739ee308721295f94bd9c553e98dbf20b/src/assets/viewer.js#L251
-
-        // after getting the Rendition back, you should be able to get the string from the rendition range
-
-        const [a, b] = [
-          rendition.currentLocation().start.cfi,
-          rendition.currentLocation().end.cfi
-        ];
-
-        book.getRange(ctx.makeRangeCfi(a, b)).then((range) => {
-          console.log("RANGE OF TEXT", range.toString());
+        const sections = [];
+        book.spine.each(function (section) {
+          sections.push(section);
         });
 
-        display(url);
+        const pagesText = [];
 
-        return false;
-      };
+        // Load + extract each section's text sequentially (mirrors
+        // PDFParser's page-by-page promise chain) so we don't hammer the
+        // archive/zip reader with concurrent requests.
+        let lastPromise = Promise.resolve();
 
-      book.opened.then(function () {
-        display(currentSectionIndex);
-      });
+        sections.forEach(function (section) {
+          lastPromise = lastPromise
+            .then(function () {
+              return section.load(book.load.bind(book));
+            })
+            .then(function (contents) {
+              const pageText = extractText(contents).replace(/\s+/g, " ").trim();
 
-      $next.addEventListener(
-        "click",
-        function () {
-          var displayed = display(currentSectionIndex + 1);
-          if (displayed) currentSectionIndex++;
-        },
-        false
-      );
+              if (ctx.state.verbose) {
+                console.log("# Section: " + section.href);
+                console.log(pageText);
+              }
 
-      $prev.addEventListener(
-        "click",
-        function () {
-          var displayed = display(currentSectionIndex - 1);
-          if (displayed) currentSectionIndex--;
-        },
-        false
-      );
+              pagesText.push(pageText);
 
-      function display(item) {
-        var section = book.spine.get(item);
+              // free the parsed document now that we've pulled the text out.
+              section.unload();
+            });
+        });
 
-        if (section) {
-          currentSection = section;
+        return lastPromise.then(function () {
+          return pagesText;
+        });
+      })
+      .then(function (pagesText) {
+        // Drop fully empty sections (covers, nav pages, etc.) so the RSVP
+        // reader isn't handed blank pages to flip through.
+        const nonEmptyPages = pagesText.filter(function (page) {
+          return page.length > 0;
+        });
 
-          let cfiString = currentSection.cfiBase;
-          console.log("cfi String", cfiString);
-
-          console.log("SECTION HERE: ", section);
-
-          section.render().then(function (html) {
-            $viewer.innerHTML = html;
-
-            // console.log("HTML TO DISPLAY: ", html);
-          });
+        if (ctx.state.verbose) {
+          console.log("# End of Document");
+          console.log("ALL PAGE TEXT: ", nonEmptyPages.join(" "));
         }
 
-        return section;
-      }
-    });
+        ctx.setState(
+          {
+            bookLoaded: true,
+            pages: nonEmptyPages,
+          },
+          function () {
+            ctx.props.updateCallback({
+              pages: ctx.state.pages,
+            });
+          }
+        );
+      })
+      .catch(function (err) {
+        console.error("Error extracting EPUB text: " + err);
+        ctx.setState({
+          error: "Error reading EPUB contents: " + (err && err.message ? err.message : err),
+        });
+      });
   }
 
   render() {
-    // console.log("EPUB DISPLAY GIVEN THE FOLLOWING FILE : ", this.state.currentFile);
-
-    // use empty options to avoid ArrayBuffer urls being treated as options in epub.js
-
-    if (!this.state.bookLoaded) {
-      // render spinning icon?
-      // return <p>Book Loading . . .</p>;
+    if (this.state.error) {
+      return <p className="EpubParser-error">{this.state.error}</p>;
     }
 
-    console.log("book on render", this.state.book);
-
-    return (
-      <div className="EpubParser">
-        {/* <p>{this.state.book.locations}</p> */}
-
-        <div id="fodder" className="scrolled"></div>
-
-        <select id="toc"></select>
-        <div id="viewer" className="scrolled"></div>
-
-        <div id="prev" className="arrow">
-          ‹
-        </div>
-
-        <div id="next" className="arrow">
-          ›
-        </div>
-      </div>
-    );
+    return <p>{this.state.bookLoaded ? "" : "loading . . . "}</p>;
   }
 }
 

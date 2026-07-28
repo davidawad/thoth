@@ -3,10 +3,7 @@ import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
 import * as CONSTANTS from "../constants";
 
-// EpubParser is not yet wired into the RSVP reader pipeline (it renders its
-// own standalone viewer instead of calling updateCallback) - re-enable once
-// that rewrite lands.
-// import EpubParser from "../EpubParser/EpubParser";
+import EpubParser from "../EpubParser/EpubParser";
 import PDFParser from "../PDFParser/PDFParser";
 
 // import "./FileParser.css";
@@ -16,8 +13,7 @@ const EPUBTYPE = CONSTANTS.EPUB_MIME_TYPE;
 
 // react-dropzone v14's `accept` prop is a MIME-type -> extensions map, not a
 // bare array (the array form silently disables the file-type filter).
-// const allowedFiletypes = { [PDFTYPE]: ['.pdf'], [EPUBTYPE]: ['.epub'] };
-const allowedFiletypes = { [PDFTYPE]: ['.pdf'] };
+const allowedFiletypes = { [PDFTYPE]: ['.pdf'], [EPUBTYPE]: ['.epub'] };
 
 let ctx = {};
 
@@ -174,8 +170,22 @@ class FileParser extends Component {
         </aside>
         */}
 
-        {/* EpubParser isn't wired into the RSVP pipeline yet - see comment on
-            its import above. Re-enable this branch once that rewrite lands. */}
+        {this.state.fileLoaded && this.state.currentFile.type === EPUBTYPE ? (
+          // render epub text!
+          <div>
+            <EpubParser
+              className="false"
+              file={this.state.currentFile}
+              ref={this.readerRef}
+              url={this.state.currentFileUrl}
+              updateCallback={this.updateSettings}
+              verbose={this.props.verbose}
+            />
+          </div>
+        ) : (
+          // else
+          <span></span>
+        )}
 
         {this.state.fileLoaded && this.state.currentFile.type === PDFTYPE ? (
           // render PDF text!
