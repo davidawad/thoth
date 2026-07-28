@@ -1,6 +1,7 @@
-import React, { Component } from "react";
-import Modal from "react-modal";
-import SettingsPanel from "../SettingsPanel/SettingsPanel";
+import React, { Component } from 'react';
+import Modal from 'react-modal';
+import SettingsPanel from '../SettingsPanel/SettingsPanel';
+import type { AppSettings, UpdateCallback } from '../types';
 
 // react-modal ships hardcoded inline defaults (e.g. a white content
 // background, its own top/left/transform centering) that would either clash
@@ -11,32 +12,42 @@ import SettingsPanel from "../SettingsPanel/SettingsPanel";
 // `.modal` from positioning `fixed` against the real viewport) and let
 // daisyui's own classes (rendered inside, see render() below) own the
 // backdrop + centering + theme colors.
-const customStyles = {
+const customStyles: Modal.Styles = {
   overlay: {
-    backgroundColor: "transparent",
-    zIndex: 50
+    backgroundColor: 'transparent',
+    zIndex: 50,
   },
   content: {
-    position: "fixed",
+    position: 'fixed',
     inset: 0,
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    transform: "none",
-    background: "transparent",
-    border: "none",
+    transform: 'none',
+    background: 'transparent',
+    border: 'none',
     borderRadius: 0,
-    padding: 0
-  }
+    padding: 0,
+  },
 };
 
-class ModalWrapper extends Component {
-  constructor(props) {
+interface ModalWrapperProps extends AppSettings {
+  updateCallback: UpdateCallback;
+}
+
+interface ModalWrapperState extends AppSettings {
+  modalIsOpen: boolean;
+}
+
+class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
+  subtitle: HTMLHeadingElement | null = null;
+
+  constructor(props: ModalWrapperProps) {
     super(props);
 
     this.state = {
-      modalIsOpen: false
+      modalIsOpen: false,
     };
 
     this.openModal = this.openModal.bind(this);
@@ -44,28 +55,29 @@ class ModalWrapper extends Component {
     this.closeModal = this.closeModal.bind(this);
   }
 
-  openModal() {
+  openModal(): void {
     this.setState({
-      modalIsOpen: true
+      modalIsOpen: true,
     });
   }
 
-  afterOpenModal() {
+  afterOpenModal(): void {
     // (previously forced the heading to hardcoded red here, which fought
     // with the daisyui theme - text color now just comes from
     // `.modal-box`'s `text-base-content` class in render()).
   }
 
-  closeModal() {
+  closeModal(): void {
     this.setState({
-      modalIsOpen: false
+      modalIsOpen: false,
     });
   }
 
   // Update state when props change
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: ModalWrapperProps): void {
     if (this.props !== prevProps) {
-      this.setState(this.props);
+      const { updateCallback: _updateCallback, ...settings } = this.props;
+      this.setState(settings);
     }
   }
 
@@ -92,17 +104,16 @@ class ModalWrapper extends Component {
             <div className="modal-box bg-base-100 text-base-content max-w-measure-narrow max-h-[80vh] overflow-y-auto">
               <h2
                 className="text-xl font-bold mb-4"
-                ref={(subtitle) => (this.subtitle = subtitle)}
+                ref={(subtitle) => {
+                  this.subtitle = subtitle;
+                }}
               >
                 Settings
               </h2>
 
               {/* pass along the callback to update reader state with new settings */}
 
-              <SettingsPanel
-                updateCallback={this.props.updateCallback}
-                {...this.props}
-              />
+              <SettingsPanel {...this.props} />
 
               <div className="closeButtonWrapper mt-4">
                 <button className="btn btn-sm" onClick={this.closeModal}>

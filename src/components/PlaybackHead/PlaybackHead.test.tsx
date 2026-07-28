@@ -42,7 +42,7 @@ describe("PlaybackHead Component", () => {
     const expectedPost = reel.text.slice(reel.hotCharInd + 1); // "def"
 
     const { container } = render(<PlaybackHead currentReel={reel} />);
-    const canvasDiv = container.querySelector(".Reader-canvas");
+    const canvasDiv = container.querySelector(".Reader-canvas")!;
     expect(canvasDiv).toBeInTheDocument();
 
     // The textContent should be equal to the white spaces followed by the pre, hot, and post parts.
@@ -51,7 +51,7 @@ describe("PlaybackHead Component", () => {
     expect(canvasDiv.textContent).toBe(expectedTextContent);
 
     // Also, check that the hot letter is wrapped in a span with the 'red' class.
-    const redSpan = container.querySelector("span.red");
+    const redSpan = container.querySelector("span.red")!;
     expect(redSpan).toBeInTheDocument();
     expect(redSpan.textContent).toBe(expectedHot);
   });
@@ -67,7 +67,7 @@ describe("PlaybackHead Component", () => {
     );
 
     // Check initial render
-    let canvasDiv = container.querySelector(".Reader-canvas");
+    let canvasDiv = container.querySelector(".Reader-canvas")!;
     expect(canvasDiv).toBeInTheDocument();
     expect(canvasDiv.textContent).toBe(initialReel.text);
 
@@ -79,7 +79,7 @@ describe("PlaybackHead Component", () => {
       hotCharInd: -1,
     };
     rerender(<PlaybackHead currentReel={updatedReel} someProp="bar" />);
-    canvasDiv = container.querySelector(".Reader-canvas");
+    canvasDiv = container.querySelector(".Reader-canvas")!;
     expect(canvasDiv.textContent).toBe(updatedReel.text);
   });
 });

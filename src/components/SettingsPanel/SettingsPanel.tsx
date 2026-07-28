@@ -10,12 +10,13 @@ import {
   DEFAULT_READABILITY_METRIC,
   SPEED_WRITING_STORAGE_KEY,
 } from '../constants';
+import type { AppSettings, UpdateCallback } from '../types';
 
 // Reads the theme currently applied to <html data-theme="..."> - set before
 // first paint by the inline script in pages/_document.js - so this selector
 // starts in sync with what's already on screen rather than flashing to a
 // default value once the component mounts.
-function getActiveTheme() {
+function getActiveTheme(): string {
   if (typeof document === 'undefined') {
     return DEFAULT_THEME;
   }
@@ -26,7 +27,7 @@ function getActiveTheme() {
 // Applies + persists a theme. Swapping `data-theme` is daisyui's own
 // mechanism (see tailwind.config.js `daisyui.themes`) - no parallel
 // CSS-variable system needed.
-function applyTheme(themeId) {
+function applyTheme(themeId: string): void {
   if (typeof document === 'undefined') {
     return;
   }
@@ -91,13 +92,17 @@ function LegibilityResearchSection() {
   );
 }
 
-const SettingsPanel = (props) => {
+interface SettingsPanelProps extends AppSettings {
+  updateCallback: UpdateCallback;
+}
+
+const SettingsPanel = (props: SettingsPanelProps) => {
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [readabilityMetric, setReadabilityMetric] = useState(
-    props.readabilityMetric || DEFAULT_READABILITY_METRIC,
+    props.readabilityMetric || DEFAULT_READABILITY_METRIC
   );
   const [speedWritingEnabled, setSpeedWritingEnabled] = useState(
-    Boolean(props.speedWritingEnabled),
+    Boolean(props.speedWritingEnabled)
   );
 
   // Sync from the DOM once mounted (client-only - avoids SSR/client
@@ -106,39 +111,42 @@ const SettingsPanel = (props) => {
     setTheme(getActiveTheme());
   }, []);
 
-  const handleThemeChange = useCallback((event) => {
-    const nextTheme = event.target.value;
-    setTheme(nextTheme);
-    applyTheme(nextTheme);
+  const handleThemeChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const nextTheme = event.target.value;
+      setTheme(nextTheme);
+      applyTheme(nextTheme);
 
-    // NOTE: deliberately NOT calling props.updateCallback() here. That
-    // callback feeds into App's top-level state (pages/index.js), which is
-    // spread as props into <Reader>; Reader's componentDidUpdate treats ANY
-    // prop change (not just `content` changes) as a reason to fully
-    // re-run text parsing (TextParsingTools/compromise). Theme state is
-    // fully self-contained (DOM `data-theme` attribute + localStorage - see
-    // applyTheme() above), so there's nothing for App/Reader to react to
-    // here; routing it through updateCallback would only add risk for no
-    // benefit.
-  }, []);
+      // NOTE: deliberately NOT calling props.updateCallback() here. That
+      // callback feeds into App's top-level state (pages/index.tsx), which
+      // is spread as props into <Reader>; Reader's componentDidUpdate
+      // treats ANY prop change (not just `content` changes) as a reason to
+      // fully re-run text parsing (TextParsingTools/compromise). Theme
+      // state is fully self-contained (DOM `data-theme` attribute +
+      // localStorage - see applyTheme() above), so there's nothing for
+      // App/Reader to react to here; routing it through updateCallback
+      // would only add risk for no benefit.
+    },
+    []
+  );
 
   // Fires the moment the user picks a new metric - reuses the existing
-  // updateCallback pattern so the choice flows straight up to pages/index.js
+  // updateCallback pattern so the choice flows straight up to pages/index.tsx
   // state (which also persists it to localStorage).
   const handleReadabilityMetricChange = useCallback(
-    (event) => {
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
       const nextMetric = event.target.value;
       setReadabilityMetric(nextMetric);
       props.updateCallback({ readabilityMetric: nextMetric });
     },
-    [props],
+    [props]
   );
 
   // Speed Writing (paper §8.4 "Speed Writing"): opt-in, OFF by default.
   // Persists the choice to localStorage and bubbles it up to the App/Reader
   // via updateCallback (same pattern the readability metric picker uses).
   const handleSpeedWritingToggle = useCallback(
-    (event) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       const enabled = event.target.checked;
       setSpeedWritingEnabled(enabled);
 
@@ -146,7 +154,7 @@ const SettingsPanel = (props) => {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem(
             SPEED_WRITING_STORAGE_KEY,
-            String(enabled),
+            String(enabled)
           );
         }
       } catch {
@@ -158,7 +166,7 @@ const SettingsPanel = (props) => {
         props.updateCallback({ speedWritingEnabled: enabled });
       }
     },
-    [props],
+    [props]
   );
 
   return (
