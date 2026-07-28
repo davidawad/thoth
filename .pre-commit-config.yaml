@@ -5,11 +5,20 @@ repos:
         name: oxlint (staged)
         entry: pnpm exec oxlint --deny-warnings
         language: system
-        types_or: [javascript, jsx]
+        types_or: [javascript, jsx, ts, tsx]
         pass_filenames: true
+      - id: typecheck
+        name: tsc --noEmit
+        entry: pnpm exec tsc --noEmit
+        language: system
+        types_or: [ts, tsx]
+        # TS type-checking is whole-program, not per-file - pass no
+        # filenames so tsc always checks the full project against its
+        # own tsconfig.json rather than a subset that could hide errors.
+        pass_filenames: false
       - id: prettier
         name: prettier (staged)
         entry: pnpm exec prettier --single-quote --write
         language: system
-        types_or: [javascript, jsx, json, css, scss, markdown]
+        types_or: [javascript, jsx, ts, tsx, json, css, scss, markdown]
         pass_filenames: true
