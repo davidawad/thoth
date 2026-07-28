@@ -1,5 +1,6 @@
 import nlp from 'compromise';
 import type { CompromiseTerm } from 'compromise';
+import { Duration, Effect } from 'effect';
 
 import TextParsingTools from './TextParsingTools';
 import { datamuseResponseSchema } from './schemas';
@@ -29,6 +30,13 @@ const MAX_CANDIDATES = 8;
 // hard cap on how many *unique* difficult words we'll look up per call, so a
 // giant pasted text can't hammer the free API or stall the reader.
 const MAX_LOOKUPS = 60;
+
+// how many of those lookups are allowed to be in flight at once. Previously
+// unbounded (a single Promise.all over every candidate) - capped now that
+// Effect.all makes a concurrency limit a one-line change, so a long text
+// with many difficult words can't fire dozens of simultaneous requests at
+// Datamuse's free, rate-limited API.
+const MAX_CONCURRENT_LOOKUPS = 8;
 
 // don't bother substituting very short words - they're rarely the problem
 // and hyphenation/timing already special-cases short words elsewhere.
@@ -176,57 +184,59 @@ function matchCase(original: string, replacement: string): string {
   return replacement;
 }
 
-// Fetches Datamuse results for a word under a given relation. Resolves to []
-// (never rejects) on any failure - offline, timeout, non-200, malformed
-// body, etc. This is an enhancement-only network call and must fail open.
+// Fetches Datamuse results for a word under a given relation, as an Effect
+// that always succeeds with [] (never fails) on any problem - offline,
+// timeout, non-200, malformed body, whatever. This is an enhancement-only
+// network call and must fail open.
 //
 // `relation` is a Datamuse query param: "rel_syn" (strict WordNet synonyms -
 // high precision, but many words have none) or "ml" ("means like" - a much
 // looser semantic-relatedness match, higher recall but includes non-synonym
 // associations, e.g. "chef" ~ "kitchen"). We try rel_syn first and only fall
-// back to ml, see resolveReplacement().
-async function fetchDatamuseRelation(
+// back to ml, see resolveReplacementEffect().
+//
+// Effect.tryPromise's `try` callback receives an AbortSignal that Effect
+// itself aborts on interruption - wiring Effect.timeout's cancellation
+// straight through to the underlying fetch() call, for free. That replaces
+// the AbortController + setTimeout + try/finally bookkeeping the previous
+// Promise-based version needed to get the same behavior.
+function fetchDatamuseRelationEffect(
   relation: string,
   word: string,
-): Promise<DatamuseResult[]> {
+): Effect.Effect<DatamuseResult[]> {
   if (typeof fetch !== 'function') {
-    return [];
+    return Effect.succeed([]);
   }
 
-  let controller: AbortController | undefined;
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const url = `${DATAMUSE_ENDPOINT}?${relation}=${encodeURIComponent(
+    word,
+  )}&md=p&max=${MAX_CANDIDATES}`;
 
-  try {
-    if (typeof AbortController !== 'undefined') {
-      controller = new AbortController();
-      timeoutId = setTimeout(() => controller?.abort(), FETCH_TIMEOUT_MS);
+  const program = Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
+      try: (signal) => fetch(url, { signal }),
+      catch: () => 'fetch-failed' as const,
+    });
+
+    if (!response.ok) {
+      return [] as DatamuseResult[];
     }
 
-    const url = `${DATAMUSE_ENDPOINT}?${relation}=${encodeURIComponent(
-      word,
-    )}&md=p&max=${MAX_CANDIDATES}`;
+    const data: unknown = yield* Effect.tryPromise({
+      try: () => response.json() as Promise<unknown>,
+      catch: () => 'invalid-json' as const,
+    });
 
-    const response = await fetch(
-      url,
-      controller ? { signal: controller.signal } : undefined,
-    );
-
-    if (!response || !response.ok) {
-      return [];
-    }
-
-    const data: unknown = await response.json();
     const parsed = datamuseResponseSchema.safeParse(data);
 
     return parsed.success ? parsed.data : [];
-  } catch {
-    // network failure, timeout/abort, JSON parse error, whatever - fail open.
-    return [];
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
+  });
+
+  return program.pipe(
+    Effect.timeout(Duration.millis(FETCH_TIMEOUT_MS)),
+    // network failure, timeout, non-JSON body, whatever - fail open.
+    Effect.catchAll(() => Effect.succeed([] as DatamuseResult[])),
+  );
 }
 
 // From a list of Datamuse results (each `{ word, score, tags }`), picks the
@@ -282,29 +292,31 @@ function pickBestSynonym(
 // solves word-sense disambiguation, so the safer tradeoff is fewer
 // substitutions (words with no strict synonym are simply left alone)
 // rather than confident-looking wrong ones.
-async function resolveReplacement(
+function resolveReplacementEffect(
   candidate: Candidate,
-): Promise<string | null> {
-  if (synonymCache.has(candidate.key)) {
-    return synonymCache.get(candidate.key) ?? null;
-  }
+): Effect.Effect<string | null> {
+  return Effect.gen(function* () {
+    if (synonymCache.has(candidate.key)) {
+      return synonymCache.get(candidate.key) ?? null;
+    }
 
-  const synonymResults = await fetchDatamuseRelation(
-    'rel_syn',
-    candidate.normalized,
-  );
+    const synonymResults = yield* fetchDatamuseRelationEffect(
+      'rel_syn',
+      candidate.normalized,
+    );
 
-  const replacement = pickBestSynonym(
-    candidate.normalized,
-    synonymResults,
-    candidate.category,
-  );
+    const replacement = pickBestSynonym(
+      candidate.normalized,
+      synonymResults,
+      candidate.category,
+    );
 
-  if (synonymCache.size < MAX_CACHE_SIZE) {
-    synonymCache.set(candidate.key, replacement);
-  }
+    if (synonymCache.size < MAX_CACHE_SIZE) {
+      synonymCache.set(candidate.key, replacement);
+    }
 
-  return replacement;
+    return replacement;
+  });
 }
 
 interface AnnotatedTerm {
@@ -338,7 +350,7 @@ async function substituteText(text: string): Promise<SubstitutionResult> {
     return fallback;
   }
 
-  try {
+  const program = Effect.gen(function* () {
     const doc = nlp(text);
     const sentences = doc.json();
 
@@ -371,7 +383,12 @@ async function substituteText(text: string): Promise<SubstitutionResult> {
       MAX_LOOKUPS,
     );
 
-    await Promise.all(candidatesToResolve.map(resolveReplacement));
+    // Resolves every candidate concurrently, capped at
+    // MAX_CONCURRENT_LOOKUPS in flight at once (see its definition) rather
+    // than the unbounded Promise.all the Promise-based version used.
+    yield* Effect.all(candidatesToResolve.map(resolveReplacementEffect), {
+      concurrency: MAX_CONCURRENT_LOOKUPS,
+    });
 
     const substitutions: Substitution[] = [];
     const substitutionsByKey = new Map<string, Substitution>();
@@ -412,11 +429,14 @@ async function substituteText(text: string): Promise<SubstitutionResult> {
     }
 
     return { text: rebuilt, substitutions, changed: true };
-  } catch {
+  }).pipe(
     // speed writing is an enhancement - never let it break the base reading
-    // experience.
-    return fallback;
-  }
+    // experience, regardless of what fails (compromise throwing on
+    // pathological input, an unexpected Effect failure, etc).
+    Effect.catchAll(() => Effect.succeed(fallback)),
+  );
+
+  return Effect.runPromise(program);
 }
 
 const funcs = {

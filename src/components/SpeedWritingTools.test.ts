@@ -276,6 +276,29 @@ describe('SpeedWritingTools.substituteText', () => {
     expect(result.text).toBe('The gorgeous sunset was breathtaking.');
   });
 
+  it('fails open (and aborts the request) when Datamuse never responds', async () => {
+    let requestSignal: AbortSignal | undefined;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
+        requestSignal = init?.signal ?? undefined;
+        // never resolves/rejects on its own - only the timeout should end this.
+        return new Promise(() => {});
+      }),
+    );
+
+    const result = await SpeedWritingTools.substituteText(
+      'The gorgeous sunset was breathtaking.',
+    );
+
+    expect(result.changed).toBe(false);
+    expect(result.text).toBe('The gorgeous sunset was breathtaking.');
+    // the timeout should have interrupted the underlying fetch via its
+    // AbortSignal, not just abandoned the pending promise.
+    expect(requestSignal?.aborted).toBe(true);
+  }, 10000);
+
   it('substitutes a difficult word for a mocked Datamuse synonym and reports it', async () => {
     // "gorgeous" and "breathtaking" are both absent from the dictionaries,
     // so both are candidates; the mock returns the same synonym for every
