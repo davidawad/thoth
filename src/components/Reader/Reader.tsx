@@ -1,6 +1,6 @@
-import React, { Component } from "react";
-import LoadingBar from "react-top-loading-bar";
-import ReactGA from "react-ga";
+import React, { Component } from 'react';
+import LoadingBar from 'react-top-loading-bar';
+import ReactGA from 'react-ga';
 
 import {
   Editor,
@@ -9,20 +9,16 @@ import {
   Modifier,
   RichUtils,
   type DraftStyleMap,
-} from "draft-js";
+} from 'draft-js';
 
-import * as CONSTANTS from "../constants";
+import * as CONSTANTS from '../constants';
 
-import TextParsingTools, {
-  type ReadabilityScores,
-} from "../TextParsingTools";
-import SpeedWritingTools, {
-  type Substitution,
-} from "../SpeedWritingTools";
-import utils from "../utils";
-import PlaybackHead from "../PlaybackHead/PlaybackHead";
-import DisplayReel from "../DisplayReel";
-import type { AppSettings } from "../types";
+import TextParsingTools, { type ReadabilityScores } from '../TextParsingTools';
+import SpeedWritingTools, { type Substitution } from '../SpeedWritingTools';
+import utils from '../utils';
+import PlaybackHead from '../PlaybackHead/PlaybackHead';
+import DisplayReel from '../DisplayReel';
+import type { AppSettings } from '../types';
 
 const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 
@@ -96,7 +92,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
       paused: true,
       bodyText: this.props.content,
       editorState: EditorState.createWithContent(
-        ContentState.createFromText(this.props.content)
+        ContentState.createFromText(this.props.content),
       ),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
       tape: this.parse(this.props.content),
@@ -108,11 +104,11 @@ class Reader extends Component<ReaderProps, ReaderState> {
         ? this.props.scrollingEnabled
         : false,
 
-      highlightColor: "yellow",
+      highlightColor: 'yellow',
 
-      baseColorStop: this.props.baseColorStop ?? "#00AD00",
+      baseColorStop: this.props.baseColorStop ?? '#00AD00',
 
-      finalColorStop: this.props.finalColorStop ?? "#0077AD",
+      finalColorStop: this.props.finalColorStop ?? '#0077AD',
 
       measurements: {},
       ageEstimate: DEFAULT_AGE,
@@ -137,7 +133,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     let age: number;
 
     if (
-      metric !== "average" &&
+      metric !== 'average' &&
       isFinite(scores[metric as keyof ReadabilityScores])
     ) {
       age = scores[metric as keyof ReadabilityScores];
@@ -169,7 +165,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
       const { content: _content, ...settings } = this.props;
       this.setState(
         settings as Pick<ReaderState, keyof ReaderState>,
-        this.propHandler
+        this.propHandler,
       );
     }
   }
@@ -199,12 +195,12 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // handler function for text pasted
   contentHandler(text: string, override?: boolean): void {
     if (ctx.props.verbose) {
-      console.log("CONTENT HANDLER RECEIVED TEXT: ", text);
+      console.log('CONTENT HANDLER RECEIVED TEXT: ', text);
     }
 
     if (text === this.state.bodyText && override !== true) {
       if (ctx.props.verbose) {
-        console.log("Content handler given Same Text as existing. Skipping");
+        console.log('Content handler given Same Text as existing. Skipping');
       }
       return;
     }
@@ -214,7 +210,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
     this.setState({
       editorState: EditorState.createWithContent(
-        ContentState.createFromText(text)
+        ContentState.createFromText(text),
       ),
     });
   }
@@ -222,8 +218,8 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // processes a new text sample and updates the state objects
   processCorpus(text: string): void {
     if (ctx.props.verbose) {
-      console.log("PARSING TEXT : ", text.substring(0, 20), "...");
-      console.log("SPEED ON PROCESSCORPUS: ", this.state.readingSpeed);
+      console.log('PARSING TEXT : ', text.substring(0, 20), '...');
+      console.log('SPEED ON PROCESSCORPUS: ', this.state.readingSpeed);
     }
 
     this.corpusStats(text);
@@ -244,14 +240,14 @@ class Reader extends Component<ReaderProps, ReaderState> {
           text,
           result.text,
           result.substitutions,
-          result.changed
+          result.changed,
         );
       })
       .catch((err) => {
         if (ctx.props.verbose) {
           console.warn(
-            "Speed Writing substitution failed, falling back to original text:",
-            err
+            'Speed Writing substitution failed, falling back to original text:',
+            err,
           );
         }
 
@@ -267,7 +263,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     sourceText: string,
     displayText: string,
     substitutions: Substitution[],
-    speedWritingActive: boolean
+    speedWritingActive: boolean,
   ): void {
     const arr = this.parse(displayText);
 
@@ -278,7 +274,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
         speedWritingSubstitutions: substitutions,
         speedWritingActive: speedWritingActive,
       },
-      this.reset
+      this.reset,
     );
   }
 
@@ -290,8 +286,8 @@ class Reader extends Component<ReaderProps, ReaderState> {
       len < MAX_DISPLAY_SIZE
         ? word
         : len < 11
-        ? word.slice(0, len - 3) + "- " + word.slice(len - 3)
-        : word.slice(0, 7) + "- " + this.hyphenate(word.slice(7));
+          ? word.slice(0, len - 3) + '- ' + word.slice(len - 3)
+          : word.slice(0, 7) + '- ' + this.hyphenate(word.slice(7));
 
     return ret;
   }
@@ -306,7 +302,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     // start in middle of word (default focus point)
     // move left until you hit a vowel, then stop
     for (let j = (focus = ((len - 1) / 2) | 0); j >= 0; j--) {
-      if (/[aeiou]/.test(str[j] ?? "")) {
+      if (/[aeiou]/.test(str[j] ?? '')) {
         focus = j;
         break;
       }
@@ -323,7 +319,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     }
 
     // if t has a comma, add half time
-    if (~str.indexOf(",")) {
+    if (~str.indexOf(',')) {
       t += t / 2;
     }
 
@@ -372,7 +368,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
     EditorState.forceSelection(this.state.editorState, selection);
 
-    this.toggleColor("gradient", selection);
+    this.toggleColor('gradient', selection);
   }
 
   // highlight current selection!
@@ -383,7 +379,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // Toggles identified styles on the text in question.
   toggleColor(
     toggledColor: string,
-    selection?: ReturnType<EditorState["getSelection"]>
+    selection?: ReturnType<EditorState['getSelection']>,
   ): void {
     const { editorState } = this.state;
 
@@ -395,16 +391,16 @@ class Reader extends Component<ReaderProps, ReaderState> {
         return Modifier.removeInlineStyle(
           contentState,
           effectiveSelection,
-          color
+          color,
         );
       },
-      editorState.getCurrentContent()
+      editorState.getCurrentContent(),
     );
 
     let nextEditorState = EditorState.push(
       editorState,
       nextContentState,
-      "change-inline-style"
+      'change-inline-style',
     );
 
     const currentStyle = editorState.getCurrentInlineStyle();
@@ -416,7 +412,10 @@ class Reader extends Component<ReaderProps, ReaderState> {
       // declaration) - a seed (nextEditorState) is always passed below, so
       // this is never actually undefined at runtime.
       nextEditorState = currentStyle.reduce<EditorState>((state, color) => {
-        return RichUtils.toggleInlineStyle(state as EditorState, color as string);
+        return RichUtils.toggleInlineStyle(
+          state as EditorState,
+          color as string,
+        );
       }, nextEditorState);
     }
 
@@ -424,7 +423,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     if (!currentStyle.has(toggledColor)) {
       nextEditorState = RichUtils.toggleInlineStyle(
         nextEditorState,
-        toggledColor
+        toggledColor,
       );
     }
 
@@ -444,7 +443,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     // return array of displayReels
     return words
       .trim()
-      .replace(/([.?!])([A-Z-])/g, "$1 $2")
+      .replace(/([.?!])([A-Z-])/g, '$1 $2')
       .split(/\s+/)
       .reduce(timingBelt, [] as DisplayReel[]);
   }
@@ -464,8 +463,8 @@ class Reader extends Component<ReaderProps, ReaderState> {
       });
 
       ReactGA.event({
-        category: "User",
-        action: "User finished reading.",
+        category: 'User',
+        action: 'User finished reading.',
       });
 
       return;
@@ -499,8 +498,8 @@ class Reader extends Component<ReaderProps, ReaderState> {
   play(): void {
     // user hit play button
     ReactGA.event({
-      category: "User",
-      action: "Hit Play Button",
+      category: 'User',
+      action: 'Hit Play Button',
     });
 
     // if paused, unpause and continue playing
@@ -512,7 +511,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
         },
         () => {
           this.loop();
-        }
+        },
       );
     }
   }
@@ -562,25 +561,25 @@ class Reader extends Component<ReaderProps, ReaderState> {
       // className field (that was already inert - draft-js has no such
       // feature; removed rather than typed around).
       yellow: {
-        color: "rgba(180, 180, 0, 1.0)",
-        fontWeight: "bold",
+        color: 'rgba(180, 180, 0, 1.0)',
+        fontWeight: 'bold',
       },
 
       gradient: {
         background:
-          "repeating-linear-gradient(90deg, rgba(2,0,36,1) 0%, " +
+          'repeating-linear-gradient(90deg, rgba(2,0,36,1) 0%, ' +
           this.state.baseColorStop +
-          " 50%, " +
+          ' 50%, ' +
           this.state.finalColorStop +
-          " 100%)",
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-        WebkitTextFillColor: "transparent",
+          ' 100%)',
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
       },
 
       current: {
-        fontWeight: "bold",
-        fontSize: "1.5em",
+        fontWeight: 'bold',
+        fontSize: '1.5em',
       },
     };
 
@@ -604,12 +603,12 @@ class Reader extends Component<ReaderProps, ReaderState> {
     remainingTimeEstimate /= 1000;
 
     const prevReel = this.state.tape[this.state.index - 2];
-    const prevWord = prevReel !== undefined ? prevReel.text : "";
+    const prevWord = prevReel !== undefined ? prevReel.text : '';
 
     const postInd = this.state.index === 0 ? 1 : this.state.index;
 
     const postReel = this.state.tape[postInd];
-    const postWord = postReel !== undefined ? postReel.text : "";
+    const postWord = postReel !== undefined ? postReel.text : '';
 
     const preNumSpaces = Math.max(LARGEST_WORD_SIZE - prevWord.length, 0);
 
@@ -619,12 +618,12 @@ class Reader extends Component<ReaderProps, ReaderState> {
     // scrolling text on render
     if (!this.state.paused && this.state.scrollingEnabled) {
       const scrollSelector =
-        prevWord + " " + this.state.currentReel.text + " " + postWord;
+        prevWord + ' ' + this.state.currentReel.text + ' ' + postWord;
 
       // seek through the text corpus as we read through it.
       const matching_element = Array.from(
-        document.querySelectorAll("span")
-      ).find((el) => (el.textContent || "").includes(scrollSelector));
+        document.querySelectorAll('span'),
+      ).find((el) => (el.textContent || '').includes(scrollSelector));
 
       if (matching_element !== undefined) {
         // element is there, scroll to it.
@@ -683,7 +682,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
         <LoadingBar
           progress={(this.state.index / this.state.tape.length) * 100}
           height={3}
-          color={this.colorStyleMap.gradient?.background as string}
+          color={CONSTANTS.START_COLOR}
         />
 
         <div className="editor">
@@ -700,16 +699,16 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
         <p> Age Estimate : {this.state.ageEstimate} </p>
         <p>
-          {" "}
-          Reading : {this.state.index} / {this.state.tape.length}{" "}
+          {' '}
+          Reading : {this.state.index} / {this.state.tape.length}{' '}
         </p>
         <p>
-          {" "}
+          {' '}
           {utils.roundToPrecision(
             totalTimeEstimate - remainingTimeEstimate,
-            0.01
-          )}{" "}
-          / {utils.roundToPrecision(totalTimeEstimate, 0.01)} seconds.{" "}
+            0.01,
+          )}{' '}
+          / {utils.roundToPrecision(totalTimeEstimate, 0.01)} seconds.{' '}
         </p>
 
         {/*
@@ -724,32 +723,32 @@ class Reader extends Component<ReaderProps, ReaderState> {
             {this.state.speedWritingSubstitutions.length > 0 ? (
               <>
                 <p>
-                  Speed Writing simplified{" "}
+                  Speed Writing simplified{' '}
                   {this.state.speedWritingSubstitutions.length} word
                   {this.state.speedWritingSubstitutions.length === 1
-                    ? ""
-                    : "s"}{" "}
+                    ? ''
+                    : 's'}{' '}
                   before reading (your original text above is unchanged):
                 </p>
                 <ul className="speedWritingSubstitutionList">
                   {this.state.speedWritingSubstitutions.map((sub, idx) => (
-                    <li key={sub.original + "-" + idx}>
+                    <li key={sub.original + '-' + idx}>
                       <span className="speedWritingOriginal">
                         {sub.original}
                       </span>
-                      {" → "}
+                      {' → '}
                       <span className="speedWritingReplacement">
                         {sub.replacement}
                       </span>
-                      {sub.count > 1 ? " (×" + sub.count + ")" : ""}
+                      {sub.count > 1 ? ' (×' + sub.count + ')' : ''}
                     </li>
                   ))}
                 </ul>
               </>
             ) : (
               <p>
-                Speed Writing is on, but no simpler synonyms were found for
-                this text.
+                Speed Writing is on, but no simpler synonyms were found for this
+                text.
               </p>
             )}
           </div>
