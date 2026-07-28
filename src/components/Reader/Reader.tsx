@@ -24,11 +24,8 @@ const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 
 const READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 const MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
-const LARGEST_WORD_SIZE = CONSTANTS.LARGEST_WORD_SIZE;
 
 const DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
-
-const UNICODE_WHITESPACE = CONSTANTS.UNICODE_WHITESPACE;
 
 interface ReaderProps extends Partial<AppSettings> {
   content: string;
@@ -73,7 +70,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     this.play = this.play.bind(this);
     this.pause = this.pause.bind(this);
     this.reset = this.reset.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);
+    this.handleGlobalKeyDown = this.handleGlobalKeyDown.bind(this);
     this.contentHandler = this.contentHandler.bind(this);
     this.propHandler = this.propHandler.bind(this);
     this.processCorpus = this.processCorpus.bind(this);
@@ -157,6 +154,44 @@ class Reader extends Component<ReaderProps, ReaderState> {
       measurements: scores,
       ageEstimate: age,
     });
+  }
+
+  // Space bar toggles play/pause - but only when the user isn't actively
+  // typing somewhere (the draft-js content editor, or any other focused
+  // input), matching how media players (YouTube, Spotify, etc) scope
+  // their spacebar shortcut. Attached globally on `document` rather than
+  // via a React onKeyUp prop on a wrapper div, since that only fires when
+  // a focusable descendant of that div already has focus - it wouldn't
+  // catch a space press anywhere else on the page.
+  componentDidMount(): void {
+    document.addEventListener('keydown', this.handleGlobalKeyDown);
+  }
+
+  componentWillUnmount(): void {
+    document.removeEventListener('keydown', this.handleGlobalKeyDown);
+  }
+
+  handleGlobalKeyDown(event: KeyboardEvent): void {
+    if (event.code !== PLAYPAUSE_KEY) {
+      return;
+    }
+
+    const active = document.activeElement;
+    const isTypingTarget =
+      active instanceof HTMLElement &&
+      (active.tagName === 'INPUT' ||
+        active.tagName === 'TEXTAREA' ||
+        active.tagName === 'SELECT' ||
+        active.isContentEditable);
+
+    if (isTypingTarget) {
+      return;
+    }
+
+    // prevent the page from scrolling on space bar - the whole point is
+    // that space controls playback here, not the page.
+    event.preventDefault();
+    this.playpause();
   }
 
   // Update state when props change
@@ -532,15 +567,6 @@ class Reader extends Component<ReaderProps, ReaderState> {
     }
   }
 
-  handleKeyUp(event: React.KeyboardEvent): void {
-    event.preventDefault();
-
-    // use the space bar to play / pause reading session.
-    if (event.keyCode === PLAYPAUSE_KEY) {
-      // this.playpause();
-    }
-  }
-
   reset(): void {
     // pick index 0 and re-display that
     const reel = this.state.tape[0];
@@ -610,11 +636,6 @@ class Reader extends Component<ReaderProps, ReaderState> {
     const postReel = this.state.tape[postInd];
     const postWord = postReel !== undefined ? postReel.text : '';
 
-    const preNumSpaces = Math.max(LARGEST_WORD_SIZE - prevWord.length, 0);
-
-    // add white spaces
-    const preWsp = Array(preNumSpaces).join(UNICODE_WHITESPACE);
-
     // scrolling text on render
     if (!this.state.paused && this.state.scrollingEnabled) {
       const scrollSelector =
@@ -632,28 +653,21 @@ class Reader extends Component<ReaderProps, ReaderState> {
     }
 
     return (
-      <div className="Reader" onKeyUp={this.handleKeyUp}>
-        <div className="">
-          {this.state.enableSurroundingReels &&
-          this.state.displaySurroundingReels ? (
-            <span className="readerSurroundingWord">
-              {preWsp}
-              {prevWord}
-            </span>
-          ) : (
-            <span>{Array(LARGEST_WORD_SIZE).join(UNICODE_WHITESPACE)}</span>
-          )}
-          {/* single space after pre-word */}
-          <span className="readerSurroundingWord">{UNICODE_WHITESPACE}</span>
+      <div className="Reader">
+        <div className="readerWordRow">
+          <span className="readerSurroundingWord readerSurroundingWord--before">
+            {this.state.enableSurroundingReels &&
+            this.state.displaySurroundingReels
+              ? prevWord
+              : ''}
+          </span>
           <PlaybackHead currentReel={this.state.currentReel} />
-          {/* single space before post-word */}
-          <span className="readerSurroundingWord">{UNICODE_WHITESPACE}</span>
-          {this.state.enableSurroundingReels &&
-          this.state.displaySurroundingReels ? (
-            <span className="readerSurroundingWord">{postWord}</span>
-          ) : (
-            <span></span>
-          )}
+          <span className="readerSurroundingWord readerSurroundingWord--after">
+            {this.state.enableSurroundingReels &&
+            this.state.displaySurroundingReels
+              ? postWord
+              : ''}
+          </span>
           <br />
           <br />
           <button className="btn" onClick={this.play}>

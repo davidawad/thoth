@@ -18,9 +18,27 @@
   border: 2px solid;
   width: 21rem;
   display: inline-block;
+  /* Prevent the flex row below from shrinking this below its set width -
+   * flex items default to flex-shrink: 1, so without this, three
+   * fixed-width boxes wider than the row's available space all get
+   * proportionally squeezed, silently un-fixing every width set here. */
+  flex-shrink: 0;
   padding-left: 5px;
   padding-right: 5px;
   border-radius: 0.25rem;
+  text-align: center;
+}
+
+/* Row holding the previous/current/next words. Centered as a whole, with
+ * the before/after words each given a fixed-width reserved box (below) so
+ * that neither one's actual length ever shifts .Reader-canvas's position -
+ * a shorter or longer neighboring word changes how much of its own box it
+ * fills, not the box's width. */
+.readerWordRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .Reader-word-content {
@@ -67,6 +85,29 @@
 
 .readerSurroundingWord {
   font-size: 1em;
+  /* Fixed reserved width, not sized to content - this is what actually
+   * keeps .Reader-canvas from shifting left/right as neighboring words
+   * change length. An earlier approach padded the word text itself with
+   * unicode whitespace characters up to a fixed *count*, which only
+   * produces a fixed *width* in a monospace font - this app now uses the
+   * proportional Atkinson Hyperlegible font everywhere (for legibility),
+   * so that count-based padding no longer reserved a consistent width and
+   * the pivot word visibly drifted. A real CSS box width works regardless
+   * of font. */
+  display: inline-block;
+  width: 8rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.readerSurroundingWord--before {
+  text-align: right;
+}
+
+.readerSurroundingWord--after {
+  text-align: left;
 }
 
 .hide .settings-close {
@@ -75,7 +116,7 @@
 
 .highlighted {
   font-weight: bold;
-  color: "rgba(180, 180, 0, 1.0)";
+  color: 'rgba(180, 180, 0, 1.0)';
 }
 
 /* .btn {
