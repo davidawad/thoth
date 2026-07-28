@@ -2,6 +2,7 @@ import nlp from 'compromise';
 import type { CompromiseTerm } from 'compromise';
 
 import TextParsingTools from './TextParsingTools';
+import { datamuseResponseSchema } from './schemas';
 
 /*
 Speed Writing (paper §8.4 "Speed Writing" future work).
@@ -83,8 +84,8 @@ export interface SubstitutionResult {
 
 interface DatamuseResult {
   word: string;
-  score?: number;
-  tags?: string[];
+  score?: number | undefined;
+  tags?: string[] | undefined;
 }
 
 // in-memory cache so re-processing the same text (e.g. toggling settings)
@@ -215,8 +216,9 @@ async function fetchDatamuseRelation(
     }
 
     const data: unknown = await response.json();
+    const parsed = datamuseResponseSchema.safeParse(data);
 
-    return Array.isArray(data) ? (data as DatamuseResult[]) : [];
+    return parsed.success ? parsed.data : [];
   } catch {
     // network failure, timeout/abort, JSON parse error, whatever - fail open.
     return [];

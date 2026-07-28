@@ -200,6 +200,9 @@ importers:
       worker-loader:
         specifier: ^3.0.8
         version: 3.0.8(webpack@5.98.0)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@babel/preset-typescript':
         specifier: ^8.0.1

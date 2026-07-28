@@ -11,11 +11,15 @@ export const UNICODE_WHITESPACE = '\u00a0';
 
 // Speed Writing (paper \u00a78.4): opt-in text simplification before reading.
 // localStorage key used to persist the user's opt-in choice across sessions.
-export const SPEED_WRITING_STORAGE_KEY = "thoth-speed-writing-enabled";
+export const SPEED_WRITING_STORAGE_KEY = 'thoth-speed-writing-enabled';
 
 // accepted upload MIME types (single source of truth for file-type checks)
 export const PDF_MIME_TYPE = 'application/pdf';
 export const EPUB_MIME_TYPE = 'application/epub+zip';
+// generous cap for an uploaded book/PDF - large enough for any real e-book,
+// small enough to reject something dropped in by mistake before it ever
+// reaches pdfjs-dist/epub.js.
+export const MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 export const DEFAULT_AGE = 12;
 export const MAX_AGE = 22;
 export const AGE_SCALE = 6;
@@ -34,8 +38,8 @@ export const MAX_DIFFICULTY_MULTIPLIER = 3; // cap so pathologically long/rare w
 // --- Selectable readability/difficulty metric (paper §6/§8.2 future work:
 // Dale-Chall was hardcoded as the default and other formulas were computed
 // but never exposed for the reader to choose between).
-export const DEFAULT_READABILITY_METRIC = "average";
-export const READABILITY_METRIC_STORAGE_KEY = "thoth.readabilityMetric";
+export const DEFAULT_READABILITY_METRIC = 'average';
+export const READABILITY_METRIC_STORAGE_KEY = 'thoth.readabilityMetric';
 
 // --- Lexical density (Ure, 1971): proportion of content words (nouns,
 // verbs, adjectives, adverbs) to total words, computed for free from

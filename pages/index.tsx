@@ -1,13 +1,17 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
-import Reader from "../src/components/Reader/Reader";
-import ModalWrapper from "../src/components/ModalWrapper/ModalWrapper";
-import FileParser from "../src/components/FileParser/FileParser";
+import Reader from '../src/components/Reader/Reader';
+import ModalWrapper from '../src/components/ModalWrapper/ModalWrapper';
+import FileParser from '../src/components/FileParser/FileParser';
 
-import ReactGA from "react-ga";
+import ReactGA from 'react-ga';
 
-import * as CONSTANTS from "../src/components/constants";
-import type { AppSettings } from "../src/components/types";
+import * as CONSTANTS from '../src/components/constants';
+import {
+  readabilityMetricSchema,
+  storedBooleanSchema,
+} from '../src/components/schemas';
+import type { AppSettings } from '../src/components/types';
 
 const DEBUG = false;
 
@@ -23,11 +27,11 @@ const age = CONSTANTS.DEFAULT_AGE;
 const verbose = DEBUG;
 
 // public anyway.
-const GOOGLE_ANALYTICS_KEY = "UA-96589312-4";
+const GOOGLE_ANALYTICS_KEY = 'UA-96589312-4';
 
 function initializeReactGA(): void {
   ReactGA.initialize(GOOGLE_ANALYTICS_KEY);
-  ReactGA.pageview("/home");
+  ReactGA.pageview('/home');
 }
 
 interface AppState extends AppSettings {
@@ -68,25 +72,31 @@ class App extends Component<Record<string, never>, AppState> {
   // Restore the user's saved readability metric choice after mount (avoids
   // an SSR/client hydration mismatch from reading localStorage up-front).
   componentDidMount(): void {
-    if (typeof window === "undefined") {
+    if (typeof window === 'undefined') {
       return;
     }
 
     const storedMetric = window.localStorage.getItem(
-      CONSTANTS.READABILITY_METRIC_STORAGE_KEY
+      CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
     );
+    const parsedMetric = readabilityMetricSchema.safeParse(storedMetric);
 
-    if (storedMetric && storedMetric !== this.state.readabilityMetric) {
-      this.setState({ readabilityMetric: storedMetric });
+    if (
+      parsedMetric.success &&
+      parsedMetric.data !== this.state.readabilityMetric
+    ) {
+      this.setState({ readabilityMetric: parsedMetric.data });
     }
 
     try {
       const storedSpeedWriting = window.localStorage.getItem(
-        CONSTANTS.SPEED_WRITING_STORAGE_KEY
+        CONSTANTS.SPEED_WRITING_STORAGE_KEY,
       );
+      const parsedSpeedWriting =
+        storedBooleanSchema.safeParse(storedSpeedWriting);
 
-      if (storedSpeedWriting !== null) {
-        this.setState({ speedWritingEnabled: storedSpeedWriting === "true" });
+      if (parsedSpeedWriting.success) {
+        this.setState({ speedWritingEnabled: parsedSpeedWriting.data });
       }
     } catch {
       // localStorage unavailable (private browsing, disabled, etc) - keep
@@ -99,13 +109,13 @@ class App extends Component<Record<string, never>, AppState> {
   */
   updateSettings(newSettings: Partial<AppSettings>): void {
     if (
-      typeof window !== "undefined" &&
-      Object.prototype.hasOwnProperty.call(newSettings, "readabilityMetric") &&
+      typeof window !== 'undefined' &&
+      Object.prototype.hasOwnProperty.call(newSettings, 'readabilityMetric') &&
       newSettings.readabilityMetric
     ) {
       window.localStorage.setItem(
         CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
-        newSettings.readabilityMetric
+        newSettings.readabilityMetric,
       );
     }
 
@@ -133,9 +143,9 @@ class App extends Component<Record<string, never>, AppState> {
 
         <footer>
           <p>
-            Thoth is an{" "}
-            <a href="https://github.com/davidawad/thoth">open source</a>{" "}
-            <a href="http://arxiv.org/abs/1908.01699"> research project</a> by{" "}
+            Thoth is an{' '}
+            <a href="https://github.com/davidawad/thoth">open source</a>{' '}
+            <a href="http://arxiv.org/abs/1908.01699"> research project</a> by{' '}
             <a href="http://davidawad.com">David Awad</a>.
             <br /> &copy; {this.state.year}
           </p>

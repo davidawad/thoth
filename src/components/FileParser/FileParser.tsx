@@ -1,18 +1,19 @@
-import React, { Component } from "react";
-import { useDropzone, type DropzoneOptions } from "react-dropzone";
-import styled from "styled-components";
-import * as CONSTANTS from "../constants";
-import type { UpdateCallback } from "../types";
+import React, { Component } from 'react';
+import { useDropzone, type DropzoneOptions } from 'react-dropzone';
+import styled from 'styled-components';
+import * as CONSTANTS from '../constants';
+import { uploadedFileSchema } from '../schemas';
+import type { UpdateCallback } from '../types';
 
-import EpubParser from "../EpubParser/EpubParser";
-import PDFParser from "../PDFParser/PDFParser";
+import EpubParser from '../EpubParser/EpubParser';
+import PDFParser from '../PDFParser/PDFParser';
 
 const PDFTYPE = CONSTANTS.PDF_MIME_TYPE;
 const EPUBTYPE = CONSTANTS.EPUB_MIME_TYPE;
 
 // react-dropzone v14's `accept` prop is a MIME-type -> extensions map, not a
 // bare array (the array form silently disables the file-type filter).
-const allowedFiletypes = { [PDFTYPE]: [".pdf"], [EPUBTYPE]: [".epub"] };
+const allowedFiletypes = { [PDFTYPE]: ['.pdf'], [EPUBTYPE]: ['.epub'] };
 
 interface FileParserProps {
   updateCallback: UpdateCallback;
@@ -26,6 +27,7 @@ interface FileParserState {
   verbose: boolean | undefined;
   pageNumber: number;
   pages: string[];
+  uploadError: string | null;
 }
 
 let ctx: FileParser;
@@ -38,15 +40,15 @@ interface DropzoneStyleProps {
 
 const getColor = (props: DropzoneStyleProps): string => {
   if (props.isDragAccept) {
-    return "#00e676";
+    return '#00e676';
   }
   if (props.isDragReject) {
-    return "#ff1744";
+    return '#ff1744';
   }
   if (props.isDragActive) {
-    return "#2196f3";
+    return '#2196f3';
   }
-  return "#eeeeee";
+  return '#eeeeee';
 };
 
 const Container = styled.div<DropzoneStyleProps>`
@@ -105,12 +107,14 @@ class FileParser extends Component<FileParserProps, FileParserState> {
       verbose: this.props.verbose,
       pageNumber: 0,
       pages: [],
+      uploadError: null,
     };
 
     this.onDrop = (files) => {
       this.setState({
         fileLoaded: false,
         currentFile: undefined,
+        uploadError: null,
       });
 
       // react-dropzone hands us only the accepted files; a rejected or empty
@@ -122,6 +126,25 @@ class FileParser extends Component<FileParserProps, FileParserState> {
       const file = files[0];
 
       if (!(file instanceof Blob)) {
+        return;
+      }
+
+      // react-dropzone's `accept` prop already filters by MIME type/
+      // extension, but that's a UI-level filter the user can bypass (e.g.
+      // dragging in a renamed file) - validate the actual shape of what we
+      // were handed before trusting it enough to hand off to pdfjs-dist/
+      // epub.js.
+      const validation = uploadedFileSchema.safeParse({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
+
+      if (!validation.success) {
+        this.setState({
+          uploadError:
+            "This file couldn't be loaded - only PDF and EPUB files up to 100MB are supported.",
+        });
         return;
       }
 
@@ -147,13 +170,13 @@ class FileParser extends Component<FileParserProps, FileParserState> {
   // allows a user to dynamically set a page number
   setPage(e: React.ChangeEvent<HTMLInputElement>): void {
     const parsed = parseInt(e.target.value, 10);
-    this.turnToPage(isNaN(parsed) ? "" : parsed);
+    this.turnToPage(isNaN(parsed) ? '' : parsed);
   }
 
   turnToPage(num: number | string): void {
     if (
-      num === "" ||
-      typeof num !== "number" ||
+      num === '' ||
+      typeof num !== 'number' ||
       isNaN(num) ||
       num >= ctx.state.pages.length ||
       num < 0
@@ -176,15 +199,20 @@ class FileParser extends Component<FileParserProps, FileParserState> {
   }
 
   render() {
-    const { currentFile, currentFileUrl, fileLoaded, pageNumber, pages } =
-      this.state;
+    const {
+      currentFile,
+      currentFileUrl,
+      fileLoaded,
+      pageNumber,
+      pages,
+      uploadError,
+    } = this.state;
 
     return (
       <div className="FileParser-canvas">
-        <StyledDropzone
-          onDrop={this.onDrop}
-          accept={allowedFiletypes}
-        />
+        <StyledDropzone onDrop={this.onDrop} accept={allowedFiletypes} />
+
+        {uploadError ? <p className="FileParser-error">{uploadError}</p> : null}
 
         {fileLoaded && currentFile && currentFile.type === EPUBTYPE ? (
           // render epub text!
@@ -217,7 +245,7 @@ class FileParser extends Component<FileParserProps, FileParserState> {
         )}
 
         {fileLoaded ? (
-          <div style={{ display: "inline-block" }}>
+          <div style={{ display: 'inline-block' }}>
             <div
               className="arrow prev"
               onClick={() => {
