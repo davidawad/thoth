@@ -16,6 +16,8 @@
     "test:mutation": "stryker run",
     "fuzz:epub": "NODE_OPTIONS=--experimental-strip-types jazzer fuzz/epub-extract-text.fuzz.js -- -max_total_time=30",
     "fuzz:pdf": "NODE_OPTIONS=--experimental-strip-types jazzer fuzz/pdf-document-parse.fuzz.js --disableBugDetectors=prototype-pollution -- -max_total_time=30",
+    "bench": "vitest bench --run --compare=bench/baseline.json",
+    "bench:update": "vitest bench --run --outputJson=bench/baseline.json",
     "ci": "echo \"CI/CD if we had it but this is a hobby project\"",
     "dockerbuild": "bash dockerbuild.sh",
     "postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.js public/pdf.worker.min.js"
@@ -131,6 +133,7 @@
     "jsdom": "^30.0.0",
     "oxlint": "^1.76.0",
     "prettier": "^3.9.6",
+    "tinybench": "^6.1.2",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
   },
