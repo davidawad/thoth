@@ -46,6 +46,7 @@ class App extends Component {
       scrollingEnabled: scrollingEnabled,
       age: age,
       verbose: verbose,
+      readabilityMetric: CONSTANTS.DEFAULT_READABILITY_METRIC,
     };
 
     // set up our analytics on the first render
@@ -53,10 +54,36 @@ class App extends Component {
     initializeReactGA();
   }
 
+  // Restore the user's saved readability metric choice after mount (avoids
+  // an SSR/client hydration mismatch from reading localStorage up-front).
+  componentDidMount() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const storedMetric = window.localStorage.getItem(
+      CONSTANTS.READABILITY_METRIC_STORAGE_KEY
+    );
+
+    if (storedMetric && storedMetric !== this.state.readabilityMetric) {
+      this.setState({ readabilityMetric: storedMetric });
+    }
+  }
+
   /*
     Callback function that takes a settings object from child and updates duplicate keys in object state
   */
   updateSettings(newSettings) {
+    if (
+      typeof window !== "undefined" &&
+      Object.prototype.hasOwnProperty.call(newSettings, "readabilityMetric")
+    ) {
+      window.localStorage.setItem(
+        CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
+        newSettings.readabilityMetric
+      );
+    }
+
     this.setState(newSettings);
   }
 

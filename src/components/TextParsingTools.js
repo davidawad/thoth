@@ -55,6 +55,21 @@ function smogToAge(value) {
   return ceil(sqrt(value) + 2.5);
 }
 
+// Calculate the age relating to a lexical density ratio (proportion of
+// content words - nouns/verbs/adjectives/adverbs - to total words).
+// Linearly maps the configured density range onto the configured age range.
+function lexicalDensityToAge(density) {
+  const minDensity = CONSTANTS.MIN_LEXICAL_DENSITY;
+  const maxDensity = CONSTANTS.MAX_LEXICAL_DENSITY;
+  const minAge = CONSTANTS.LEXICAL_DENSITY_MIN_AGE;
+  const maxAge = CONSTANTS.LEXICAL_DENSITY_MAX_AGE;
+
+  const clamped = Math.min(Math.max(density, minDensity), maxDensity);
+  const ratio = (clamped - minDensity) / (maxDensity - minDensity);
+
+  return minAge + ratio * (maxAge - minAge);
+}
+
 // computes an object containing the number of sentences / etc.
 const computeCounts = function computeStatsOnTextCorpus(text) {
   let ret = {};
@@ -128,6 +143,15 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
 
   let numLetters = numCharacters;
 
+  // Content words (nouns, verbs, adjectives, adverbs) via compromise's POS
+  // tagging - used to compute lexical density, a free extra difficulty
+  // signal (see lexicalDensityToAge below).
+  const numContentWords =
+    langObj.nouns().length +
+    langObj.verbs().length +
+    langObj.adjectives().length +
+    langObj.adverbs().length;
+
   ret = {
     character: numCharacters,
     letter: numLetters,
@@ -138,6 +162,7 @@ const computeCounts = function computeStatsOnTextCorpus(text) {
     sentence: numSentences,
     unfamiliarWord: numWords - familiarWordCount,
     difficultWord: numWords - easyWordCount,
+    contentWord: numContentWords,
   };
 
   return ret;
@@ -157,10 +182,30 @@ const generateScores = function computeReadabilityScoresBasedOnCounts(counts) {
     smog: smogToAge(smog(counts)),
     gunningFog: gradeToAge(gunningFog(counts)),
     spacheFormula: gradeToAge(spacheFormula(counts)),
+    lexicalDensity: lexicalDensityToAge(
+      counts.word > 0 ? counts.contentWord / counts.word : 0
+    ),
   };
 
   return ret;
 };
+
+// The set of difficulty/readability metrics a user can pick between to
+// drive the age estimate + word timing, and the human-readable labels for
+// them - single source of truth for the SettingsPanel combobox. Keys must
+// match the keys generateScores() returns, plus the synthetic "average"
+// option (mean of every finite metric - the long-standing default).
+const READABILITY_METRICS = [
+  { key: "average", label: "Average of all metrics" },
+  { key: "daleChall", label: "Dale-Chall" },
+  { key: "spacheFormula", label: "Spache" },
+  { key: "flesch", label: "Flesch-Kincaid" },
+  { key: "smog", label: "SMOG" },
+  { key: "gunningFog", label: "Gunning Fog" },
+  { key: "colemanLiau", label: "Coleman-Liau" },
+  { key: "automatedReadability", label: "Automated Readability Index" },
+  { key: "lexicalDensity", label: "Lexical Density (POS-based)" },
+];
 
 const generateWeight = function generateWeightFromScores(age, val) {
   const min = age;
@@ -196,6 +241,50 @@ const easyWord = function checkAgainstSpacheDictionary(w) {
   return wordInDictionary(spacheWords, w);
 };
 
+// Continuous, graduated per-word display-time multiplier - replaces the old
+// fixed "unfamiliar word gets 1.5x/2.5x time" binary flag (paper §8.1 Future
+// Work explicitly calls this out as losing gradations of difficulty).
+// Combines two free per-word signals:
+//   - syllable count: longer words take more of the multiplier
+//   - dictionary familiarity tier: words absent from spache (the easier,
+//     younger-reader list) AND dale-chall (the general familiar list) are
+//     treated as harder than words that are unfamiliar in only one.
+// All weights are tunable constants (see constants.js), not hardcoded here.
+const wordDifficultyMultiplier = function computeWordDifficultyMultiplier(
+  word
+) {
+  const stripped = stripPunctuation(word).toLowerCase();
+
+  if (!stripped) {
+    return CONSTANTS.DIFFICULTY_BASE_MULTIPLIER;
+  }
+
+  const syllableCount = syllable(stripped);
+  const extraSyllables = Math.max(0, syllableCount - 1);
+
+  const isEasy = easyWord(stripped);
+  const isFamiliar = familiarWord(stripped);
+
+  let familiarityPenalty = 0;
+
+  if (!isEasy && !isFamiliar) {
+    // unfamiliar in both dictionaries - hardest tier
+    familiarityPenalty =
+      CONSTANTS.DIFFICULTY_UNFAMILIAR_WEIGHT + CONSTANTS.DIFFICULTY_HARD_WEIGHT;
+  } else if (!isEasy && isFamiliar) {
+    // generally familiar, but not on the "easy" (spache) list - middle tier
+    familiarityPenalty = CONSTANTS.DIFFICULTY_UNFAMILIAR_WEIGHT;
+  }
+  // else: on the easy (spache) list - easiest tier, no penalty
+
+  const multiplier =
+    CONSTANTS.DIFFICULTY_BASE_MULTIPLIER +
+    extraSyllables * CONSTANTS.DIFFICULTY_SYLLABLE_WEIGHT +
+    familiarityPenalty;
+
+  return Math.min(multiplier, CONSTANTS.MAX_DIFFICULTY_MULTIPLIER);
+};
+
 /*
 
 stripPunctuation("This., -/ is #! an $ % ^ & * example ;: {} of a = -_ string with `~)() punctuation")
@@ -214,5 +303,7 @@ const funcs = {
   easyWord,
   familiarWord,
   stripPunctuation,
+  wordDifficultyMultiplier,
+  READABILITY_METRICS,
 };
 export default funcs;

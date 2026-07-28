@@ -89,36 +89,31 @@ class Reader extends Component {
   corpusStats(text) {
     const scores = TextParsingTools.generateTextScores(text);
 
-    let res = 0;
-    let total = 0;
-    let numEntries = 0;
+    const metric =
+      this.props.readabilityMetric || CONSTANTS.DEFAULT_READABILITY_METRIC;
 
-    for (let key in scores) {
-      const val = scores[key];
+    // if the user picked a specific formula (and it produced a real number),
+    // use it directly. Otherwise fall back to averaging every finite metric -
+    // this is also what "average" explicitly selects.
+    let age;
 
-      if (isFinite(val)) {
-        numEntries++;
-        total += val;
+    if (metric !== "average" && isFinite(scores[metric])) {
+      age = scores[metric];
+    } else {
+      let total = 0;
+      let numEntries = 0;
+
+      for (let key in scores) {
+        const val = scores[key];
+
+        if (isFinite(val)) {
+          numEntries++;
+          total += val;
+        }
       }
+
+      age = numEntries > 0 ? total / numEntries : DEFAULT_AGE;
     }
-
-    const agePredictionMode = "avg";
-
-    switch (agePredictionMode) {
-      case "avg":
-        res = total / numEntries;
-        break;
-
-      case "mean":
-        res = total / numEntries;
-        break;
-
-      default: // avg by default
-        res = total / numEntries;
-        break;
-    }
-
-    const age = res;
 
     this.setState({
       measurements: scores,
@@ -255,28 +250,18 @@ class Reader extends Component {
       t += t * 1.5;
     }
 
-    // if the word is easy according to the spache dictionary
-    // better for younger readers
-    if (TextParsingTools.easyWord(word)) {
-      // pass for now
-    }
-
     const wordIsPronoun =
       word.charAt(0) === word.charAt(0).toLowerCase() ? true : false;
 
     const punctuationStrippedWord =
       TextParsingTools.stripPunctuation(word).toLowerCase();
 
-    // if the word isn't familiar according to the dale-chall dictionary,
-    // and is not a pronoun,
-    // and has a length greater than 2, display it for longer
-    if (
-      !TextParsingTools.familiarWord(punctuationStrippedWord) &&
-      !wordIsPronoun &&
-      word.length > 2
-    ) {
-      // if the word isn't familiar give the user extra time.
-      t += t * 1.5;
+    // Scale the display time continuously by how difficult the word is
+    // (syllable count + dictionary-familiarity tier), rather than applying
+    // a single fixed multiplier to every "unfamiliar" word. Pronouns and
+    // very short words are excluded, same as before.
+    if (!wordIsPronoun && word.length > 2) {
+      t *= TextParsingTools.wordDifficultyMultiplier(punctuationStrippedWord);
     }
 
     // TODO scale the timing by a factor of the perceived text complexity:
