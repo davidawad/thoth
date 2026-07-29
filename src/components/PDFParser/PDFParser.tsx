@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 
 // Namespace import, not default - pdfjs-dist's UMD build doesn't reliably
 // expose a default export under Next.js's bundler (it did resolve to

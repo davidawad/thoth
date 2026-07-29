@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { createPortal } from 'react-dom';
 import LoadingBar from 'react-top-loading-bar';
 import ReactGA from 'react-ga';

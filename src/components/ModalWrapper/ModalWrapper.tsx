@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import Modal from 'react-modal';
 import SettingsPanel from '../SettingsPanel/SettingsPanel';
 import type { AppSettings, UpdateCallback } from '../types';

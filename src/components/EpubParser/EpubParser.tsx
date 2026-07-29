@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 
 import Epub, { type Section } from 'epubjs/lib/index';
 import extractText from './extractText';

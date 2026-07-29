@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 
 import Reader, {
   READER_STATS_PORTAL_ID,
