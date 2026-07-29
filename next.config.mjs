@@ -23,6 +23,12 @@ const resolvePath = (modulePath) => {
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // TypeScript 7 (the native Go port) doesn't expose the old tsserver-style
+    // compiler API Next.js's build-time type-checker expects by default -
+    // this flag switches Next to shelling out to the `tsc` CLI instead.
+    useTypeScriptCli: true,
+  },
   // Configure compilation for React 19
   compiler: {
     // Enable new React JSX transform
@@ -31,6 +37,10 @@ const nextConfig = {
     reactRemoveProperties: process.env.NODE_ENV === 'production',
   },
   // Ensure React is properly loaded
+  // Next.js 16 defaults `next build`/`next dev` to Turbopack, which doesn't
+  // understand this custom webpack() config (and would hard-error). package.json
+  // scripts pass --webpack explicitly to opt back into webpack, which this repo
+  // needs anyway for babel.config.js (custom Babel, not SWC) support.
   webpack: (config, { isServer: _isServer }) => {
     // This allows Next.js to find React even with newer versions
     config.resolve.alias = {

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import dynamic from 'next/dynamic';
 import { useDropzone, type DropzoneOptions } from 'react-dropzone';
 import styled from 'styled-components';
 import * as CONSTANTS from '../constants';
@@ -7,7 +8,14 @@ import type { UpdateCallback } from '../types';
 import type { SampleBook } from '../constants';
 
 import EpubParser from '../EpubParser/EpubParser';
-import PDFParser from '../PDFParser/PDFParser';
+// pdfjs-dist v6's browser build references DOMMatrix at module-eval time,
+// which doesn't exist in the Node environment Next.js uses to collect page
+// data during `next build`. PDFParser only ever runs client-side (it reads
+// a File via FileReader/Worker), so load it with ssr:false to keep pdfjs-dist
+// out of the server-side module graph entirely.
+const PDFParser = dynamic(() => import('../PDFParser/PDFParser'), {
+  ssr: false,
+});
 
 const PDFTYPE = CONSTANTS.PDF_MIME_TYPE;
 const EPUBTYPE = CONSTANTS.EPUB_MIME_TYPE;

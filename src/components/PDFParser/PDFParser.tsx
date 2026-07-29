@@ -50,9 +50,10 @@ class PDFParser extends Component<PDFParserProps, PDFParserState> {
     // Set once per page load, not at module scope, so this never runs during
     // Next.js SSR / static page-data collection (no Worker/window there).
     // The CRA `worker-loader!` inline-loader syntax doesn't resolve under
-    // Next.js, so `postinstall` copies pdf.worker.min.js into public/ instead
-    // and we point pdfjs at it directly by URL.
-    PDFJS.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+    // Next.js, so `postinstall` copies pdf.worker.min.mjs into public/ instead
+    // and we point pdfjs at it directly by URL. pdfjs-dist v6 ships the
+    // worker as an ES module (.mjs) instead of the old UMD .js build.
+    PDFJS.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
     const reader = new FileReader();
 
@@ -64,7 +65,9 @@ class PDFParser extends Component<PDFParserProps, PDFParserState> {
   openBook(e: ProgressEvent<FileReader>): void {
     // Loading file from file system into typed array
     const bookData = e.target?.result as ArrayBuffer;
-    const loadingTask = PDFJS.getDocument(bookData);
+    // pdfjs-dist v6 dropped the raw ArrayBuffer overload of getDocument() -
+    // it now only accepts a DocumentInitParameters object.
+    const loadingTask = PDFJS.getDocument({ data: bookData });
 
     // reset bookLoaded as we now want to load a new book
     this.setState({
@@ -103,7 +106,11 @@ class PDFParser extends Component<PDFParserProps, PDFParserState> {
           if (data.metadata) {
             if (ctx.state.verbose) {
               console.log('## Metadata');
-              console.log(JSON.stringify(data.metadata.getAll(), null, 2));
+              // pdfjs-dist v6 dropped Metadata#getAll() in favor of making
+              // Metadata directly iterable ([key, value] entries).
+              console.log(
+                JSON.stringify(Object.fromEntries(data.metadata), null, 2),
+              );
               console.log();
             }
           }
@@ -168,15 +175,16 @@ class PDFParser extends Component<PDFParserProps, PDFParserState> {
                   pages: ctx.state.pages,
                 });
               }
-            }
+            },
           );
         },
         function (err: unknown) {
           console.error('Error: ' + err);
           ctx.setState({
-            error: 'Could not read this PDF (' + err + '). Try a different file.',
+            error:
+              'Could not read this PDF (' + err + '). Try a different file.',
           });
-        }
+        },
       );
   }
 
