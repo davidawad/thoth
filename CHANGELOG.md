@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/davidawad/thoth/compare/v1.2.1...v1.2.2) (2026-07-29)
+
+
+### Bug Fixes
+
+* remove the broken Highlight button ([b639b50](https://github.com/davidawad/thoth/commit/b639b50d77054b3b7dbd2a3c75dccff2814d46fa))
+
 ## [1.2.1](https://github.com/davidawad/thoth/compare/v1.2.0...v1.2.1) (2026-07-29)
 
 
