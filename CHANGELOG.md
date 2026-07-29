@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/davidawad/thoth/compare/v1.1.1...v1.2.0) (2026-07-29)
+
+
+### Features
+
+* cite the original RSVP research paper and rework the page layout ([535aa60](https://github.com/davidawad/thoth/commit/535aa60a4b22870809e6aa7c8ac555e4b832e850))
+
 ## [1.1.1](https://github.com/davidawad/thoth/compare/v1.1.0...v1.1.1) (2026-07-28)
 
 
