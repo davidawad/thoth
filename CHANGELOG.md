@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/davidawad/thoth/compare/v1.2.0...v1.2.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* add a close (x) button to the settings modal ([3cd8404](https://github.com/davidawad/thoth/commit/3cd8404513d2aaab617bfa21e4e93cc0f5bae3a5))
+
 # [1.2.0](https://github.com/davidawad/thoth/compare/v1.1.1...v1.2.0) (2026-07-29)
 
 
