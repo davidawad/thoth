@@ -101,7 +101,16 @@ class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
               is unconditional here); `.modal-box` is themed via
               bg-base-100/text-base-content, tracking light/dark/sepia. */}
           <div className="modal modal-open">
-            <div className="modal-box bg-base-100 text-base-content max-w-measure-narrow max-h-[80vh] overflow-y-auto">
+            <div className="modal-box relative bg-base-100 text-base-content max-w-measure-narrow max-h-[80vh] overflow-y-auto">
+              <button
+                type="button"
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                onClick={this.closeModal}
+                aria-label="Close settings"
+              >
+                ✕
+              </button>
+
               <h2
                 className="text-xl font-bold mb-4"
                 ref={(subtitle) => {
