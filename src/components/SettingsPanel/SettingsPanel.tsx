@@ -6,6 +6,8 @@ import {
   THEME_STORAGE_KEY,
   DEFAULT_THEME,
   FONT_ATTRIBUTION,
+  FOUNDATIONAL_RESEARCH,
+  FOUNDATIONAL_RESEARCH_PAPER,
   LEGIBILITY_REFERENCES,
   DEFAULT_READABILITY_METRIC,
   SPEED_WRITING_STORAGE_KEY,
@@ -64,6 +66,58 @@ function TypefaceSection() {
   );
 }
 
+function FoundationalResearchSection() {
+  return (
+    <section className="mb-6">
+      <h3 className="text-lg font-semibold mb-2">
+        Research this app is based on
+      </h3>
+      <p className="text-sm mb-2">
+        Thoth started as{' '}
+        <a
+          href={FOUNDATIONAL_RESEARCH_PAPER.url}
+          target="_blank"
+          rel="noreferrer"
+          className="link link-primary"
+        >
+          a paper
+        </a>{' '}
+        on why fixed-speed RSVP readers ignore how reading actually works, and
+        what changes when word timing accounts for it. The citations below are
+        grouped by what they informed.
+      </p>
+      <div className="text-xs space-y-3 opacity-80 max-h-64 overflow-y-auto pr-2">
+        {FOUNDATIONAL_RESEARCH.map((category) => (
+          <div key={category.title}>
+            <h4 className="font-semibold not-italic mb-1 opacity-100">
+              {category.title}
+            </h4>
+            <ul className="space-y-2 list-disc list-inside">
+              {category.references.map((reference) => (
+                <li key={reference.citation}>
+                  {reference.url ? (
+                    <a
+                      href={reference.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link"
+                    >
+                      {reference.citation}
+                    </a>
+                  ) : (
+                    reference.citation
+                  )}
+                  {reference.note ? <> &mdash; {reference.note}</> : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function LegibilityResearchSection() {
   return (
     <section>
@@ -99,10 +153,10 @@ interface SettingsPanelProps extends Partial<AppSettings> {
 const SettingsPanel = (props: SettingsPanelProps) => {
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [readabilityMetric, setReadabilityMetric] = useState(
-    props.readabilityMetric || DEFAULT_READABILITY_METRIC
+    props.readabilityMetric || DEFAULT_READABILITY_METRIC,
   );
   const [speedWritingEnabled, setSpeedWritingEnabled] = useState(
-    Boolean(props.speedWritingEnabled)
+    Boolean(props.speedWritingEnabled),
   );
 
   // Sync from the DOM once mounted (client-only - avoids SSR/client
@@ -127,7 +181,7 @@ const SettingsPanel = (props: SettingsPanelProps) => {
       // App/Reader to react to here; routing it through updateCallback
       // would only add risk for no benefit.
     },
-    []
+    [],
   );
 
   // Fires the moment the user picks a new metric - reuses the existing
@@ -139,7 +193,7 @@ const SettingsPanel = (props: SettingsPanelProps) => {
       setReadabilityMetric(nextMetric);
       props.updateCallback({ readabilityMetric: nextMetric });
     },
-    [props]
+    [props],
   );
 
   // Speed Writing (paper §8.4 "Speed Writing"): opt-in, OFF by default.
@@ -154,7 +208,7 @@ const SettingsPanel = (props: SettingsPanelProps) => {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem(
             SPEED_WRITING_STORAGE_KEY,
-            String(enabled)
+            String(enabled),
           );
         }
       } catch {
@@ -166,7 +220,7 @@ const SettingsPanel = (props: SettingsPanelProps) => {
         props.updateCallback({ speedWritingEnabled: enabled });
       }
     },
-    [props]
+    [props],
   );
 
   return (
@@ -248,6 +302,7 @@ const SettingsPanel = (props: SettingsPanelProps) => {
         </p>
       </section>
 
+      <FoundationalResearchSection />
       <TypefaceSection />
       <LegibilityResearchSection />
     </div>

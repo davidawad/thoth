@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { createPortal } from 'react-dom';
 import LoadingBar from 'react-top-loading-bar';
 import ReactGA from 'react-ga';
 
@@ -27,6 +28,12 @@ const MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 
 const DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
 
+// id of the sidebar slot (rendered by pages/index.tsx) that the reading
+// stats (age estimate, progress, time) are portaled into - keeps them
+// visually grouped with the book selector in the right-hand column while
+// the underlying state/logic stays here, next to everything it depends on.
+export const READER_STATS_PORTAL_ID = 'reader-stats-slot';
+
 interface ReaderProps extends Partial<AppSettings> {
   content: string;
 }
@@ -53,6 +60,10 @@ interface ReaderState {
   // render() for how these are surfaced to the user.
   speedWritingActive: boolean;
   speedWritingSubstitutions: Substitution[];
+
+  // DOM node (rendered by pages/index.tsx) that the stats block portals
+  // into - null until componentDidMount finds it client-side.
+  statsPortalTarget: Element | null;
 }
 
 let ctx: Reader;
@@ -115,6 +126,8 @@ class Reader extends Component<ReaderProps, ReaderState> {
       // render() for how these are surfaced to the user.
       speedWritingActive: false,
       speedWritingSubstitutions: [],
+
+      statsPortalTarget: null,
     };
   }
 
@@ -165,6 +178,10 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // catch a space press anywhere else on the page.
   componentDidMount(): void {
     document.addEventListener('keydown', this.handleGlobalKeyDown);
+
+    this.setState({
+      statsPortalTarget: document.getElementById(READER_STATS_PORTAL_ID),
+    });
   }
 
   componentWillUnmount(): void {
@@ -652,6 +669,23 @@ class Reader extends Component<ReaderProps, ReaderState> {
       }
     }
 
+    const statsBlock = (
+      <div className="card bg-base-200 p-4 gap-1 text-sm">
+        <h3 className="font-semibold mb-1">Stats</h3>
+        <p>Age estimate: {this.state.ageEstimate}</p>
+        <p>
+          Reading: {this.state.index} / {this.state.tape.length}
+        </p>
+        <p>
+          {utils.roundToPrecision(
+            totalTimeEstimate - remainingTimeEstimate,
+            0.01,
+          )}{' '}
+          / {utils.roundToPrecision(totalTimeEstimate, 0.01)} seconds
+        </p>
+      </div>
+    );
+
     return (
       <div className="Reader">
         <div className="readerWordRow">
@@ -668,30 +702,22 @@ class Reader extends Component<ReaderProps, ReaderState> {
               ? postWord
               : ''}
           </span>
-          <br />
-          <br />
+        </div>
+
+        <div className="readerControlsRow flex flex-wrap justify-center gap-2 my-4">
           <button className="btn" onClick={this.play}>
             Play
           </button>
-          &nbsp;
           <button className="btn" onClick={this.pause}>
             Pause
           </button>
-          &nbsp;
           <button className="btn" onClick={this.reset}>
             Reset
           </button>
-          &nbsp;
           <button className="btn" onClick={this.highlightSelection}>
             Highlight
           </button>
-          &nbsp;
-          <button className="btn" onClick={this.setGradient}>
-            Gradient
-          </button>
         </div>
-
-        <br />
 
         <LoadingBar
           progress={(this.state.index / this.state.tape.length) * 100}
@@ -711,19 +737,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
           />
         </div>
 
-        <p> Age Estimate : {this.state.ageEstimate} </p>
-        <p>
-          {' '}
-          Reading : {this.state.index} / {this.state.tape.length}{' '}
-        </p>
-        <p>
-          {' '}
-          {utils.roundToPrecision(
-            totalTimeEstimate - remainingTimeEstimate,
-            0.01,
-          )}{' '}
-          / {utils.roundToPrecision(totalTimeEstimate, 0.01)} seconds.{' '}
-        </p>
+        {this.state.statsPortalTarget
+          ? createPortal(statsBlock, this.state.statsPortalTarget)
+          : statsBlock}
 
         {/*
           Speed Writing (paper §8.4): when enabled, show exactly what was

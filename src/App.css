@@ -1,12 +1,19 @@
 .App {
   /* text-align: center; */
   margin: 0;
-  padding: 0;
   border: 0;
 
   width: 100%;
-  max-width: 40rem;
+  /* Wide enough for the main reading column (editor caps at 70ch, see
+   * styles/globals.css --measure) plus a left spacer and the right-hand
+   * stats/book-selector sidebar (20rem each) and the gaps between them -
+   * see pages/index.tsx. Equal-width spacer/sidebar keep the reader
+   * centered on the page instead of shifted left by the sidebar alone. */
+  max-width: 80rem;
   margin: 0 auto;
+  /* Breathing room above the reader (was flush with the viewport edge) and
+   * below the footer, plus the existing side gutters. */
+  padding: 3rem 1.5rem 2rem;
   /* sitewide font is set on `body` in styles/globals.css; inherit it here
    * rather than overriding with the old hardcoded Courier. */
   font-family: inherit;

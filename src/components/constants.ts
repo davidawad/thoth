@@ -141,6 +141,174 @@ export const FONT_ATTRIBUTION: FontAttribution = {
   license: 'SIL Open Font License 1.1 (free for commercial & personal use)',
 };
 
+// ---------------------------------------------------------------------------
+// Foundational research - the citations behind Thoth's original design
+// (RSVP timing, per-word difficulty scaling, readability formulas, why a
+// single focused "pivot" word beats scanning a line). Pulled from the
+// project's original paper; see FOUNDATIONAL_RESEARCH_PAPER below. The
+// LEGIBILITY_REFERENCES list further down is a separate, later pass focused
+// specifically on typography and is kept distinct from this one.
+// ---------------------------------------------------------------------------
+
+export interface FoundationalReference {
+  citation: string;
+  url?: string;
+  note: string;
+}
+
+export interface FoundationalResearchCategory {
+  title: string;
+  references: FoundationalReference[];
+}
+
+export const FOUNDATIONAL_RESEARCH_PAPER = {
+  title:
+    'Improved Rapid Serial Visual Presentation using Natural Language Processing',
+  author: 'David Awad',
+  url: 'https://arxiv.org/abs/1908.01699',
+};
+
+export const FOUNDATIONAL_RESEARCH: FoundationalResearchCategory[] = [
+  {
+    title: 'RSVP & speed reading',
+    references: [
+      {
+        citation:
+          'Rayner, K., Schotter, E. R., Masson, M. E. J., Potter, M. C., & Treiman, R. (2016). So Much to Read, So Little Time: How Do We Read, and Can Speed Reading Help? Psychological Science in the Public Interest, 17(1), 4–34.',
+        url: 'https://doi.org/10.1177/1529100615623267',
+        note: 'The field’s major review of speed reading claims: comprehension trades off against raw speed rather than coming for free. Motivates Thoth scaling per-word display time by difficulty instead of just cranking a flat wpm number.',
+      },
+      {
+        citation:
+          'Dyson, M. C., & Haselgrove, M. (2001). The Influence of Reading Speed and Line Length on the Effectiveness of Reading from Screen. International Journal of Human-Computer Studies, 54(4), 585–612.',
+        url: 'https://doi.org/10.1006/ijhc.2001.0458',
+        note: '“By reading almost twice as fast as normal we increase the volume of material we get through on screen but acquire a less complete account.” Informs keeping the default reading speed (500 wpm) conservative rather than maximizing throughput.',
+      },
+      {
+        citation:
+          'Jackson, M. D., & McClelland, J. L. (1975). Sensory and Cognitive Determinants of Reading Speed.',
+        note: 'Faster readers decode visual information more efficiently, freeing more of their attention for comprehension rather than decoding - motivates minimizing decoding overhead (one focused word, no scrolling) so more attention goes to meaning.',
+      },
+      {
+        citation:
+          'Rayner, K., Inhoff, A. W., Morrison, R. E., Slowiaczek, M. L., & Bertera, J. H. (1981). Masking of foveal and parafoveal vision during eye fixations in reading. Journal of Experimental Psychology: Human Perception and Performance, 7(1), 167–179.',
+        url: 'https://doi.org/10.1037/0096-1523.7.1.167',
+        note: 'Informs displaying a single fixed central word rather than relying on peripheral vision to pick up neighboring words, the way normal line reading does.',
+      },
+      {
+        citation:
+          'Morrison, F. J., & Rayner, K. (1981). Saccade size in reading depends upon character spaces and not visual angle.',
+        note: 'Eye movement during normal reading is dominated by saccades between fixations; RSVP removes saccades entirely by bringing each word to a fixed point instead of moving the eye to the word.',
+      },
+    ],
+  },
+  {
+    title: 'How the brain reads',
+    references: [
+      {
+        citation:
+          'Dehaene, S., & Cohen, L. (2011). The unique role of the visual word form area in reading. Trends in Cognitive Sciences, 15(6), 254–262.',
+        note: 'The eye and visual cortex did not evolve for reading; the brain repurposes a region (the visual word form area, VWFA) to recognize familiar whole words as single images rather than letter-by-letter. The basis for showing one focused word at a time instead of scanning a line.',
+      },
+      {
+        citation:
+          'Glezer, L., Kim, J., Rule, J., Jiang, X., & Riesenhuber, M. (2015). Adding words to the brain’s visual dictionary: Novel word learning selectively sharpens orthographic representations in the VWFA. Journal of Neuroscience, 35(12), 4965–4972.',
+        note: 'Unfamiliar words are recognized more slowly than familiar ones because they aren’t yet “sharpened” in the VWFA - direct motivation for scaling per-word display time by word familiarity (see TextParsingTools.wordDifficultyMultiplier) rather than a flat duration.',
+      },
+      {
+        citation:
+          'Dehaene, S., Pegado, F., Braga, L. W., et al. (2010). How Learning to Read Changes the Cortical Networks for Vision and Language. Science, 330(6009), 1359–1364.',
+        note: 'Literacy measurably reorganizes visual cortex - background for treating reading as a learned visual skill that a tool can optimize around, rather than a fixed biological given.',
+      },
+      {
+        citation:
+          'Dehaene, S. (2009). Reading in the Brain: The Science and Evolution of a Human Invention. Viking Adult.',
+        note: 'General background on reading as a cultural invention layered on top of visual circuitry that evolved for other purposes - the framing behind Thoth’s original premise.',
+      },
+    ],
+  },
+  {
+    title: 'Readability formulas Thoth uses',
+    references: [
+      {
+        citation:
+          'Dale, E., & Chall, J. (1948). A Formula for Predicting Readability. Educational Research Bulletin, 27(1), 11–28.',
+        note: 'Thoth’s default difficulty metric; the Dale-Chall familiar-word list also drives per-word timing (a word absent from the list is treated as harder).',
+      },
+      {
+        citation:
+          'Flesch, R. (1948). A new readability yardstick. Journal of Applied Psychology, 32(3), 221–233.',
+        note: 'One of the selectable readability metrics in Settings → Readability.',
+      },
+      {
+        citation:
+          'Kincaid, J. P., Fishburne, R. P., Rogers, R. L., & Chissom, B. S. (1975). Derivation of new readability formulas (automated readability index, fog count, and flesch reading ease formula) for Navy enlisted personnel. Research Branch Report 8–75.',
+        note: 'Source of the Automated Readability Index and Flesch-Kincaid metrics, both selectable in Settings → Readability.',
+      },
+      {
+        citation:
+          'Spache, G. (1953). A New Readability Formula for Primary-Grade Reading Materials. The Elementary School Journal, 53(7), 410–413.',
+        note: 'Selectable readability metric, tuned for younger/less practiced readers.',
+      },
+      {
+        citation:
+          'Coleman, M., & Liau, T. (1975). A computer readability formula designed for machine scoring. Journal of Applied Psychology, 60(2), 283–284.',
+        note: 'Selectable readability metric (Coleman-Liau), designed to be computable without a syllable counter.',
+      },
+      {
+        citation:
+          'Hedman, A. (2008). Using the SMOG Formula to Revise a Health-Related Document. American Journal of Health Education, 39(1), 61–64.',
+        note: 'Applied use of the SMOG formula, also selectable in Settings → Readability.',
+      },
+    ],
+  },
+  {
+    title: 'Screen vs. paper reading',
+    references: [
+      {
+        citation:
+          'Mangen, A., Walgermo, B. R., & Brønnick, K. (2013). Reading Linear Texts on Paper versus Computer Screen: Effects on Reading Comprehension. International Journal of Educational Research, 58, 61–68.',
+        note: 'Found paper produced measurably better comprehension than screen reading in a Norwegian school study - a real tradeoff Thoth doesn’t solve, just documents as a limitation of building a screen-first reader.',
+      },
+      {
+        citation:
+          'Kong, Y., Seo, Y. S., & Zhai, L. (2018). Comparison of reading performance on screen and on paper: A meta-analysis. Computers & Education, 123, 138–149.',
+        note: 'Broader meta-analytic confirmation of the paper-vs-screen comprehension gap above.',
+      },
+      {
+        citation:
+          'Cartelli, A. Current trends and future practices for digital literacy and competence. IGI Global.',
+        note: 'Students already read far more digitally than on paper today, motivating a screen-first tool despite the comprehension gap the two references above document.',
+      },
+    ],
+  },
+  {
+    title: 'Memory & comprehension',
+    references: [
+      {
+        citation:
+          'Fletcher, J. M. (2006). Measuring Reading Comprehension. Scientific Studies of Reading, 10(3), 323–330.',
+        note: 'Background on why "words per minute" alone is an incomplete measure of reading effectiveness - comprehension has to be measured separately from raw speed.',
+      },
+      {
+        citation:
+          'Tulving, E. (2002). Episodic Memory: From Mind to Brain. Annual Review of Psychology, 53(1), 1–25.',
+        note: 'General memory-systems background informing how much context (surrounding words) a reader needs held in mind at once.',
+      },
+      {
+        citation:
+          'Miller, G., & Kintsch, W. (1994). The Magical Number Seven, Plus or Minus Two: Some Limits on Our Capacity for Processing Information. Psychological Review, 101(2), 343–352.',
+        note: 'Working-memory capacity limits are part of why Thoth shows only the immediately adjacent previous/next word as context rather than a full sentence at once.',
+      },
+      {
+        citation:
+          'McElree, B. (2000). Sentence comprehension is mediated by content-addressable memory structures. Journal of Psycholinguistic Research, 29(2), 111–123.',
+        note: 'Background on how sentence-level comprehension is assembled from working memory as words arrive one at a time - directly relevant to a one-word-at-a-time RSVP display.',
+      },
+    ],
+  },
+];
+
 export interface LegibilityReference {
   citation: string;
   url: string;

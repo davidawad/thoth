@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 
-import Reader from '../src/components/Reader/Reader';
+import Reader, {
+  READER_STATS_PORTAL_ID,
+} from '../src/components/Reader/Reader';
 import ModalWrapper from '../src/components/ModalWrapper/ModalWrapper';
 import FileParser from '../src/components/FileParser/FileParser';
 
@@ -125,31 +127,48 @@ class App extends Component<Record<string, never>, AppState> {
   render() {
     return (
       <div className="App">
-        <div className="row">
-          <br />
-          <Reader {...this.state} />
+        {/* Equal-width spacer + sidebar columns either side of `main` keep
+            the reader visually centered on the page - it's the star of the
+            show, not something the sidebar should shove off-center. Spacer
+            is hidden below `lg`, where the sidebar drops beneath `main`
+            instead of sitting next to it. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)_20rem] gap-8 items-start">
+          <div className="hidden lg:block" aria-hidden="true" />
 
-          <br />
+          <main className="min-w-0">
+            <Reader {...this.state} />
+          </main>
 
-          <FileParser
-            updateCallback={this.updateSettings}
-            verbose={this.state.verbose}
-          />
+          <aside className="flex flex-col gap-4">
+            <div id={READER_STATS_PORTAL_ID} className="contents" />
 
-          <br />
-
-          <ModalWrapper updateCallback={this.updateSettings} {...this.state} />
+            <FileParser
+              updateCallback={this.updateSettings}
+              verbose={this.state.verbose}
+            />
+          </aside>
         </div>
 
-        <footer>
+        <footer className="mt-10 py-4 text-center text-xs opacity-60">
           <p>
             Thoth is an{' '}
-            <a href="https://github.com/davidawad/thoth">open source</a>{' '}
-            <a href="http://arxiv.org/abs/1908.01699"> research project</a> by{' '}
-            <a href="http://davidawad.com">David Awad</a>.
-            <br /> &copy; {this.state.year}
+            <a href="https://github.com/davidawad/thoth" className="link">
+              open source
+            </a>{' '}
+            <a href="http://arxiv.org/abs/1908.01699" className="link">
+              research project
+            </a>{' '}
+            by{' '}
+            <a href="http://davidawad.com" className="link">
+              David Awad
+            </a>{' '}
+            &copy; {this.state.year}
           </p>
         </footer>
+
+        <div className="fixed bottom-4 right-4 z-40">
+          <ModalWrapper updateCallback={this.updateSettings} {...this.state} />
+        </div>
       </div>
     );
   }
