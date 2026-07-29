@@ -714,9 +714,6 @@ class Reader extends Component<ReaderProps, ReaderState> {
           <button className="btn" onClick={this.reset}>
             Reset
           </button>
-          <button className="btn" onClick={this.highlightSelection}>
-            Highlight
-          </button>
         </div>
 
         <LoadingBar
