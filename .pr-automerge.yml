@@ -8,12 +8,14 @@
 # auto_merge: true opts this repo in to the unattended /done-auto landing
 # path -- but ONLY when this repo is ALSO tagged sensitivity: personal in
 # dotfiles' registry, no sensitive path (secrets, .env, deploy config,
-# migrations, ...) is touched, the existing AI code review comes back
-# clean, AND a separate agent (pr-merge-risk-judge.sh) reviews the diff +
-# its own tests and returns BOTH a 0-100 risk_score <= max_score below AND
-# an explicit recommends_merge verdict -- weighing most heavily whether
-# the diff's own tests actually exercise what changed. Every one of these
-# is a hard floor except the judge's score/recommendation, which is the
-# actual judgment call (see pr_risk_score.py's module docstring).
+# migrations, chwrite .write_protect paths, ...) is touched, the existing
+# AI code review comes back clean, AND a separate agent
+# (pr-merge-risk-judge.sh) reviews the diff + its own tests and returns
+# BOTH a 0-100 merge_confidence (HIGHER = safer) discounted by its own
+# reported uncertainty >= min_score below, AND an explicit
+# recommends_merge verdict -- weighing most heavily whether the diff's own
+# tests actually exercise what changed. Every one of these is a hard floor
+# except the judge's score/recommendation, which is the actual judgment
+# call (see pr_risk_score.py's module docstring).
 auto_merge: true
-max_score: 35
+min_score: 65
