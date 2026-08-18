@@ -1,21 +1,29 @@
 # Auto-merge policy for this repo, read by dotfiles' pr_risk_score.py
 # (dot-1lv8) when a bead here goes through /done-auto. Lives here, not in
-# dotfiles' central projects/registry.yaml, because this is this project's
-# own risk tolerance, committed with its own code and reviewable via its
-# own PRs -- not David's business-relationship classification of the
-# project (that stays central, see registry.yaml's `sensitivity` field).
+# dotfiles' central projects/registry.yaml, because this is this
+# project's own risk tolerance, committed with its own code and
+# reviewable via its own PRs. `projects/registry.yaml` is consulted only
+# for an informational PROJECT= field -- it has no bearing on
+# eligibility (dot-1lv8, 2026-08-18: David, "idgaf about this notion of
+# personal/external/internal that's meaningless").
 #
-# auto_merge: true opts this repo in to the unattended /done-auto landing
-# path -- but ONLY when this repo is ALSO tagged sensitivity: personal in
-# dotfiles' registry, no sensitive path (secrets, .env, deploy config,
-# migrations, chwrite .write_protect paths, ...) is touched, the existing
-# AI code review comes back clean, AND a separate agent
-# (pr-merge-risk-judge.sh) reviews the diff + its own tests and returns
-# BOTH a 0-100 merge_confidence (HIGHER = safer) discounted by its own
-# reported uncertainty >= min_score below, AND an explicit
-# recommends_merge verdict -- weighing most heavily whether the diff's own
-# tests actually exercise what changed. Every one of these is a hard floor
-# except the judge's score/recommendation, which is the actual judgment
-# call (see pr_risk_score.py's module docstring).
+# Two independent booleans, both default false:
+#   auto_merge: true  -- the ONLY switch for unattended /done-auto
+#     landing. Still requires a floor clear (no sensitive path touched,
+#     incl. anything chwrite's own .write_protect manifest here
+#     protects) AND a separate PR-reviewer agent (pr-merge-reviewer.sh)
+#     to review the diff + its own tests and return BOTH a 0-100
+#     merge_confidence (HIGHER = safer) discounted by its own reported
+#     uncertainty >= min_score below, AND an explicit recommends_merge
+#     verdict -- weighing most heavily whether the diff's own tests
+#     actually exercise what changed. Every one of these is a hard floor
+#     except the reviewer's score/recommendation, which is the actual
+#     judgment call (see pr_risk_score.py's module docstring).
+#   pr_review: true   -- ALSO gates the floor on the older dual-lens AI
+#     review (test-tampering + general code review) coming back clean,
+#     independent of auto_merge -- a project can want review comments
+#     without ever wanting unattended merges, or skip this and rely
+#     solely on the PR reviewer's own score.
 auto_merge: true
+pr_review: true
 min_score: 65
