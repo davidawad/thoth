@@ -1,0 +1,14 @@
+# Auto-merge policy for this repo, read by dotfiles' pr_risk_score.py
+# (dot-1lv8) when a bead here goes through /done-auto. Lives here, not in
+# dotfiles' central projects/registry.yaml, because this is this project's
+# own risk tolerance, committed with its own code and reviewable via its
+# own PRs -- not David's business-relationship classification of the
+# project (that stays central, see registry.yaml's `sensitivity` field).
+#
+# auto_merge: true opts this repo in to the unattended /done-auto landing
+# path -- but ONLY when this repo is ALSO tagged sensitivity: personal in
+# dotfiles' registry, the AI code review comes back clean, no sensitive
+# path (secrets, .env, deploy config, migrations, ...) is touched, and the
+# diff score (lines_changed + files_changed*10) is under max_score.
+auto_merge: true
+max_score: 500
