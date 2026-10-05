@@ -10,7 +10,6 @@ cache:
 
 stages:
   - test
-  - deploy
 
 # Define the tests job
 unit-tests:
@@ -40,23 +39,3 @@ unit-tests:
 variables:
   JEST_JUNIT_OUTPUT_DIR: "reports"
   JEST_JUNIT_OUTPUT_NAME: "junit.xml"
-
-# GitLab Pages: static export served at https://davidawad.gitlab.io/thoth/
-pages:
-  stage: deploy
-  image: node:22
-  cache: []
-  variables:
-    NEXT_PUBLIC_BASE_PATH: /thoth
-  script:
-    - corepack enable
-    - pnpm install --frozen-lockfile
-    - pnpm build
-    # Pages serves whatever is in public/.
-    - rm -rf public
-    - mv out public
-  artifacts:
-    paths:
-      - public
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
