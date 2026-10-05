@@ -18,8 +18,8 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable
-# For Next.js, copy the built .next folder and public assets
-COPY --from=builder /app/.next ./.next
+# For Next.js, copy the built static export (out/) and public assets
+COPY --from=builder /app/out ./out
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "serve out -l 3000",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -73,6 +73,7 @@
     "react-top-loading-bar": "^3.0.2",
     "resolve": "1.22.12",
     "sass-loader": "^17.0.0",
+    "serve": "^14.2.6",
     "smog-formula": "^2.0.1",
     "spache": "^2.0.1",
     "spache-formula": "^2.0.1",
