@@ -44,6 +44,7 @@ variables:
 # GitLab Pages: static export served at https://davidawad.gitlab.io/thoth/
 pages:
   stage: deploy
+  needs: []
   image: node:22
   cache: []
   variables:
