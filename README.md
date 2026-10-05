@@ -7,13 +7,13 @@ It contains a bevy of settings and features for customizing your experience.
 
 See my presentation here for a walkthrough : https://www.youtube.com/watch?v=iyLc0WiCYn4
 
-Thoth is hosted online @ https://davidawad.github.io/thoth/
+Thoth is hosted online @ https://davidawad.gitlab.io/thoth/
 
-[![Thoth, sepia theme](docs/screenshots/home-sepia.png)](https://davidawad.github.io/thoth/)
+[![Thoth, sepia theme](docs/screenshots/home-sepia.png)](https://davidawad.gitlab.io/thoth/)
 
 | Light                                                                           | Dark                                                                          |
 | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [![Light](docs/screenshots/home-light.png)](https://davidawad.github.io/thoth/) | [![Dark](docs/screenshots/home-dark.png)](https://davidawad.github.io/thoth/) |
+| [![Light](docs/screenshots/home-light.png)](https://davidawad.gitlab.io/thoth/) | [![Dark](docs/screenshots/home-dark.png)](https://davidawad.gitlab.io/thoth/) |
 
 Looking to study instead? Try [Seshat](https://github.com/davidawad/Seshat).
 
