@@ -67,7 +67,7 @@ scenes 5 and 6 of video 3.
 
 ## Rebuild
 
-    cd videos && python3 build.py all      # needs python3 + Pillow + numpy + ffmpeg, macOS fonts
+    cd docs/videos && python3 build.py all      # needs python3 + Pillow + numpy + ffmpeg, macOS fonts
     python3 build.py timeline|quality|stack
 
-Frames go to /tmp/thoth-videos-frames, MP4s to `videos/out/` (gitignored).
+Frames go to /tmp/thoth-videos-frames, MP4s to `docs/videos/out/` (gitignored).
