@@ -8,6 +8,7 @@ import type { UpdateCallback } from '../types';
 import type { SampleBook } from '../constants';
 
 import EpubParser from '../EpubParser/EpubParser';
+import { BASE_PATH } from '../../basePath';
 // pdfjs-dist v6's browser build references DOMMatrix at module-eval time,
 // which doesn't exist in the Node environment Next.js uses to collect page
 // data during `next build`. PDFParser only ever runs client-side (it reads
@@ -187,7 +188,9 @@ class FileParser extends Component<FileParserProps, FileParserState> {
     this.setState({ loadingSampleId: book.id, uploadError: null });
 
     try {
-      const response = await fetch(`/sample-books/${book.filename}`);
+      const response = await fetch(
+        `${BASE_PATH}/sample-books/${book.filename}`,
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch sample book: ${response.status}`);

@@ -38,3 +38,6 @@ package-lock.json
 
 .env
 .env.default
+
+# Next static export
+/out

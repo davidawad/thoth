@@ -21,7 +21,15 @@ const resolvePath = (modulePath) => {
   }
 };
 
+// Static export so the app can be served from GitHub/GitLab Pages (no Node
+// server). Pages hosts the project at /<name>/, supplied by CI through
+// NEXT_PUBLIC_BASE_PATH; unset for local dev.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
+
 const nextConfig = {
+  output: 'export',
+  basePath,
+  images: { unoptimized: true },
   reactStrictMode: true,
   experimental: {
     // TypeScript 7 (the native Go port) doesn't expose the old tsserver-style

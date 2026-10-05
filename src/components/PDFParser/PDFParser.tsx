@@ -4,6 +4,7 @@ import { Component } from 'react';
 // expose a default export under Next.js's bundler (it did resolve to
 // `undefined` at runtime with `import PDFJS from 'pdfjs-dist'`).
 import * as PDFJS from 'pdfjs-dist';
+import { BASE_PATH } from '../../basePath';
 
 interface PDFParserProps {
   file: File;
@@ -53,7 +54,7 @@ class PDFParser extends Component<PDFParserProps, PDFParserState> {
     // Next.js, so `postinstall` copies pdf.worker.min.mjs into public/ instead
     // and we point pdfjs at it directly by URL. pdfjs-dist v6 ships the
     // worker as an ES module (.mjs) instead of the old UMD .js build.
-    PDFJS.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+    PDFJS.GlobalWorkerOptions.workerSrc = `${BASE_PATH}/pdf.worker.min.mjs`;
 
     const reader = new FileReader();
 
