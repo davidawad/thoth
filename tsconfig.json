@@ -19,5 +19,5 @@
     "typeRoots": ["./types", "./node_modules/@types"]
   },
   "include": ["next-env.d.ts", "types/**/*.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", ".next", "build", ".claude"]
+  "exclude": ["node_modules", ".next", "build", ".claude", "bombadil"]
 }
