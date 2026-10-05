@@ -1,34 +1,30 @@
-# The Docker image that will be used to build your app
-image: node:20-alpine
-
-# Cache dependencies between jobs
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
-    - .yarn-cache/
+image: node:22
 
 stages:
   - test
   - deploy
 
-# Define the tests job
+# Cache the pnpm store between jobs
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .pnpm-store/
+
+before_script:
+  - corepack enable
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install --frozen-lockfile
+
 unit-tests:
   stage: test
   script:
-    - yarn config set cache-folder .yarn-cache
-    - yarn install --frozen-lockfile
-    # Install jest-junit reporter
-    - yarn add --dev jest-junit
     - mkdir -p reports
-    # Run tests and generate JUnit report
-    - yarn test --ci --reporters=default --reporters=jest-junit
-  # Run this job on merge requests and main branch
+    - pnpm exec vitest run --reporter=default --reporter=junit --outputFile.junit=reports/junit.xml
+  # Run this job on merge requests and the default branch
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == 'main'
     - if: $CI_COMMIT_BRANCH == 'master'
-  # Create a report for the test results
   artifacts:
     when: always
     reports:
@@ -37,21 +33,14 @@ unit-tests:
       - reports/
     expire_in: 1 week
 
-variables:
-  JEST_JUNIT_OUTPUT_DIR: "reports"
-  JEST_JUNIT_OUTPUT_NAME: "junit.xml"
-
 # GitLab Pages: static export served at https://davidawad.gitlab.io/thoth/
 pages:
   stage: deploy
   needs: []
-  image: node:22
   cache: []
   variables:
     NEXT_PUBLIC_BASE_PATH: /thoth
   script:
-    - corepack enable
-    - pnpm install --frozen-lockfile
     - pnpm build
     # Pages serves whatever is in public/.
     - rm -rf public
