@@ -164,6 +164,13 @@ class App extends Component<Record<string, never>, AppState> {
             </a>{' '}
             &copy; {this.state.year}
           </p>
+          <p>
+            Reading is for Thoth. For studying, try{' '}
+            <a href="https://github.com/davidawad/Seshat" className="link">
+              Seshat
+            </a>
+            .
+          </p>
         </footer>
 
         <div className="fixed bottom-4 right-4 z-40">
