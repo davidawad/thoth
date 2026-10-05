@@ -9,6 +9,14 @@ See my presentation here for a walkthrough : https://www.youtube.com/watch?v=iyL
 
 Thoth is hosted online @ https://thoth-david-awad.vercel.app/
 
+[![Thoth, sepia theme](docs/screenshots/home-sepia.png)](https://thoth-david-awad.vercel.app/)
+
+| Light                                                                             | Dark                                                                            |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [![Light](docs/screenshots/home-light.png)](https://thoth-david-awad.vercel.app/) | [![Dark](docs/screenshots/home-dark.png)](https://thoth-david-awad.vercel.app/) |
+
+Looking to study instead? Try [Seshat](https://github.com/davidawad/Seshat).
+
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 
 ## Available Scripts
@@ -59,5 +67,3 @@ https://www.freepik.com/free-vector/egypt-symbols-gods-collection_2857150.htm
 - [write-music](https://github.com/wooorm/write-music)
 - [common-words](https://github.com/wooorm/common-words)
 - [short-words](https://github.com/wooorm/short-words)
-
-
