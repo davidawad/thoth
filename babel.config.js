@@ -8,4 +8,10 @@ module.exports = {
     'next/babel',
     '@babel/preset-typescript',
   ],
+  // Gives each styled component a stable, file-based componentId (and
+  // displayName). Without it styled-components uses a global creation counter,
+  // so SSR and client class names can diverge -> React hydration mismatch.
+  plugins: [
+    ['babel-plugin-styled-components', { ssr: true, displayName: true }],
+  ],
 };

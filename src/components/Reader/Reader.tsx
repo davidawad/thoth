@@ -6,7 +6,6 @@ import ReactGA from 'react-ga';
 import {
   Editor,
   EditorState,
-  ContentState,
   Modifier,
   RichUtils,
   type DraftStyleMap,
@@ -17,6 +16,10 @@ import * as CONSTANTS from '../constants';
 import TextParsingTools, { type ReadabilityScores } from '../TextParsingTools';
 import SpeedWritingTools, { type Substitution } from '../SpeedWritingTools';
 import utils from '../utils';
+import {
+  READER_EDITOR_KEY,
+  createDeterministicContentState,
+} from './deterministicContent';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
 import type { AppSettings } from '../types';
@@ -100,7 +103,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
       paused: true,
       bodyText: this.props.content,
       editorState: EditorState.createWithContent(
-        ContentState.createFromText(this.props.content),
+        createDeterministicContentState(this.props.content),
       ),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
       tape: this.parse(this.props.content),
@@ -262,7 +265,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
     this.setState({
       editorState: EditorState.createWithContent(
-        ContentState.createFromText(text),
+        createDeterministicContentState(text),
       ),
     });
   }
@@ -725,6 +728,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
         <div className="editor">
           <Editor
             ref={this.setEditor}
+            editorKey={READER_EDITOR_KEY}
             editorState={this.state.editorState}
             onChange={this.onEditorChange}
             placeholder="Place your text content in here and press the play button!"

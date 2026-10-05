@@ -1,0 +1,10 @@
+{
+  "name": "thoth-bombadil",
+  "private": true,
+  "scripts": {
+    "test": "bombadil browser test --headless --time-limit=5m --output-path out --output-path-overwrite http://localhost:3000 specification.ts"
+  },
+  "devDependencies": {
+    "@antithesishq/bombadil": "0.7.8"
+  }
+}

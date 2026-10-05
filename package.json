@@ -135,6 +135,7 @@
     "@types/syllable": "^5.0.2",
     "@vitejs/plugin-react": "^6.0.4",
     "@vitest/coverage-v8": "^4.1.10",
+    "babel-plugin-styled-components": "^2.3.0",
     "cssnano": "^8.0.2",
     "fast-check": "^4.9.0",
     "jsdom": "^30.0.0",

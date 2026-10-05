@@ -1,10 +1,18 @@
-import { Html, Head, Main, NextScript } from "next/document";
+import Document, {
+  Html,
+  Head,
+  Main,
+  NextScript,
+  type DocumentContext,
+  type DocumentInitialProps,
+} from 'next/document';
+import { ServerStyleSheet } from 'styled-components';
 
 import {
   THEME_STORAGE_KEY,
   DEFAULT_THEME,
   THEMES,
-} from "../src/components/constants";
+} from '../src/components/constants';
 
 // Applies the persisted (or OS-preferred) theme to <html data-theme="..."> as
 // early as possible - before hydration/first paint - so there is no flash of
@@ -16,7 +24,7 @@ const THEME_INIT_SCRIPT = `(function () {
   try {
     var validThemes = ${validThemeIds};
     var stored = window.localStorage.getItem(${JSON.stringify(
-      THEME_STORAGE_KEY
+      THEME_STORAGE_KEY,
     )});
     var theme = validThemes.indexOf(stored) !== -1 ? stored : null;
 
@@ -36,31 +44,58 @@ const THEME_INIT_SCRIPT = `(function () {
   }
 })();`;
 
-export default function Document() {
-  return (
-    <Html lang="en" data-theme={DEFAULT_THEME}>
-      <Head>
-        {/* Atkinson Hyperlegible: free accessibility-focused typeface from
+export default class AppDocument extends Document {
+  // Collect styled-components styles during SSR so the server-rendered class
+  // names match the client (otherwise: hydration mismatch on FileParser).
+  static async getInitialProps(
+    ctx: DocumentContext,
+  ): Promise<DocumentInitialProps> {
+    const sheet = new ServerStyleSheet();
+    const originalRenderPage = ctx.renderPage;
+
+    try {
+      ctx.renderPage = () =>
+        originalRenderPage({
+          enhanceApp: (App) => (props) =>
+            sheet.collectStyles(<App {...props} />),
+        });
+
+      const initialProps = await Document.getInitialProps(ctx);
+      return {
+        ...initialProps,
+        styles: [initialProps.styles, sheet.getStyleElement()],
+      };
+    } finally {
+      sheet.seal();
+    }
+  }
+
+  render() {
+    return (
+      <Html lang="en" data-theme={DEFAULT_THEME}>
+        <Head>
+          {/* Atkinson Hyperlegible: free accessibility-focused typeface from
             the Braille Institute of America - see SettingsPanel for the
             full attribution + legibility research citations. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-          rel="stylesheet"
-        />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+            rel="stylesheet"
+          />
 
-        {/* Runs before paint to set the persisted theme; see comment above. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </Head>
-      <body className="bg-base-100 text-base-content min-h-screen">
-        <Main />
-        <NextScript />
-      </body>
-    </Html>
-  );
+          {/* Runs before paint to set the persisted theme; see comment above. */}
+          <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        </Head>
+        <body className="bg-base-100 text-base-content min-h-screen">
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
 }
