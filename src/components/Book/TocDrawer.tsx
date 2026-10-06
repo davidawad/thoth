@@ -37,7 +37,7 @@ export default function TocDrawer({
     (
       current.current ?? panel.current?.querySelector<HTMLElement>(FOCUSABLE)
     )?.focus();
-    current.current?.scrollIntoView({ block: 'center' });
+    current.current?.scrollIntoView?.({ block: 'center' });
     return () => opener?.focus?.();
   }, []);
 

@@ -12,9 +12,8 @@ const accept = {
 };
 
 export interface LibraryPanelProps {
-  variant: 'landing' | 'compact';
   library: readonly BookMeta[];
-  /** The book the Continue card offers (landing variant only). */
+  /** The book the Continue card offers. */
   continueBook?: BookMeta | null;
   positions: Readonly<Record<string, SavedPosition>>;
   currentId: string | null;
@@ -72,11 +71,7 @@ function DropArea({ p }: { p: LibraryPanelProps }) {
         <IngestStatus busy={p.busy} />
       ) : (
         <>
-          <p className="book-drop-title">
-            {p.variant === 'landing'
-              ? 'Drop a PDF or EPUB here'
-              : 'Open another book'}
-          </p>
+          <p className="book-drop-title">Drop a PDF or EPUB here</p>
           <button
             type="button"
             className="btn btn-sm btn-primary"
@@ -101,7 +96,7 @@ function bookLabel(m: BookMeta, saved: SavedPosition | undefined): string {
 
 function RecentBooks({ p }: { p: LibraryPanelProps }) {
   // On the landing page a single saved book is the Continue card already.
-  const shown = p.variant === 'landing' ? 2 : 1;
+  const shown = 2;
   if (p.library.length < shown) {
     return null;
   }
@@ -143,9 +138,6 @@ function RecentBooks({ p }: { p: LibraryPanelProps }) {
 }
 
 function Samples({ p }: { p: LibraryPanelProps }) {
-  if (p.variant === 'compact' && p.library.length > 0) {
-    return null;
-  }
   return (
     <div className="book-samples">
       <h3>Public-domain samples</h3>
@@ -207,10 +199,7 @@ function Privacy({ p }: { p: LibraryPanelProps }) {
 
 export default function LibraryPanel(p: LibraryPanelProps) {
   return (
-    <section
-      className={`book-library book-library--${p.variant}`}
-      aria-label="Library"
-    >
+    <section className="book-library" aria-label="Library">
       <DropArea p={p} />
       {p.error ? (
         <p className="book-error" role="alert">
@@ -222,7 +211,7 @@ export default function LibraryPanel(p: LibraryPanelProps) {
           {p.notice}
         </p>
       ) : null}
-      {p.variant === 'landing' && p.continueBook ? (
+      {p.continueBook ? (
         <ContinueCard
           book={p.continueBook}
           pct={p.positions[p.continueBook.id]?.pct}

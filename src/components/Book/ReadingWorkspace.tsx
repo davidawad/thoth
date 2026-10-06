@@ -80,7 +80,6 @@ export default function ReadingWorkspace({
           <aside className="landing-side">
             <div id={READER_STATS_PORTAL_ID} className="contents" />
             <LibraryPanel
-              variant="landing"
               library={lib.library}
               continueBook={continueBook}
               positions={positions}

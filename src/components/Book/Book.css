@@ -212,9 +212,6 @@
   text-align: center;
   transition: border-color 0.2s;
 }
-.book-library--compact .book-drop {
-  padding: 1rem;
-}
 .book-drop.is-active {
   border-color: var(--color-accent);
 }
