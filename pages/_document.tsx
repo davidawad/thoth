@@ -13,6 +13,9 @@ import {
   DEFAULT_THEME,
   THEMES,
 } from '../src/components/constants';
+import { PALETTE_STORAGE_KEY } from '../src/components/palette/applyPalette';
+import { resolvePaletteCssVars } from '../src/components/palette/palettes';
+import { paletteSchema } from '../src/components/palette/types';
 
 // Applies the persisted (or OS-preferred) theme to <html data-theme="..."> as
 // early as possible - before hydration/first paint - so there is no flash of
@@ -42,6 +45,35 @@ const THEME_INIT_SCRIPT = `(function () {
       ${JSON.stringify(DEFAULT_THEME)}
     );
   }
+})();`;
+
+// Pre-paint palette: the inline CSS variables for every palette x mode,
+// precomputed at build time, so a saved palette applies before first paint
+// (no flash of the default colors). The custom accent needs a contrast check,
+// so it is applied after hydration instead (see applyStoredPalette).
+const paletteVars = JSON.stringify(
+  Object.fromEntries(
+    paletteSchema.options.map((palette) => [
+      palette,
+      {
+        dark: resolvePaletteCssVars(palette, 'dark', null),
+        light: resolvePaletteCssVars(palette, 'light', null),
+      },
+    ]),
+  ),
+);
+
+const PALETTE_INIT_SCRIPT = `(function () {
+  try {
+    var key = window.localStorage.getItem(${JSON.stringify(PALETTE_STORAGE_KEY)});
+    var all = ${paletteVars};
+    var root = document.documentElement;
+    var mode = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    var vars = all[key] && all[key][mode];
+    if (!vars) return;
+    for (var name in vars) root.style.setProperty(name, vars[name]);
+    root.setAttribute("data-palette", key);
+  } catch (e) {}
 })();`;
 
 export default class AppDocument extends Document {
@@ -82,6 +114,7 @@ export default class AppDocument extends Document {
 
           {/* Runs before paint to set the persisted theme; see comment above. */}
           <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+          <script dangerouslySetInnerHTML={{ __html: PALETTE_INIT_SCRIPT }} />
         </Head>
         <body className="bg-base-100 text-base-content min-h-screen">
           <Main />

@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import TextParsingTools from '../TextParsingTools';
+import PaletteField from '../palette/PaletteField';
+import { applyStoredPalette } from '../palette/applyPalette';
 import {
   THEMES,
   THEME_STORAGE_KEY,
@@ -226,6 +228,8 @@ const SettingsPanel = (props: SettingsPanelProps) => {
       const nextTheme = event.target.value;
       setTheme(nextTheme);
       applyTheme(nextTheme);
+      // The palette's dark/light half depends on the theme - re-resolve it.
+      applyStoredPalette();
 
       // NOTE: deliberately NOT calling props.updateCallback() here. That
       // callback feeds into App's top-level state (pages/index.tsx), which
@@ -307,6 +311,8 @@ const SettingsPanel = (props: SettingsPanelProps) => {
           Saved to this browser and applied automatically next time you visit.
         </p>
       </section>
+
+      <PaletteField />
 
       <section className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Readability</h3>

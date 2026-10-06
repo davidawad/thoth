@@ -7,6 +7,7 @@ import ModalWrapper from '../src/components/ModalWrapper/ModalWrapper';
 import FileParser from '../src/components/FileParser/FileParser';
 import SiteHeader from '../src/components/SiteChrome/SiteHeader';
 import SiteFooter from '../src/components/SiteChrome/SiteFooter';
+import { applyStoredPalette } from '../src/components/palette/applyPalette';
 
 import ReactGA from 'react-ga';
 
@@ -85,6 +86,10 @@ class App extends Component<Record<string, never>, AppState> {
     if (typeof window === 'undefined') {
       return;
     }
+
+    // Re-applies the saved palette (and custom accent, which needs the
+    // contrast check the pre-paint script in _document doesn't do).
+    applyStoredPalette();
 
     const storedMetric = window.localStorage.getItem(
       CONSTANTS.READABILITY_METRIC_STORAGE_KEY,

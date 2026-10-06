@@ -16,6 +16,7 @@ import '@fontsource/ibm-plex-mono/600.css';
 import '../styles/globals.css';
 import '../src/App.css';
 import '../src/components/SiteChrome/SiteChrome.css';
+import '../src/components/palette/palette.css';
 import '../src/components/Reader/Reader.css';
 import '../src/components/ModalWrapper/ModalWrapper.css';
 
