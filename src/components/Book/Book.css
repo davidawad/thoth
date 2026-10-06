@@ -403,3 +403,25 @@
     padding-inline: 0.6rem;
   }
 }
+
+/* Phones: the previous/next context words don't fit beside the focus word. */
+@media (max-width: 640px) {
+  .book-page .readerSurroundingWord,
+  .book-hero + .Reader .readerSurroundingWord {
+    display: none;
+  }
+  .book-page .Reader-canvas,
+  .book-hero + .Reader .Reader-canvas {
+    width: min(21rem, 100%);
+    font-size: 2rem;
+  }
+}
+
+/* Keep the context words inside the page card. */
+.book-page .readerSurroundingWord {
+  width: 6rem;
+  font-size: 0.9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
