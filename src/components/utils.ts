@@ -14,5 +14,12 @@ function roundToPrecision(x: number, precision?: number): number {
   return y - (y % (precision === undefined ? 1 : +precision));
 }
 
-const funcs = { sigmoid, roundToPrecision };
+// Formats a seconds value for display with at most 2 decimals. Rounding in
+// binary floating point leaves noise like 7.3500000000000005, so this goes
+// through toFixed() (and Number() to drop trailing zeros and any "-0").
+function formatSeconds(seconds: number): string {
+  return Number(seconds.toFixed(2)).toString();
+}
+
+const funcs = { sigmoid, roundToPrecision, formatSeconds };
 export default funcs;

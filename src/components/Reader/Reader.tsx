@@ -680,11 +680,8 @@ class Reader extends Component<ReaderProps, ReaderState> {
           Reading: {this.state.index} / {this.state.tape.length}
         </p>
         <p>
-          {utils.roundToPrecision(
-            totalTimeEstimate - remainingTimeEstimate,
-            0.01,
-          )}{' '}
-          / {utils.roundToPrecision(totalTimeEstimate, 0.01)} seconds
+          {utils.formatSeconds(totalTimeEstimate - remainingTimeEstimate)} /{' '}
+          {utils.formatSeconds(totalTimeEstimate)} seconds
         </p>
       </div>
     );

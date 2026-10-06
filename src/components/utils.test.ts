@@ -98,3 +98,27 @@ describe('utils.roundToPrecision', () => {
     );
   });
 });
+
+describe('utils.formatSeconds', () => {
+  it('drops float noise (the reported 7.3500000000000005 case)', () => {
+    expect(utils.formatSeconds(7.3500000000000005)).toBe('7.35');
+    expect(utils.formatSeconds(11.58)).toBe('11.58');
+  });
+
+  it('does not pad whole or one-decimal values', () => {
+    expect(utils.formatSeconds(3)).toBe('3');
+    expect(utils.formatSeconds(7.3)).toBe('7.3');
+  });
+
+  it('never renders negative zero', () => {
+    expect(utils.formatSeconds(-1e-16)).toBe('0');
+  });
+
+  it('never shows more than 2 decimals for any finite input', () => {
+    fc.assert(
+      fc.property(fc.double({ noNaN: true, min: -1e6, max: 1e6 }), (x) => {
+        expect(utils.formatSeconds(x)).toMatch(/^-?\d+(\.\d{1,2})?$/);
+      }),
+    );
+  });
+});

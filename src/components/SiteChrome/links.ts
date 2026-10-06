@@ -10,4 +10,5 @@ export const FOOTER_LINKS = [
   { label: 'Source', href: REPO_URL },
   { label: 'Release notes', href: `${REPO_URL}/blob/master/CHANGELOG.md` },
   { label: 'License', href: `${REPO_URL}/blob/master/LICENSE` },
+  { label: 'Seshat (study)', href: SESHAT_URL },
 ] as const;

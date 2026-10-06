@@ -2,21 +2,16 @@ import { afterEach, describe, it, expect, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import SiteHeader from './SiteHeader';
 import SiteFooter from './SiteFooter';
-import { FOOTER_LINKS, SESHAT_URL } from './links';
+import { FOOTER_LINKS } from './links';
 
 afterEach(cleanup);
 
 describe('SiteHeader', () => {
-  it('shows the brand and a switcher to the sibling Seshat app', () => {
+  it('shows the brand only, with no link to the sibling app', () => {
     render(<SiteHeader />);
 
     expect(screen.getByText('Thoth')).toBeTruthy();
-    expect(
-      screen.getByRole('link', { name: 'Read' }).getAttribute('aria-current'),
-    ).toBe('page');
-    expect(
-      screen.getByRole('link', { name: /Seshat/ }).getAttribute('href'),
-    ).toBe(SESHAT_URL);
+    expect(screen.queryByRole('link', { name: /Seshat/ })).toBeNull();
   });
 });
 

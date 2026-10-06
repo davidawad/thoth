@@ -408,7 +408,9 @@ This is Thoth, an open source speed reading tool inspired by Zethos and Spritz (
 
 It combines a few different features of other powerful speed readers and lets you set options yourself.
 
-It's free and open source on GitHub.  
+It's free and open source on GitHub.
+
+It implements the ideas in my research paper, "Improved Rapid Serial Visual Presentation using Natural Language Processing" (https://arxiv.org/abs/1908.01699).
 
 All you have to do is paste in some text and you'll be breezing through it in no time.
 
