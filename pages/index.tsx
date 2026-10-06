@@ -1,10 +1,8 @@
 import { Component } from 'react';
 
-import Reader, {
-  READER_STATS_PORTAL_ID,
-} from '../src/components/Reader/Reader';
 import ModalWrapper from '../src/components/ModalWrapper/ModalWrapper';
-import FileParser from '../src/components/FileParser/FileParser';
+import ReadingWorkspace from '../src/components/Book/ReadingWorkspace';
+import { loadWpm, saveWpm, DEFAULT_WPM } from '../src/components/Book/storage';
 import SiteHeader from '../src/components/SiteChrome/SiteHeader';
 import SiteFooter from '../src/components/SiteChrome/SiteFooter';
 import { applyStoredPalette } from '../src/components/palette/applyPalette';
@@ -20,11 +18,10 @@ import type { AppSettings } from '../src/components/types';
 
 const DEBUG = false;
 
-const READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
+const READING_SPEED = DEFAULT_WPM; // in words-per-minute (wpm)
 const START_COLOR = CONSTANTS.START_COLOR;
 const STOP_COLOR = CONSTANTS.STOP_COLOR;
 
-const initialContent = DEBUG ? CONSTANTS.EPICTETUS : CONSTANTS.INTRO_TEXT;
 const scrollingEnabled = false;
 
 const age = CONSTANTS.DEFAULT_AGE;
@@ -50,11 +47,13 @@ class App extends Component<Record<string, never>, AppState> {
 
     this.updateSettings = this.updateSettings.bind(this);
     this.openSettings = this.openSettings.bind(this);
+    this.setReadingSpeed = this.setReadingSpeed.bind(this);
+    this.resetReadingSpeed = this.resetReadingSpeed.bind(this);
     this.closeSettings = this.closeSettings.bind(this);
 
     this.state = {
       year: new Date().getFullYear(),
-      content: initialContent,
+      content: '',
       settingsOpen: false,
       readingSpeed: READING_SPEED,
       baseColorStop: START_COLOR,
@@ -90,6 +89,9 @@ class App extends Component<Record<string, never>, AppState> {
     // Re-applies the saved palette (and custom accent, which needs the
     // contrast check the pre-paint script in _document doesn't do).
     applyStoredPalette();
+
+    // Saved reading speed (read client-side, after hydration).
+    this.setState({ readingSpeed: loadWpm() });
 
     const storedMetric = window.localStorage.getItem(
       CONSTANTS.READABILITY_METRIC_STORAGE_KEY,
@@ -150,6 +152,16 @@ class App extends Component<Record<string, never>, AppState> {
     this.setState(newSettings as Pick<AppState, keyof AppState>);
   }
 
+  // The wpm slider: applied immediately, persisted to localStorage.
+  setReadingSpeed(wpm: number): void {
+    saveWpm(wpm);
+    this.setState({ readingSpeed: wpm });
+  }
+
+  resetReadingSpeed(): void {
+    this.setState({ readingSpeed: DEFAULT_WPM });
+  }
+
   openSettings(): void {
     this.setState({ settingsOpen: true });
   }
@@ -170,27 +182,11 @@ class App extends Component<Record<string, never>, AppState> {
         </a>
         <SiteHeader />
         <div className="App">
-          {/* Equal-width spacer + sidebar columns either side of `main` keep
-            the reader visually centered on the page - it's the star of the
-            show, not something the sidebar should shove off-center. Spacer
-            is hidden below `lg`, where the sidebar drops beneath `main`
-            instead of sitting next to it. */}
-          <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)_20rem] gap-8 items-start">
-            <div className="hidden lg:block" aria-hidden="true" />
-
-            <main id="main-content" className="min-w-0">
-              <Reader {...settings} />
-            </main>
-
-            <aside className="flex flex-col gap-4">
-              <div id={READER_STATS_PORTAL_ID} className="contents" />
-
-              <FileParser
-                updateCallback={this.updateSettings}
-                verbose={this.state.verbose}
-              />
-            </aside>
-          </div>
+          <ReadingWorkspace
+            settings={settings}
+            onSpeedChange={this.setReadingSpeed}
+            onClearedAll={this.resetReadingSpeed}
+          />
         </div>
 
         <SiteFooter onOpenSettings={this.openSettings} />

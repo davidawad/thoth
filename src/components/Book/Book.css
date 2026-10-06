@@ -1,0 +1,405 @@
+/* Book reader chrome. Colours come only from the theme/palette tokens
+ * (styles/tokens.css) so all three themes and every palette apply. Chrome
+ * uses Fraunces / Newsreader / IBM Plex Mono; the page text itself is
+ * Atkinson Hyperlegible (--font-body) via the Reader. */
+
+.book-booting {
+  padding: 4rem 0;
+  text-align: center;
+  color: var(--color-fg-muted);
+  font-family: var(--font-chrome);
+}
+
+/* ---- Landing / hero ---------------------------------------------------- */
+.book-hero {
+  margin-bottom: 2.5rem;
+}
+.book-hero-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  line-height: 1.15;
+  margin: 0 0 0.5rem;
+}
+.book-hero-copy {
+  font-family: var(--font-chrome);
+  font-size: 1.1rem;
+  color: var(--color-fg-muted);
+  max-width: 44rem;
+  margin: 0 0 1.25rem;
+}
+
+/* ---- Library panel ----------------------------------------------------- */
+.book-library {
+  font-family: var(--font-chrome);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.book-library h3 {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  margin: 0 0 0.4rem;
+}
+.book-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1rem;
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-page);
+  background: var(--color-bg-elevated);
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.book-library--compact .book-drop {
+  padding: 1rem;
+}
+.book-drop.is-active {
+  border-color: var(--color-accent);
+}
+.book-drop-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  margin: 0;
+}
+.book-drop-hint {
+  font-size: 0.85rem;
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+.book-ingest {
+  width: 100%;
+}
+.book-ingest-label {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  margin: 0 0 0.5rem;
+}
+.book-ingest progress {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: var(--color-accent);
+}
+.book-error,
+.book-notice {
+  font-size: 0.95rem;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid currentColor;
+}
+.book-error {
+  color: var(--color-error);
+}
+.book-notice {
+  color: var(--color-fg-muted);
+}
+.book-recent ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.book-recent li {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+}
+.book-recent li.is-current {
+  border-color: var(--color-accent);
+}
+.book-recent-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.book-recent-title {
+  font-family: var(--font-display);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.book-recent-meta {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--color-fg-muted);
+}
+.book-recent-remove,
+.book-link-button {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  background: none;
+  border: 0;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.5rem 0.6rem;
+}
+.book-link-button {
+  padding: 0;
+}
+.book-recent-remove:hover,
+.book-link-button:hover {
+  color: var(--color-error);
+}
+.book-samples-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.book-sample-author {
+  color: var(--color-fg-muted);
+  font-size: 0.8em;
+  margin-left: 0.3em;
+}
+.book-privacy p {
+  font-size: 0.85rem;
+  color: var(--color-fg-muted);
+  margin: 0 0 0.4rem;
+}
+
+/* ---- Reading view ------------------------------------------------------ */
+.book-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.book-head-text {
+  min-width: 0;
+}
+.book-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  line-height: 1.15;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.book-byline {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--color-fg-muted);
+  margin: 0.35rem 0 0;
+}
+.book-head-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.book-resumed {
+  font-family: var(--font-chrome);
+  font-style: italic;
+  color: var(--color-fg-muted);
+  margin: 0.75rem 0 0;
+}
+.book-chapter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 1.5rem 0 1rem;
+  text-align: center;
+}
+.book-chapter-num {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+.book-chapter-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  overflow-wrap: anywhere;
+}
+.book-page {
+  padding: 1.25rem 1rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-page);
+  background: var(--color-bg-elevated);
+}
+.book-page .editor {
+  max-height: 24rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+.book-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.book-scrub {
+  flex: 1;
+  min-width: 0;
+}
+.book-progress {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--color-fg-muted);
+  text-align: center;
+  margin: 0.6rem 0 0.4rem;
+}
+.book-bar {
+  height: 4px;
+  background: var(--color-border-strong);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.book-bar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+}
+.book-keys {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  color: var(--color-fg-muted);
+  text-align: center;
+  margin: 0.6rem 0 0;
+}
+
+/* Speed control in the Reader's controls row. */
+.readerSpeed {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+}
+.readerSpeed input {
+  width: 8rem;
+}
+.readerSpeedValue {
+  min-width: 4.5rem;
+  color: var(--color-fg-muted);
+}
+
+/* ---- Table-of-contents drawer ------------------------------------------ */
+.book-toc-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.45);
+}
+.book-toc {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(24rem, 90vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  border-right: 1px solid var(--color-border-strong);
+  animation: book-toc-in 0.2s ease-out;
+}
+@keyframes book-toc-in {
+  from {
+    transform: translateX(-1.5rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book-toc {
+    animation: none;
+  }
+  .book-bar-fill {
+    transition: none;
+  }
+}
+.book-toc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.book-toc-head h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.25rem;
+  margin: 0;
+}
+.book-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.book-toc-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  cursor: pointer;
+}
+.book-toc-item:hover {
+  background: var(--color-bg-elevated);
+}
+.book-toc-item.is-current {
+  background: var(--color-bg-elevated-2);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+.book-toc-title {
+  font-family: var(--font-chrome);
+  font-size: 1rem;
+}
+.book-toc-meta {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  color: var(--color-fg-muted);
+}
+
+.book button:focus-visible,
+.book-library button:focus-visible,
+.book-toc button:focus-visible,
+.book input:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .book-page {
+    padding: 0.75rem 0.5rem 0.25rem;
+  }
+  .readerSpeed {
+    width: 100%;
+    justify-content: center;
+  }
+  .readerSpeed input {
+    flex: 1;
+    width: auto;
+  }
+  .book-nav .btn {
+    padding-inline: 0.6rem;
+  }
+}

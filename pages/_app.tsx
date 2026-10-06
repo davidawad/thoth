@@ -19,6 +19,7 @@ import '../src/components/SiteChrome/SiteChrome.css';
 import '../src/components/palette/palette.css';
 import '../src/components/Reader/Reader.css';
 import '../src/components/ModalWrapper/ModalWrapper.css';
+import '../src/components/Book/Book.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;
