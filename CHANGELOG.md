@@ -1,3 +1,40 @@
+# [1.3.0](https://github.com/davidawad/thoth/compare/v1.2.2...v1.3.0) (2026-10-06)
+
+
+### Bug Fixes
+
+* clear all saved settings, and re-parse the displayed text on speed change ([dd7f500](https://github.com/davidawad/thoth/commit/dd7f5000a857b4c9c394bcd3200aa9476927e9f0))
+* commit editor edits after typing pauses so the tape and heat map never lag ([d321182](https://github.com/davidawad/thoth/commit/d3211825ae85bb56c02dd4e32dae8f6029915daf))
+* **deps:** patch dependabot vulnerabilities via bumps and pnpm overrides ([d3011e8](https://github.com/davidawad/thoth/commit/d3011e8729af9195071304848c6575473b97d12b))
+* docker image builds (postinstall creates public/), add a .dockerignore ([50bdd74](https://github.com/davidawad/thoth/commit/50bdd748ca0aab8154669bf3f9fe6927a9b85290))
+* drop unused React default imports, refresh stale pdf worker asset ([bb0f86a](https://github.com/davidawad/thoth/commit/bb0f86a9a18e732b4db215501b312238c6858640))
+* keep context words inside the page card on narrow screens; test extractBlocks ([566f620](https://github.com/davidawad/thoth/commit/566f620dd2c781917286a1a2154aced7468ffc84))
+* long words fit the head, Phaedo chapter titles, mockup playback loop ([131ddb9](https://github.com/davidawad/thoth/commit/131ddb904793664fc49008b7a5c2fe17daad2886))
+* never auto-open a saved book on load; offer it as the continue book ([2d5fb6d](https://github.com/davidawad/thoth/commit/2d5fb6dcd0482e3814b8fa691be6ccca09b1dd24))
+* opening Settings no longer resets the reader; faster difficulty scoring ([31e2232](https://github.com/davidawad/thoth/commit/31e22323b87e28b6df16bb51f8e7606492ab4e28))
+* remove SSR hydration mismatches found by Bombadil spec ([9f1f440](https://github.com/davidawad/thoth/commit/9f1f440e02f2e58e780799b0d0f4e3d1a13646b6))
+* serve the static export (out/) for pnpm start and the Docker image ([b29c22f](https://github.com/davidawad/thoth/commit/b29c22fe0987ab3de3d4c6752ccfb9ab652cd2d9))
+* strip title page and contents from EPUB sections; robust large-input scoring test ([2c22a15](https://github.com/davidawad/thoth/commit/2c22a15d728553bb7c4c633e1b2ef054a2637577))
+
+
+### Features
+
+* book model, pagination, storage and EPUB/PDF ingest pipeline ([8724a10](https://github.com/davidawad/thoth/commit/8724a101a3cd5c55bb107418d845b221b2969da2))
+* book reading view with contents drawer, library and resume ([8854000](https://github.com/davidawad/thoth/commit/8854000337b95cdd85b0737c246e96741a60fb49))
+* **claude:** embed compound-engineering plugin in repo settings ([0d60dff](https://github.com/davidawad/thoth/commit/0d60dff25daab159050cf0e2a790c8a96c904548))
+* color palette picker ported from seshat, applied pre-paint ([a0ba7cc](https://github.com/davidawad/thoth/commit/a0ba7ccd364fe7b931e6ea00e12575f722528dd1))
+* default reading speed is 500 wpm, defined in one place ([dbe436f](https://github.com/davidawad/thoth/commit/dbe436f1a9b86be3c01499f7bbef08d76c861297))
+* **footer:** link to Seshat for studying ([4595203](https://github.com/davidawad/thoth/commit/4595203737c0f4c5d3ff972a9ccfd872e43ec3ec))
+* playback head font setting (default Atkinson); inline red letter with glow ([701e181](https://github.com/davidawad/thoth/commit/701e181b31d2dbc014382daa09f16dbbf14e5878))
+* playback head shows words before and after, bold red focus letter ([57a3018](https://github.com/davidawad/thoth/commit/57a301845abfe314f1d688ebd82ee5ef86a36b42))
+* ring-and-lines logo, Seshat link in footer, paper in intro text, fix seconds counter ([4ab66ec](https://github.com/davidawad/thoth/commit/4ab66ec2d69a0a6e943f5039cec5ed4ddc40f0c0))
+* share the seshat styleguide, add difficulty heat map, tidy stats card ([90abc34](https://github.com/davidawad/thoth/commit/90abc346ba12f0f437ef60f033365966c95309e4))
+* shared header/footer with Seshat-style chrome, Settings opens from footer ([fcefba8](https://github.com/davidawad/thoth/commit/fcefba897d6c0d5b8df3cc66a2f519a9a0e12023))
+* spotlight landing page with description, continue card and sample text ([3b04018](https://github.com/davidawad/thoth/commit/3b040180aa1ea4883af52355757c7666da72ffcf))
+* spotlight reading view with two-page spread, page turns and settings row ([881b5f4](https://github.com/davidawad/thoth/commit/881b5f4bee4a6bf3212eb14e0973976810305bde))
+* static export + GitHub/GitLab Pages deploy ([467cb75](https://github.com/davidawad/thoth/commit/467cb75d9a43173c40bfd0d04aa916543b993fee))
+* **videos:** reproducible stop-motion launch videos built from repo history ([f30d534](https://github.com/davidawad/thoth/commit/f30d534fd1d4797977cbdeabc7993d2ff84b9b17))
+
 ## [1.2.2](https://github.com/davidawad/thoth/compare/v1.2.1...v1.2.2) (2026-07-29)
 
 
