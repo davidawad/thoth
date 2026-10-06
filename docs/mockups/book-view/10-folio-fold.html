@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thoth book view 10: Folio Fold</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+/* ===== Thoth book-view mockups: shared base (tokens, book geometry, 3D leaf) ===== */
+:root {
+  /* Thoth chrome tokens (styles/tokens.css, dark = Thoth default) */
+  --bg: #1b1712;
+  --bg2: #241b14;
+  --bg3: #2c2119;
+  --fg: #ece1c9;
+  --muted: #b9aa8c;
+  --line: rgba(237, 227, 205, 0.12);
+  --line2: #8a7a63;
+  --accent: #b4903f;
+  --accent-ink: #1b1712;
+  --ring: #d8be85;
+  /* the book's own surface (designs override per theme) */
+  --paper: #2a2119;
+  --paper2: #231b14;
+  --ink: #ebe0c8;
+  --ink-dim: #8d806a;
+  --focus: #ff6b4a;
+  --hl: rgba(180, 144, 63, 0.22);
+  --hl-edge: #b4903f;
+  --shade: rgba(0, 0, 0, 0.45);
+  --desk: #14110d;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-chrome: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --font-legible: 'Atkinson Hyperlegible', Arial, sans-serif;
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  --bg: #f8f0dd;
+  --bg2: #ece0c6;
+  --bg3: #e3d5af;
+  --fg: #2a1e12;
+  --muted: #5a4b37;
+  --line: rgba(42, 30, 18, 0.16);
+  --line2: #8a7a63;
+  --accent: #7a5a1a;
+  --accent-ink: #f8f0dd;
+  --ring: #7a5a1a;
+  --paper: #fdfaf0;
+  --paper2: #f3ecd8;
+  --ink: #2a1e12;
+  --ink-dim: #9a8c74;
+  --focus: #c0261b;
+  --hl: rgba(180, 144, 63, 0.28);
+  --hl-edge: #7a5a1a;
+  --shade: rgba(60, 40, 10, 0.32);
+  --desk: #e6dab9;
+  color-scheme: light;
+}
+:root[data-theme='sepia'] {
+  --bg: #f4ecd8;
+  --bg2: #ece0c4;
+  --bg3: #ddcda2;
+  --fg: #3b2f1e;
+  --muted: #5f4f38;
+  --line: rgba(59, 47, 30, 0.18);
+  --line2: #8a7a63;
+  --accent: #8a5a2b;
+  --accent-ink: #fdf6e3;
+  --ring: #8a5a2b;
+  --paper: #f7edcf;
+  --paper2: #ecdfba;
+  --ink: #3b2f1e;
+  --ink-dim: #a08c68;
+  --focus: #b3261e;
+  --hl: rgba(138, 90, 43, 0.24);
+  --hl-edge: #8a5a2b;
+  --shade: rgba(70, 45, 15, 0.34);
+  --desk: #d9c79c;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-chrome);
+  min-height: 100svh;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* chrome atoms */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line2);
+  background: var(--bg2);
+  border-radius: 4px;
+}
+.btn:hover {
+  background: var(--bg3);
+}
+.btn.pri {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+.lbl {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ===== the book ===== */
+.fit {
+  width: min(
+    var(--maxw, 1020px),
+    100%,
+    calc((100svh - var(--chrome, 15rem)) * 1.42)
+  );
+  margin-inline: auto;
+}
+.fit.s1 {
+  width: min(
+    var(--maxw, 420px),
+    100%,
+    calc((100svh - var(--chrome, 12rem)) * 0.68)
+  );
+}
+.book {
+  position: relative;
+  width: 100%;
+  perspective: 2600px;
+}
+.spread {
+  position: relative;
+  width: 100%;
+  container-type: inline-size;
+  aspect-ratio: 1.42 / 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  transform-style: preserve-3d;
+}
+.spread.single {
+  grid-template-columns: 1fr;
+  aspect-ratio: 0.68 / 1;
+}
+.spread.single .pg.L {
+  display: none;
+}
+.pg {
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-chrome);
+  font-size: 1.62cqw;
+  line-height: 1.62;
+  padding: 6cqw 5.4cqw 5cqw;
+  display: flex;
+  flex-direction: column;
+}
+.single .pg {
+  font-size: 4.5cqw;
+  padding: 9cqw 8cqw 8cqw;
+}
+.pg.L {
+  background: linear-gradient(90deg, var(--paper) 78%, var(--paper2));
+  border-radius: 4px 0 0 4px;
+}
+.pg.R {
+  background: linear-gradient(270deg, var(--paper) 78%, var(--paper2));
+  border-radius: 0 4px 4px 0;
+}
+.single .pg.R {
+  background: var(--paper);
+  border-radius: 4px;
+}
+.pg .rh {
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.4em;
+}
+.pg .txt {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.pg .txt p {
+  margin: 0;
+  text-indent: 1.5em;
+  hyphens: auto;
+  text-align: left;
+}
+.pg .txt p.cont,
+.pg .txt p.first {
+  text-indent: 0;
+}
+.pg .folio {
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  text-align: center;
+  color: var(--ink-dim);
+  padding-top: 0.8em;
+}
+.w {
+  position: relative;
+  border-radius: 2px;
+}
+.w .f {
+  font-weight: inherit;
+  color: var(--focus);
+}
+.w.cur {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--focus) 16%, transparent);
+  box-shadow: 0 0 0 0.12em color-mix(in srgb, var(--focus) 16%, transparent);
+  font-weight: 600;
+}
+.pg.blank {
+  background: var(--paper);
+}
+
+/* 3D leaf */
+.flip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  transform-origin: 0 50%;
+  transform-style: preserve-3d;
+  z-index: 5;
+  display: none;
+  will-change: transform;
+}
+.single .flip {
+  width: 100%;
+}
+.flip.on {
+  display: block;
+}
+.flip .face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip .face.back {
+  transform: rotateY(180deg);
+}
+.flip .face .shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--shade), transparent 60%);
+  opacity: 0;
+}
+.flip .face.back .shade {
+  background: linear-gradient(270deg, var(--shade), transparent 60%);
+}
+.pg.L .gutter,
+.pg.R .gutter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6cqw;
+  pointer-events: none;
+}
+.pg.L .gutter {
+  right: 0;
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.2), transparent);
+}
+.pg.R .gutter {
+  left: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.2), transparent);
+}
+.single .gutter {
+  display: none;
+}
+
+/* playback head (single word, red focus letter on a fixed pivot) */
+.head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  font-family: var(--font-legible);
+  font-size: 2rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.head .hl {
+  text-align: right;
+}
+.head .hr {
+  text-align: left;
+}
+.head .hf {
+  color: var(--focus);
+  font-weight: 700;
+}
+.head .hl,
+.head .hr {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---- design 10: Folio Fold ---- */
+:root, :root[data-theme='dark'] { --paper: #e2d3b2; --paper2: #c9b88f; --ink: #241a0f; --ink-dim: #857759; --focus: #c0261b; --hl: rgba(206,160,50,.3); --hl-edge: #7a5a1a; --desk: #100d0a; --shade: rgba(0,0,0,.6); }
+:root[data-theme='light'] { --paper: #fbf4e0; --paper2: #e6dabb; --ink: #241a0f; --focus: #c0261b; --hl: rgba(206,160,50,.3); --desk: #cdbf99; }
+:root[data-theme='sepia'] { --paper: #f6e8c3; --paper2: #e0cf9f; --ink: #3b2f1e; --focus: #b3261e; --hl: rgba(160,110,40,.28); --desk: #c3ae7c; }
+
+body { background: radial-gradient(90% 70% at 50% 35%, color-mix(in srgb, var(--accent) 14%, var(--desk, var(--bg))), var(--desk, var(--bg)) 75%); overflow-x: hidden; }
+.top { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; font-family: var(--font-display); } .top .btn { background: var(--bg2); }
+.stage { padding: 1rem 1.4rem 2rem; display: grid; justify-items: center; } .fit { --chrome: 12rem; --maxw: 1040px; perspective: 2200px; }
+.tilt { transform: rotateX(9deg); transform-origin: 50% 100%; transform-style: preserve-3d; position: relative; }
+.tilt::before, .tilt::after { content: ''; position: absolute; top: 1.2%; bottom: -1.4%; width: 51%; z-index: -1; background: repeating-linear-gradient(180deg, var(--paper2) 0 2px, var(--paper) 2px 4px); border-radius: 3px; }
+.tilt::before { left: -.7%; transform: translateY(1.2%); box-shadow: -.3rem .8rem 1.4rem rgba(0,0,0,.45); } .tilt::after { right: -.7%; transform: translateY(1.2%); box-shadow: .3rem .8rem 1.4rem rgba(0,0,0,.45); }
+.cover { position: absolute; inset: 2% -2.2% -3.4% -2.2%; background: color-mix(in srgb, var(--accent) 38%, #2a1608); border-radius: 8px; z-index: -2; box-shadow: 0 2rem 3rem rgba(0,0,0,.5); }
+.pg { font-size: 1.66cqw; } .pg.L::after, .pg.R::after { z-index: 3; }
+.pg.L .gutter, .pg.R .gutter { width: 9cqw; } .pg.L .gutter { background: linear-gradient(270deg, rgba(0,0,0,.34), rgba(0,0,0,.08) 55%, transparent); } .pg.R .gutter { background: linear-gradient(90deg, rgba(0,0,0,.34), rgba(0,0,0,.08) 55%, transparent); }
+.pg.R::after { }
+
+.pg.has-cur::after { content: ''; position: absolute; bottom: 0; width: 8cqw; height: 8cqw; z-index: 3; }
+.pg.R.has-cur::after, .single .pg.has-cur::after { right: 0; left: auto; background: linear-gradient(135deg, var(--accent) 0 50%, var(--desk) 50% 100%); filter: drop-shadow(-.3cqw -.3cqw .4cqw var(--shade)); }
+.pg.L.has-cur::after { left: 0; right: auto; background: linear-gradient(225deg, var(--accent) 0 50%, var(--desk) 50% 100%); filter: drop-shadow(.3cqw -.3cqw .4cqw var(--shade)); }
+.w.in-s { background: var(--hl); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.pg.R.has-cur::after, .single .pg.has-cur::after { background: linear-gradient(135deg, var(--accent) 0 50%, color-mix(in srgb, var(--accent) 38%, #2a1608) 50% 100%); }
+.pg.L.has-cur::after { background: linear-gradient(225deg, var(--accent) 0 50%, color-mix(in srgb, var(--accent) 38%, #2a1608) 50% 100%); }
+.lamp { position: fixed; right: 1.2rem; top: 4.6rem; width: 15.5rem; z-index: 8; background: color-mix(in srgb, var(--bg2) 92%, #ffd27a); border: 1px solid var(--line2); border-radius: 10px; padding: .8rem; display: grid; gap: .6rem; box-shadow: 0 0 3rem color-mix(in srgb, #ffcf70 22%, transparent), 0 1rem 2rem rgba(0,0,0,.35); }
+.lamp .head { font-size: 1.7rem; background: var(--bg); border-radius: 5px; padding: .4rem 0; border: 1px solid var(--line); } .lamp .row { display: flex; gap: .4rem; } .lamp .row .btn { flex: 1; padding: .45rem .3rem; }
+.foot { text-align: center; padding-bottom: 1.5rem; }
+@media (max-width: 960px) { .lamp { position: static; margin: 0 1.4rem 1rem; width: auto; } .tilt { transform: none; } .tilt::before, .tilt::after, .cover { display: none; } }
+
+</style>
+</head>
+<body class="d10">
+
+<div class="top"><span>Meditations</span><button class="btn" type="button" data-act="theme">Theme: <span data-themename></span></button></div>
+<div class="lamp" aria-label="Playback"><span class="lbl">Reading lamp</span><div class="head" data-head aria-label="Current word"></div><div class="row"><button class="btn" type="button" data-act="prev" data-prev aria-label="Previous page">‹</button><button class="btn pri" type="button" data-act="play"><span data-playlabel>Play</span></button><button class="btn" type="button" data-act="next" data-next aria-label="Next page">›</button></div></div>
+<div class="stage"><div class="fit"><div class="tilt"><i class="cover"></i><div class="book"></div></div></div></div>
+<p class="lbl foot"><span data-pageinfo></span> · <span data-pct></span> · <span data-left></span></p>
+<script>window.BOOK_TEXT = {
+  "title": "Meditations",
+  "author": "Marcus Aurelius",
+  "chapter": "The Second Book",
+  "paras": [
+    "I. Remember how long thou hast already put off these things, and how often a certain day and hour as it were, having been set unto thee by the gods, thou hast neglected it. It is high time for thee to understand the true nature both of the world, whereof thou art a part; and of that Lord and Governor of the world, from whom, as a channel from the spring, thou thyself didst flow: and that there is but a certain limit of time appointed unto thee, which if thou shalt not make use of to calm and allay the many distempers of thy soul, it will pass away and thou with it, and never after return.",
+    "II. Let it be thy earnest and incessant care as a Roman and a man to perform whatsoever it is that thou art about, with true and unfeigned gravity, natural affection, freedom and justice: and as for all other cares, and imaginations, how thou mayest ease thy mind of them. Which thou shalt do; if thou shalt go about every action as thy last action, free from all vanity, all passionate and wilful aberration from reason, and from all hypocrisy, and self-love, and dislike of those things, which by the fates or appointment of God have happened unto thee. Thou seest that those things, which for a man to hold on in a prosperous course, and to live a divine life, are requisite and necessary, are not many, for the gods will require no more of any man, that shall but keep and observe these things.",
+    "III. Do, soul, do; abuse and contemn thyself; yet a while and the time for thee to respect thyself, will be at an end. Every man's happiness depends from himself, but behold thy life is almost at an end, whiles affording thyself no respect, thou dost make thy happiness to consist in the souls, and conceits of other men.",
+    "IV. Why should any of these things that happen externally, so much distract thee? Give thyself leisure to learn some good thing, and cease roving and wandering to and fro. Thou must also take heed of another kind of wandering, for they are idle in their actions, who toil and labour in this life, and have no certain scope to which to direct all their motions, and desires.",
+    "V. For not observing the state of another man's soul, scarce was ever any man known to be unhappy. Tell whosoever they be that intend not, and guide not by reason and discretion the motions of their own souls, they must of necessity be unhappy.",
+    "VI. These things thou must always have in mind: What is the nature of the universe, and what is mine—in particular: This unto that what relation it hath: what kind of part, of what kind of universe it is: And that there is nobody that can hinder thee, but that thou mayest always both do and speak those things which are agreeable to that nature, whereof thou art a part.",
+    "VII. Theophrastus, where he compares sin with sin (as after a vulgar sense such things I grant may be compared:) says well and like a philosopher, that those sins are greater which are committed through lust, than those which are committed through anger. For he that is angry seems with a kind of grief and close contraction of himself, to turn away from reason; but he that sins through lust, being overcome by pleasure, doth in his very sin bewray a more impotent, and unmanlike disposition. Well then and like a philosopher doth he say, that he of the two is the more to be condemned, that sins with pleasure, than he that sins with grief. For indeed this latter may seem first to have been wronged, and so in some manner through grief thereof to have been forced to be angry, whereas he who through lust doth commit anything, did of himself merely resolve upon that action.",
+    "VIII. Whatsoever thou dost affect, whatsoever thou dost project, so do, and so project all, as one who, for aught thou knowest, may at this very present depart out of this life. And as for death, if there be any gods, it is no grievous thing to leave the society of men. The gods will do thee no hurt, thou mayest be sure. But if it be so that there be no gods, or that they take no care of the world, why should I desire to live in a world void of gods, and of all divine providence? But gods there be certainly, and they take care for the world; and as for those things which be truly evil, as vice and wickedness, such things they have put in a man's own power, that he might avoid them if he would: and had there been anything besides that had been truly bad and evil, they would have had a care of that also, that a man might have avoided it. But why should that be thought to hurt and prejudice a man's life in this world, which cannot any ways make man himself the better, or the worse in his own person? Neither must we think that the nature of the universe did either through ignorance pass these things, or if not as ignorant of them, yet as unable either to prevent, or better to order and dispose them. It cannot be that she through want either of power or skill, should have committed such a thing, so as to suffer all things both good and bad, equally and promiscuously, to happen unto all both good and bad. As for life therefore, and death, honour and dishonour, labour and pleasure, riches and poverty, all these things happen unto men indeed, both good and bad, equally; but as things which of themselves are neither good nor bad; because of themselves, neither shameful nor praiseworthy.",
+    "IX. Consider how quickly all things are dissolved and resolved: the bodies and substances themselves, into the matter and substance of the world: and their memories into the general age and time of the world. Consider the nature of all worldly sensible things; of those especially, which either ensnare by pleasure, or for their irksomeness are dreadful, or for their outward lustre and show are in great esteem and request, how vile and contemptible, how base and corruptible, how destitute of all true life and being they are.",
+    "X. It is the part of a man endowed with a good understanding faculty, to consider what they themselves are in very deed, from whose bare conceits and voices, honour and credit do proceed: as also what it is to die, and how if a man shall consider this by itself alone, to die, and separate from it in his mind all those things which with it usually represent themselves unto us, he can conceive of it no otherwise, than as of a work of nature, and he that fears any work of nature, is a very child. Now death, it is not only a work of nature, but also conducing to nature.",
+    "XI. Consider with thyself how man, and by what part of his, is joined unto God, and how that part of man is affected, when it is said to be diffused. There is nothing more wretched than that soul, which in a kind of circuit compasseth all things, searching (as he saith) even the very depths of the earth; and by all signs and conjectures prying into the very thoughts of other men's souls; and yet of this, is not sensible, that it is sufficient for a man to apply himself wholly, and to confine all his thoughts and cares to the tendance of that spirit which is within him, and truly and really to serve him. His service doth consist in this, that a man keep himself pure from all violent passion and evil affection, from all rashness and vanity, and from all manner of discontent, either in regard of the gods or men. For indeed whatsoever proceeds from the gods, deserves respect for their worth and excellency; and whatsoever proceeds from men, as they are our kinsmen, should by us be entertained, with love, always; sometimes, as proceeding from their ignorance, of that which is truly good and bad, (a blindness no less, than that by which we are not able to discern between white and black:) with a kind of pity and compassion also.",
+    "XII. If thou shouldst live three thousand, or as many as ten thousands of years, yet remember this, that man can part with no life properly, save with that little part of life, which he now lives: and that which he lives, is no other, than that which at every instant he parts with. That then which is longest of duration, and that which is shortest, come both to one effect. For although in regard of that which is already past there may be some inequality, yet that time which is now present and in being, is equal unto all men. And that being it which we part with whensoever we die, it doth manifestly appear, that it can be but a moment of time, that we then part with. For as for that which is either past or to come, a man cannot be said properly to part with it. For how should a man part with that which he hath not? These two things therefore thou must remember. First, that all things in the world from all eternity, by a perpetual revolution of the same times and things ever continued and renewed, are of one kind and nature; so that whether for a hundred or two hundred years only, or for an infinite space of time, a man see those things which are still the same, it can be no matter of great moment. And secondly, that that life which any the longest liver, or the shortest liver parts with, is for length and duration the very same, for that only which is present, is that, which either of them can lose, as being that only which they have; for that which he hath not, no man can truly be said to lose."
+  ]
+}
+;
+window.BOOK_CFG = {"wpp":160};</script>
+<script>
+/* eslint-disable -- standalone browser mockup engine (inlined into static HTML), not app code */
+/* ===== Thoth book-view mockup engine: paginates real prose, drives the page turn,
+   the demo playback word, theme toggle and the data-* hooks the designs use. ===== */
+(function () {
+  var T = window.BOOK_TEXT,
+    C = Object.assign(
+      {
+        wpp: 150,
+        wppSingle: 96,
+        rate: 230,
+        forceSingle: false,
+        runHeads: ['MEDITATIONS', 'THE SECOND BOOK'],
+        notes: {},
+        startWord: 24,
+      },
+      window.BOOK_CFG || {},
+    );
+  var $ = function (s, r) {
+      return (r || document).querySelector(s);
+    },
+    $$ = function (s, r) {
+      return Array.prototype.slice.call((r || document).querySelectorAll(s));
+    };
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* words with paragraph + sentence ids */
+  var words = [],
+    sent = 0;
+  T.paras.forEach(function (p, pi) {
+    p.split(/\s+/).forEach(function (t, k) {
+      words.push({ t: t, p: pi, s: sent, open: k === 0 });
+      if (/[.!?]["”’)\]]*$/.test(t)) sent++;
+    });
+    sent++;
+  });
+  var N = words.length,
+    ci = Math.min(C.startWord, N - 1),
+    pages = [],
+    spread = 0,
+    single = false,
+    playing = false,
+    busy = false,
+    timer = null,
+    rate = +((location.search.match(/rate=(\d+)/) || [])[1] || C.rate);
+
+  var esc = function (s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  };
+  function focusIdx(w) {
+    var f = ((w.length - 1) / 2) | 0,
+      j;
+    for (j = f; j >= 0; j--) {
+      if (/[aeiou]/i.test(w[j])) {
+        f = j;
+        break;
+      }
+    }
+    return f;
+  }
+
+  function layout() {
+    var per = single ? C.wppSingle : C.wpp,
+      i = 0;
+    pages = [];
+    while (i < N) {
+      pages.push([i, Math.min(i + per, N)]);
+      i += per;
+    }
+  }
+  var perUnit = function () {
+    return single ? 1 : 2;
+  };
+  var spreadOfWord = function (i) {
+    var pg = pages.findIndex(function (r) {
+      return i >= r[0] && i < r[1];
+    });
+    return Math.floor(pg / perUnit());
+  };
+  var spreadCount = function () {
+    return Math.ceil(pages.length / perUnit());
+  };
+
+  function pageHTML(idx, side) {
+    if (idx < 0 || idx >= pages.length)
+      return '<div class="rh"></div><div class="txt"></div><div class="folio"></div>';
+    var r = pages[idx],
+      html = '',
+      last = -1;
+    for (var i = r[0]; i < r[1]; i++) {
+      var w = words[i];
+      if (w.p !== last) {
+        if (last !== -1) html += '</p>';
+        html +=
+          '<p class="' +
+          (w.open ? 'open' + (i === 0 ? ' first' : '') : 'cont') +
+          '">';
+        last = w.p;
+      }
+      html +=
+        '<span class="w' +
+        (i === ci ? ' cur' : '') +
+        '" data-i="' +
+        i +
+        '" data-s="' +
+        w.s +
+        '">' +
+        wordInner(i) +
+        '</span> ';
+    }
+    html += '</p>';
+    var rh = (C.runHeads || [])[idx % 2 === 0 ? 0 : 1] || '';
+    var note =
+      C.notes && C.notes[idx]
+        ? '<aside class="note">' + C.notes[idx] + '</aside>'
+        : '';
+    return (
+      '<div class="rh"><span>' +
+      rh +
+      '</span><span>' +
+      (C.runRight && idx % 2 === 0 ? C.runRight : '') +
+      '</span></div><div class="txt">' +
+      html +
+      '</div><div class="folio">' +
+      (idx + 1) +
+      '</div>' +
+      note +
+      (C.pageExtra ? C.pageExtra(idx) : '') +
+      '<i class="gutter"></i>'
+    );
+  }
+  function wordInner(i) {
+    var t = words[i].t;
+    if (i !== ci) return esc(t);
+    var f = focusIdx(t);
+    return (
+      esc(t.slice(0, f)) +
+      '<b class="f">' +
+      esc(t[f]) +
+      '</b>' +
+      esc(t.slice(f + 1))
+    );
+  }
+
+  var book, spEl, L, R, F, Ff, Fb;
+  function build() {
+    book = $('.book');
+    book.innerHTML =
+      '<div class="spread"><section class="pg L"></section><section class="pg R"></section><div class="flip"><div class="face front"><section class="pg"></section><i class="shade"></i></div><div class="face back"><section class="pg"></section><i class="shade"></i></div></div></div>';
+    spEl = $('.spread', book);
+    L = $('.pg.L', spEl);
+    R = $('.pg.R', spEl);
+    F = $('.flip', spEl);
+    Ff = $('.front .pg', F);
+    Fb = $('.back .pg', F);
+  }
+  function fill(el, idx, side) {
+    el.className =
+      'pg ' + side + (idx < 0 || idx >= pages.length ? ' blank' : '');
+    el.innerHTML = pageHTML(idx, side);
+  }
+  function show(k) {
+    spread = Math.max(0, Math.min(spreadCount() - 1, k));
+    var base = spread * perUnit();
+    if (single) {
+      fill(R, base, 'R');
+      L.innerHTML = '';
+    } else {
+      fill(L, base, 'L');
+      fill(R, base + 1, 'R');
+    }
+    mark();
+    info();
+  }
+  function mark() {
+    $$('.pg', spEl).forEach(function (pg) {
+      pg.classList.remove('has-cur');
+    });
+    var el = $('.w.cur', spEl);
+    if (!el) return;
+    var pg = el.closest('.pg');
+    pg.classList.add('has-cur');
+    var pr = pg.getBoundingClientRect(),
+      er = el.getBoundingClientRect(),
+      k = pr.width / pg.offsetWidth || 1;
+    pg.style.setProperty('--cy', (er.top - pr.top) / k + 'px');
+    pg.style.setProperty('--cx', (er.left - pr.left) / k + 'px');
+    pg.style.setProperty('--ch', er.height / k + 'px');
+    pg.style.setProperty('--cw', er.width / k + 'px');
+    var s = words[ci].s;
+    $$('.w', spEl).forEach(function (w) {
+      var i = +w.dataset.i;
+      w.classList.toggle('in-s', +w.dataset.s === s);
+      w.classList.toggle('read', i < ci);
+    });
+    spEl.style.setProperty(
+      '--sy',
+      er.top - spEl.getBoundingClientRect().top + 'px',
+    );
+  }
+  function setCur(i) {
+    var prev = $('.w.cur', spEl);
+    if (prev) {
+      prev.classList.remove('cur');
+      prev.innerHTML = esc(words[+prev.dataset.i].t);
+    }
+    ci = i;
+    var el = $('.w[data-i="' + i + '"]', spEl);
+    if (el) {
+      el.classList.add('cur');
+      el.innerHTML = wordInner(i);
+    }
+    mark();
+    head();
+    info();
+  }
+  function head() {
+    var t = words[ci].t,
+      f = focusIdx(t);
+    $$('[data-head]').forEach(function (h) {
+      h.innerHTML =
+        '<span class="hl">' +
+        esc(t.slice(0, f)) +
+        '</span><span class="hf">' +
+        esc(t[f]) +
+        '</span><span class="hr">' +
+        esc(t.slice(f + 1)) +
+        '</span>';
+    });
+  }
+  function info() {
+    var pg = pages.findIndex(function (r) {
+        return ci >= r[0] && ci < r[1];
+      }),
+      pu = perUnit(),
+      a = spread * pu + 1,
+      b = Math.min(a + pu - 1, pages.length);
+    var pct = Math.round((ci / (N - 1)) * 100);
+    $$('[data-pageinfo]').forEach(function (e) {
+      e.textContent =
+        (pu === 1 || a === b ? 'Page ' + a : 'Pages ' + a + '–' + b) +
+        ' of ' +
+        pages.length;
+    });
+    $$('[data-pct]').forEach(function (e) {
+      e.textContent = pct + '%';
+    });
+    $$('[data-left]').forEach(function (e) {
+      e.textContent =
+        '~' + Math.max(1, Math.round((N - ci) / (60000 / rate))) + ' min left';
+    });
+    $$('[data-progress]').forEach(function (e) {
+      e.style.setProperty('--p', pct / 100);
+    });
+    $$('[data-wordpos]').forEach(function (e) {
+      e.textContent = 'word ' + (ci + 1) + ' of ' + N;
+    });
+    $$('[data-chapinfo]').forEach(function (e) {
+      e.textContent = T.chapter;
+    });
+    $$('[data-rate]').forEach(function (e) {
+      e.textContent = Math.round((60000 / rate) * 1.0) + ' wpm';
+    });
+    $$('[data-scrub]').forEach(function (e) {
+      e.max = N - 1;
+      e.value = ci;
+    });
+    $$('[data-stack-l]').forEach(function (e) {
+      e.style.setProperty(
+        '--n',
+        Math.min(1, (spread * pu) / Math.max(1, pages.length - 1)),
+      );
+    });
+    $$('[data-stack-r]').forEach(function (e) {
+      e.style.setProperty(
+        '--n',
+        1 - Math.min(1, ((spread + 1) * pu) / Math.max(1, pages.length)),
+      );
+    });
+    $$('[data-prev]').forEach(function (e) {
+      e.disabled = spread === 0;
+    });
+    $$('[data-next]').forEach(function (e) {
+      e.disabled = spread >= spreadCount() - 1;
+    });
+  }
+
+  /* page turn: a leaf (front/back faces) rotating about the gutter */
+  function turn(dir, done) {
+    var to = spread + dir;
+    if (busy || to < 0 || to >= spreadCount()) {
+      done && done(false);
+      return;
+    }
+    var pu = perUnit(),
+      a = spread * pu,
+      na = to * pu;
+    if (reduced) {
+      show(to);
+      firstWord();
+      done && done(true);
+      return;
+    }
+    busy = true;
+    book.classList.add('turning');
+    var anim;
+    if (dir > 0) {
+      if (single) {
+        fill(R, na, 'R');
+      } else {
+        fill(R, na + 1, 'R');
+      }
+      fill(Ff, single ? a : a + 1, 'R');
+      fill(Fb, single ? -1 : na, 'L');
+      F.classList.add('on');
+      anim = F.animate(
+        [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(-180deg)' }],
+        {
+          duration: 820,
+          easing: 'cubic-bezier(.45,.05,.25,1)',
+          fill: 'forwards',
+        },
+      );
+    } else {
+      if (single) {
+        fill(R, a, 'R');
+      } else {
+        fill(L, na, 'L');
+        fill(R, a + 1, 'R');
+      }
+      fill(Ff, single ? na : na + 1, 'R');
+      fill(Fb, single ? -1 : a, 'L');
+      F.classList.add('on');
+      anim = F.animate(
+        [{ transform: 'rotateY(-180deg)' }, { transform: 'rotateY(0deg)' }],
+        {
+          duration: 820,
+          easing: 'cubic-bezier(.45,.05,.25,1)',
+          fill: 'forwards',
+        },
+      );
+    }
+    var sh = $$('.shade', F),
+      from = dir > 0 ? [0, 0.55, 0] : [0, 0.55, 0];
+    sh.forEach(function (s) {
+      s.animate(
+        [{ opacity: 0 }, { opacity: 0.8, offset: 0.5 }, { opacity: 0 }],
+        { duration: 820, easing: 'ease-in-out' },
+      );
+    });
+    var fz = location.search.match(/flipat=([\d.]+)/);
+    if (fz) {
+      anim.pause();
+      anim.currentTime = +fz[1] * 820;
+      $$('.shade', F).forEach(function (x) {
+        x.getAnimations().forEach(function (a) {
+          a.pause();
+          a.currentTime = +fz[1] * 820;
+        });
+      });
+      return;
+    }
+    anim.onfinish = function () {
+      anim.cancel();
+      F.classList.remove('on');
+      busy = false;
+      book.classList.remove('turning');
+      spread = to;
+      show(to);
+      if (!playing || !done) firstWord();
+      done && done(true);
+    };
+  }
+  function firstWord() {
+    var r = pages[spread * perUnit()];
+    if (
+      r &&
+      (ci < r[0] ||
+        ci >=
+          pages[
+            Math.min(pages.length - 1, spread * perUnit() + perUnit() - 1)
+          ][1])
+    )
+      setCur(r[0]);
+    else mark();
+    head();
+    info();
+  }
+
+  /* playback */
+  function tick() {
+    if (!playing) return;
+    var nx = ci + 1;
+    if (nx >= N) {
+      play(false);
+      return;
+    }
+    if (spreadOfWord(nx) !== spread) {
+      ci = nx;
+      head();
+      turn(1, function () {
+        setCur(nx);
+        timer = setTimeout(tick, rate);
+      });
+      return;
+    }
+    setCur(nx);
+    var w = words[nx].t,
+      d =
+        rate *
+        (w.length > 7 ? 1.25 : 1) *
+        (/[,;]$/.test(w) ? 1.5 : 1) *
+        (/[.!?]["”’)]?$/.test(w) ? 2.2 : 1);
+    timer = setTimeout(tick, d);
+  }
+  function play(on) {
+    playing = on === undefined ? !playing : on;
+    document.body.classList.toggle('playing', playing);
+    $$('[data-playlabel]').forEach(function (e) {
+      e.textContent = playing ? 'Pause' : 'Play';
+    });
+    clearTimeout(timer);
+    if (playing) {
+      if (spreadOfWord(ci) !== spread) {
+        show(spreadOfWord(ci));
+      }
+      timer = setTimeout(tick, 120);
+    }
+  }
+
+  /* themes */
+  var themes = ['dark', 'light', 'sepia'];
+  function theme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    $$('[data-themename]').forEach(function (e) {
+      e.textContent = t;
+    });
+    try {
+      localStorage.setItem('bv-theme', t);
+    } catch (e) {}
+    setTimeout(mark, 30);
+  }
+
+  /* chapters (mock table of contents for the book) */
+  var CH = [
+    'Book I',
+    'Book II',
+    'Book III',
+    'Book IV',
+    'Book V',
+    'Book VI',
+    'Book VII',
+    'Book VIII',
+    'Book IX',
+    'Book X',
+    'Book XI',
+    'Book XII',
+  ];
+  function chapters() {
+    $$('[data-toc-list]').forEach(function (ul) {
+      ul.innerHTML = CH.map(function (c, i) {
+        return (
+          '<li><button type="button" class="chbtn' +
+          (i === 1 ? ' on' : '') +
+          '"' +
+          (i === 1 ? ' aria-current="true"' : '') +
+          '><span class="chn">' +
+          (i + 1) +
+          '</span><span>' +
+          c +
+          '</span></button></li>'
+        );
+      }).join('');
+    });
+    $$('[data-rail]').forEach(function (r) {
+      r.innerHTML = CH.map(function (c, i) {
+        return (
+          '<i class="tick' + (i === 1 ? ' on' : '') + '" title="' + c + '"></i>'
+        );
+      }).join('');
+    });
+  }
+
+  function relayout() {
+    var s = C.forceSingle || matchMedia('(max-width: 760px)').matches;
+    var w = ci;
+    if (s === single && pages.length) return;
+    single = s;
+    layout();
+    spEl.classList.toggle('single', single);
+    show(spreadOfWord(w));
+    setCur(w);
+  }
+
+  function boot() {
+    build();
+    chapters();
+    layout();
+    var st = null;
+    try {
+      st = localStorage.getItem('bv-theme');
+    } catch (e) {}
+    var q = (location.search.match(/theme=(\w+)/) || [])[1];
+    theme(q || st || 'dark');
+    single = C.forceSingle || matchMedia('(max-width: 760px)').matches;
+    layout();
+    spEl.classList.toggle('single', single);
+    show(spreadOfWord(ci));
+    setCur(ci);
+    var qp = (location.search.match(/page=(\d+)/) || [])[1];
+    if (qp) {
+      show(+qp);
+      setCur(pages[spread * perUnit()][0] + 14);
+    }
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-act]');
+      if (!a) {
+        var pg = e.target.closest('.pg');
+        if (
+          pg &&
+          !busy &&
+          spEl.contains(pg) &&
+          !window.getSelection().toString()
+        ) {
+          var rect = spEl.getBoundingClientRect();
+          turn(
+            e.clientX < rect.left + rect.width * (single ? 0.35 : 0.5) ? -1 : 1,
+          );
+        }
+        return;
+      }
+      var k = a.dataset.act;
+      if (k === 'next') turn(1, function () {});
+      else if (k === 'prev') turn(-1, function () {});
+      else if (k === 'play') play();
+      else if (k === 'theme')
+        theme(
+          themes[
+            (themes.indexOf(
+              document.documentElement.getAttribute('data-theme'),
+            ) +
+              1) %
+              3
+          ],
+        );
+      else if (k === 'toc') {
+        var t = $('[data-toc]');
+        if (t) {
+          var o = t.classList.toggle('open');
+          a.setAttribute('aria-expanded', o);
+        }
+      } else if (k === 'faster') {
+        rate = Math.max(70, rate - 30);
+        info();
+      } else if (k === 'slower') {
+        rate = Math.min(600, rate + 30);
+        info();
+      } else if (k === 'collapse') {
+        var c = a.closest('[data-collapsible]');
+        c && c.classList.toggle('collapsed');
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (e.key === 'ArrowRight') turn(1, function () {});
+      else if (e.key === 'ArrowLeft') turn(-1, function () {});
+      else if (e.key === ' ') {
+        e.preventDefault();
+        play();
+      } else if (e.key === 't')
+        document.querySelector('[data-act=theme]') &&
+          document.querySelector('[data-act=theme]').click();
+      else if (e.key === 'Escape') {
+        var t = $('[data-toc].open');
+        t && t.classList.remove('open');
+      }
+    });
+    $$('[data-scrub]').forEach(function (s) {
+      s.addEventListener('input', function () {
+        play(false);
+        var w = +s.value;
+        show(spreadOfWord(w));
+        setCur(w);
+      });
+    });
+    matchMedia('(max-width: 760px)').addEventListener('change', relayout);
+    if (new URLSearchParams(location.search).has('play')) play(true);
+    window.__book = {
+      turn: turn,
+      play: play,
+      setCur: setCur,
+      state: function () {
+        return {
+          spread: spread,
+          ci: ci,
+          single: single,
+          pages: pages.length,
+          busy: busy,
+        };
+      },
+    };
+  }
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+
+</script>
+</body>
+</html>

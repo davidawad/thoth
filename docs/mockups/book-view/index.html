@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thoth book view mockups</title><link rel="stylesheet" href="assets/fonts.css">
+<style>
+/* ===== Thoth book-view mockups: shared base (tokens, book geometry, 3D leaf) ===== */
+:root {
+  /* Thoth chrome tokens (styles/tokens.css, dark = Thoth default) */
+  --bg: #1b1712;
+  --bg2: #241b14;
+  --bg3: #2c2119;
+  --fg: #ece1c9;
+  --muted: #b9aa8c;
+  --line: rgba(237, 227, 205, 0.12);
+  --line2: #8a7a63;
+  --accent: #b4903f;
+  --accent-ink: #1b1712;
+  --ring: #d8be85;
+  /* the book's own surface (designs override per theme) */
+  --paper: #2a2119;
+  --paper2: #231b14;
+  --ink: #ebe0c8;
+  --ink-dim: #8d806a;
+  --focus: #ff6b4a;
+  --hl: rgba(180, 144, 63, 0.22);
+  --hl-edge: #b4903f;
+  --shade: rgba(0, 0, 0, 0.45);
+  --desk: #14110d;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-chrome: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --font-legible: 'Atkinson Hyperlegible', Arial, sans-serif;
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  --bg: #f8f0dd;
+  --bg2: #ece0c6;
+  --bg3: #e3d5af;
+  --fg: #2a1e12;
+  --muted: #5a4b37;
+  --line: rgba(42, 30, 18, 0.16);
+  --line2: #8a7a63;
+  --accent: #7a5a1a;
+  --accent-ink: #f8f0dd;
+  --ring: #7a5a1a;
+  --paper: #fdfaf0;
+  --paper2: #f3ecd8;
+  --ink: #2a1e12;
+  --ink-dim: #9a8c74;
+  --focus: #c0261b;
+  --hl: rgba(180, 144, 63, 0.28);
+  --hl-edge: #7a5a1a;
+  --shade: rgba(60, 40, 10, 0.32);
+  --desk: #e6dab9;
+  color-scheme: light;
+}
+:root[data-theme='sepia'] {
+  --bg: #f4ecd8;
+  --bg2: #ece0c4;
+  --bg3: #ddcda2;
+  --fg: #3b2f1e;
+  --muted: #5f4f38;
+  --line: rgba(59, 47, 30, 0.18);
+  --line2: #8a7a63;
+  --accent: #8a5a2b;
+  --accent-ink: #fdf6e3;
+  --ring: #8a5a2b;
+  --paper: #f7edcf;
+  --paper2: #ecdfba;
+  --ink: #3b2f1e;
+  --ink-dim: #a08c68;
+  --focus: #b3261e;
+  --hl: rgba(138, 90, 43, 0.24);
+  --hl-edge: #8a5a2b;
+  --shade: rgba(70, 45, 15, 0.34);
+  --desk: #d9c79c;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-chrome);
+  min-height: 100svh;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* chrome atoms */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line2);
+  background: var(--bg2);
+  border-radius: 4px;
+}
+.btn:hover {
+  background: var(--bg3);
+}
+.btn.pri {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+.lbl {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ===== the book ===== */
+.fit {
+  width: min(
+    var(--maxw, 1020px),
+    100%,
+    calc((100svh - var(--chrome, 15rem)) * 1.42)
+  );
+  margin-inline: auto;
+}
+.fit.s1 {
+  width: min(
+    var(--maxw, 420px),
+    100%,
+    calc((100svh - var(--chrome, 12rem)) * 0.68)
+  );
+}
+.book {
+  position: relative;
+  width: 100%;
+  perspective: 2600px;
+}
+.spread {
+  position: relative;
+  width: 100%;
+  container-type: inline-size;
+  aspect-ratio: 1.42 / 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  transform-style: preserve-3d;
+}
+.spread.single {
+  grid-template-columns: 1fr;
+  aspect-ratio: 0.68 / 1;
+}
+.spread.single .pg.L {
+  display: none;
+}
+.pg {
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-chrome);
+  font-size: 1.62cqw;
+  line-height: 1.62;
+  padding: 6cqw 5.4cqw 5cqw;
+  display: flex;
+  flex-direction: column;
+}
+.single .pg {
+  font-size: 4.5cqw;
+  padding: 9cqw 8cqw 8cqw;
+}
+.pg.L {
+  background: linear-gradient(90deg, var(--paper) 78%, var(--paper2));
+  border-radius: 4px 0 0 4px;
+}
+.pg.R {
+  background: linear-gradient(270deg, var(--paper) 78%, var(--paper2));
+  border-radius: 0 4px 4px 0;
+}
+.single .pg.R {
+  background: var(--paper);
+  border-radius: 4px;
+}
+.pg .rh {
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.4em;
+}
+.pg .txt {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.pg .txt p {
+  margin: 0;
+  text-indent: 1.5em;
+  hyphens: auto;
+  text-align: left;
+}
+.pg .txt p.cont,
+.pg .txt p.first {
+  text-indent: 0;
+}
+.pg .folio {
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  text-align: center;
+  color: var(--ink-dim);
+  padding-top: 0.8em;
+}
+.w {
+  position: relative;
+  border-radius: 2px;
+}
+.w .f {
+  font-weight: inherit;
+  color: var(--focus);
+}
+.w.cur {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--focus) 16%, transparent);
+  box-shadow: 0 0 0 0.12em color-mix(in srgb, var(--focus) 16%, transparent);
+  font-weight: 600;
+}
+.pg.blank {
+  background: var(--paper);
+}
+
+/* 3D leaf */
+.flip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  transform-origin: 0 50%;
+  transform-style: preserve-3d;
+  z-index: 5;
+  display: none;
+  will-change: transform;
+}
+.single .flip {
+  width: 100%;
+}
+.flip.on {
+  display: block;
+}
+.flip .face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip .face.back {
+  transform: rotateY(180deg);
+}
+.flip .face .shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--shade), transparent 60%);
+  opacity: 0;
+}
+.flip .face.back .shade {
+  background: linear-gradient(270deg, var(--shade), transparent 60%);
+}
+.pg.L .gutter,
+.pg.R .gutter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6cqw;
+  pointer-events: none;
+}
+.pg.L .gutter {
+  right: 0;
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.2), transparent);
+}
+.pg.R .gutter {
+  left: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.2), transparent);
+}
+.single .gutter {
+  display: none;
+}
+
+/* playback head (single word, red focus letter on a fixed pivot) */
+.head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  font-family: var(--font-legible);
+  font-size: 2rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.head .hl {
+  text-align: right;
+}
+.head .hr {
+  text-align: left;
+}
+.head .hf {
+  color: var(--focus);
+  font-weight: 700;
+}
+.head .hl,
+.head .hr {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.wrap { max-width: 78rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0 0 .5rem; }
+.lede { max-width: 46rem; color: var(--muted); font-size: 1.1rem; margin: 0 0 1.2rem; }
+.bar { display: flex; gap: .6rem; align-items: center; margin-bottom: 1.6rem; flex-wrap: wrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1.2rem; }
+.card { display: flex; flex-direction: column; gap: .7rem; text-decoration: none; color: inherit; border: 1px solid var(--line); background: var(--bg2); border-radius: 5px; overflow: hidden; }
+.card:hover { border-color: var(--accent); }
+.card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: var(--bg3); display: block; }
+.card div { padding: 0 1rem 1rem; } .card h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; margin: 0 0 .3rem; }
+.card p { margin: 0; color: var(--muted); font-size: .98rem; line-height: 1.4; } .no { font-family: var(--font-mono); color: var(--accent); font-size: .8rem; margin-right: .3rem; }
+</style></head><body><div class="wrap">
+<h1>Book view: ten directions</h1>
+<p class="lede">The reading view as a rendered two-page book, separate from the landing page. The RSVP playback head is its own element and the current word's red focus letter shows in both the head and the book text. Each mockup turns pages (arrow keys or click a page), plays a demo word (space), and switches theme (T). Text is from Meditations (Marcus Aurelius, public domain).</p>
+<div class="bar"><button class="btn" type="button" data-act="theme">Theme: <span data-themename>dark</span></button><span class="lbl">applies to this gallery only</span></div>
+<div class="grid">
+<a class="card" href="01-study-desk.html"><img src="screenshots/01.png" alt="Screenshot of mockup 01" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">01</span> Study Desk</h2><p>Cream paper spread on a dark desk. Ribbon bookmark hangs from the head of the page being read, a soft highlighter band marks the sentence, and the playback head docks in a wide bar under the book.</p></div></a>
+<a class="card" href="02-vellum-night.html"><img src="screenshots/02.png" alt="Screenshot of mockup 02" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">02</span> Vellum Night</h2><p>Dark vellum pages for evening reading. A gold margin tick and a quiet underline follow the sentence; the playback head is a floating pill hung under the gutter; contents slide in from the left.</p></div></a>
+<a class="card" href="03-typeset.html"><img src="screenshots/03.png" alt="Screenshot of mockup 03" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">03</span> Typeset</h2><p>Editorial typesetting: drop cap, small-caps opening, running heads and folios. The playback head is a header strip across the top, a chapter rail runs down the left edge, and the current page gets a folded corner plus a highlighter band.</p></div></a>
+<a class="card" href="04-marginalia.html"><img src="screenshots/04.png" alt="Screenshot of mockup 04" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">04</span> Marginalia</h2><p>A reader’s manuscript: wide outer margins carry handwritten-style notes, a ruled margin line, a margin tick and a pen underline mark the passage. The playback head lives in a side panel beside the book.</p></div></a>
+<a class="card" href="05-e-ink.html"><img src="screenshots/05.png" alt="Screenshot of mockup 05" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">05</span> E-ink</h2><p>Flat, quiet, high-legibility pages in Atkinson Hyperlegible. Only the current word carries a heavy underline; the playback head sits in the bottom margin straddling the gutter; progress is a row of page dots.</p></div></a>
+<a class="card" href="06-phone-single.html"><img src="screenshots/06.png" alt="Screenshot of mockup 06" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">06</span> Phone Single Page</h2><p>Phone-first: one page at a time with the same ideas. The leaf turns from the left edge, tap the page edges to turn, the playback head and a big play button live in the thumb zone, and contents open as a bottom sheet.</p></div></a>
+<a class="card" href="07-spine-gauge.html"><img src="screenshots/07.png" alt="Screenshot of mockup 07" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">07</span> Spine Gauge</h2><p>The book itself shows progress: page-stack edges thicken and thin as you read, and a gauge runs down the gutter with a dot at the line you are on. A highlighter band marks the sentence; the playback head floats as a small picture-in-picture card in the lower left.</p></div></a>
+<a class="card" href="08-spotlight.html"><img src="screenshots/08.png" alt="Screenshot of mockup 08" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">08</span> Spotlight</h2><p>Focus mode: larger type, text already read and still to come recede, and only the current sentence is lit. The playback head is a slim full-width bar along the bottom edge; a hairline progress line runs across the top.</p></div></a>
+<a class="card" href="09-chapter-rail.html"><img src="screenshots/09.png" alt="Screenshot of mockup 09" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">09</span> Chapter Rail</h2><p>A navigator’s layout: a chapter rail down the left, a word scrubber under the book, and a ribbon plus a margin arrow that points at the line being read. The playback head is a lectern tab that slides up from the bottom edge and collapses to a tab.</p></div></a>
+<a class="card" href="10-folio-fold.html"><img src="screenshots/10.png" alt="Screenshot of mockup 10" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">10</span> Folio Fold</h2><p>The most physical one: the whole book tilts back on the desk with visible page-stack edges and deep curl shading on every turn. A dog-eared corner marks the page being read, a thin band marks the sentence, and a small reading-lamp card holds the playback head.</p></div></a>
+</div></div>
+<script>
+(function(){var th=['dark','light','sepia'];var s=null;try{s=localStorage.getItem('bv-theme')}catch(e){}
+function set(t){document.documentElement.setAttribute('data-theme',t);document.querySelector('[data-themename]').textContent=t;try{localStorage.setItem('bv-theme',t)}catch(e){}}
+set(s||'dark');document.addEventListener('click',function(e){if(e.target.closest('[data-act=theme]'))set(th[(th.indexOf(document.documentElement.getAttribute('data-theme'))+1)%3]);});})();
+</script></body></html>

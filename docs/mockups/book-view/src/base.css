@@ -1,0 +1,334 @@
+/* ===== Thoth book-view mockups: shared base (tokens, book geometry, 3D leaf) ===== */
+:root {
+  /* Thoth chrome tokens (styles/tokens.css, dark = Thoth default) */
+  --bg: #1b1712;
+  --bg2: #241b14;
+  --bg3: #2c2119;
+  --fg: #ece1c9;
+  --muted: #b9aa8c;
+  --line: rgba(237, 227, 205, 0.12);
+  --line2: #8a7a63;
+  --accent: #b4903f;
+  --accent-ink: #1b1712;
+  --ring: #d8be85;
+  /* the book's own surface (designs override per theme) */
+  --paper: #2a2119;
+  --paper2: #231b14;
+  --ink: #ebe0c8;
+  --ink-dim: #8d806a;
+  --focus: #ff6b4a;
+  --hl: rgba(180, 144, 63, 0.22);
+  --hl-edge: #b4903f;
+  --shade: rgba(0, 0, 0, 0.45);
+  --desk: #14110d;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-chrome: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --font-legible: 'Atkinson Hyperlegible', Arial, sans-serif;
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  --bg: #f8f0dd;
+  --bg2: #ece0c6;
+  --bg3: #e3d5af;
+  --fg: #2a1e12;
+  --muted: #5a4b37;
+  --line: rgba(42, 30, 18, 0.16);
+  --line2: #8a7a63;
+  --accent: #7a5a1a;
+  --accent-ink: #f8f0dd;
+  --ring: #7a5a1a;
+  --paper: #fdfaf0;
+  --paper2: #f3ecd8;
+  --ink: #2a1e12;
+  --ink-dim: #9a8c74;
+  --focus: #c0261b;
+  --hl: rgba(180, 144, 63, 0.28);
+  --hl-edge: #7a5a1a;
+  --shade: rgba(60, 40, 10, 0.32);
+  --desk: #e6dab9;
+  color-scheme: light;
+}
+:root[data-theme='sepia'] {
+  --bg: #f4ecd8;
+  --bg2: #ece0c4;
+  --bg3: #ddcda2;
+  --fg: #3b2f1e;
+  --muted: #5f4f38;
+  --line: rgba(59, 47, 30, 0.18);
+  --line2: #8a7a63;
+  --accent: #8a5a2b;
+  --accent-ink: #fdf6e3;
+  --ring: #8a5a2b;
+  --paper: #f7edcf;
+  --paper2: #ecdfba;
+  --ink: #3b2f1e;
+  --ink-dim: #a08c68;
+  --focus: #b3261e;
+  --hl: rgba(138, 90, 43, 0.24);
+  --hl-edge: #8a5a2b;
+  --shade: rgba(70, 45, 15, 0.34);
+  --desk: #d9c79c;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-chrome);
+  min-height: 100svh;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* chrome atoms */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line2);
+  background: var(--bg2);
+  border-radius: 4px;
+}
+.btn:hover {
+  background: var(--bg3);
+}
+.btn.pri {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+.lbl {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ===== the book ===== */
+.fit {
+  width: min(
+    var(--maxw, 1020px),
+    100%,
+    calc((100svh - var(--chrome, 15rem)) * 1.42)
+  );
+  margin-inline: auto;
+}
+.fit.s1 {
+  width: min(
+    var(--maxw, 420px),
+    100%,
+    calc((100svh - var(--chrome, 12rem)) * 0.68)
+  );
+}
+.book {
+  position: relative;
+  width: 100%;
+  perspective: 2600px;
+}
+.spread {
+  position: relative;
+  width: 100%;
+  container-type: inline-size;
+  aspect-ratio: 1.42 / 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  transform-style: preserve-3d;
+}
+.spread.single {
+  grid-template-columns: 1fr;
+  aspect-ratio: 0.68 / 1;
+}
+.spread.single .pg.L {
+  display: none;
+}
+.pg {
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-chrome);
+  font-size: 1.62cqw;
+  line-height: 1.62;
+  padding: 6cqw 5.4cqw 5cqw;
+  display: flex;
+  flex-direction: column;
+}
+.single .pg {
+  font-size: 4.5cqw;
+  padding: 9cqw 8cqw 8cqw;
+}
+.pg.L {
+  background: linear-gradient(90deg, var(--paper) 78%, var(--paper2));
+  border-radius: 4px 0 0 4px;
+}
+.pg.R {
+  background: linear-gradient(270deg, var(--paper) 78%, var(--paper2));
+  border-radius: 0 4px 4px 0;
+}
+.single .pg.R {
+  background: var(--paper);
+  border-radius: 4px;
+}
+.pg .rh {
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.4em;
+}
+.pg .txt {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.pg .txt p {
+  margin: 0;
+  text-indent: 1.5em;
+  hyphens: auto;
+  text-align: left;
+}
+.pg .txt p.cont,
+.pg .txt p.first {
+  text-indent: 0;
+}
+.pg .folio {
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  text-align: center;
+  color: var(--ink-dim);
+  padding-top: 0.8em;
+}
+.w {
+  position: relative;
+  border-radius: 2px;
+}
+.w .f {
+  font-weight: inherit;
+  color: var(--focus);
+}
+.w.cur {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--focus) 16%, transparent);
+  box-shadow: 0 0 0 0.12em color-mix(in srgb, var(--focus) 16%, transparent);
+  font-weight: 600;
+}
+.pg.blank {
+  background: var(--paper);
+}
+
+/* 3D leaf */
+.flip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  transform-origin: 0 50%;
+  transform-style: preserve-3d;
+  z-index: 5;
+  display: none;
+  will-change: transform;
+}
+.single .flip {
+  width: 100%;
+}
+.flip.on {
+  display: block;
+}
+.flip .face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip .face.back {
+  transform: rotateY(180deg);
+}
+.flip .face .shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--shade), transparent 60%);
+  opacity: 0;
+}
+.flip .face.back .shade {
+  background: linear-gradient(270deg, var(--shade), transparent 60%);
+}
+.pg.L .gutter,
+.pg.R .gutter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6cqw;
+  pointer-events: none;
+}
+.pg.L .gutter {
+  right: 0;
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.2), transparent);
+}
+.pg.R .gutter {
+  left: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.2), transparent);
+}
+.single .gutter {
+  display: none;
+}
+
+/* playback head (single word, red focus letter on a fixed pivot) */
+.head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  font-family: var(--font-legible);
+  font-size: 2rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.head .hl {
+  text-align: right;
+}
+.head .hr {
+  text-align: left;
+}
+.head .hf {
+  color: var(--focus);
+  font-weight: 700;
+}
+.head .hl,
+.head .hr {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
