@@ -27,6 +27,7 @@ import {
 import SpeedControl from './SpeedControl';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
+import { currentPosition, focusIndex, surroundingWords } from './wordRow';
 import type { AppSettings } from '../types';
 
 const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
@@ -62,8 +63,6 @@ interface ReaderState {
   currentReel: DisplayReel;
   tape: DisplayReel[];
   readingSpeed: number;
-  enableSurroundingReels: boolean;
-  displaySurroundingReels: boolean;
   scrollingEnabled: boolean;
   highlightColor: string;
   baseColorStop: string;
@@ -99,6 +98,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     // bind functions for correct setState context
     this.play = this.play.bind(this);
     this.pause = this.pause.bind(this);
+    this.playpause = this.playpause.bind(this);
     this.reset = this.reset.bind(this);
     this.handleGlobalKeyDown = this.handleGlobalKeyDown.bind(this);
     this.contentHandler = this.contentHandler.bind(this);
@@ -114,16 +114,17 @@ class Reader extends Component<ReaderProps, ReaderState> {
     this.highlightSelection = this.highlightSelection.bind(this);
     this.setGradient = this.setGradient.bind(this);
 
+    const tape = this.parse(this.props.content);
+
     this.state = {
       index: 0,
       paused: true,
       bodyText: this.props.content,
       editorState: this.buildEditorState(this.props.content),
-      currentReel: new DisplayReel('Press "Play".', -1, 1000),
-      tape: this.parse(this.props.content),
+      // Start on the first word (as after Reset), so the head is never empty.
+      currentReel: tape[0] ?? new DisplayReel('', -1, 1000),
+      tape,
       readingSpeed: READING_SPEED,
-      enableSurroundingReels: true,
-      displaySurroundingReels: true,
 
       scrollingEnabled: this.props.scrollingEnabled
         ? this.props.scrollingEnabled
@@ -421,19 +422,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
   // creates an array of DisplayReel Objects that contain the timing and other information for word display.
   timingBelt(words: DisplayReel[], str: string): DisplayReel[] {
-    let focus: number;
     const word = str;
     const len = str.length;
-
-    // focus point
-    // start in middle of word (default focus point)
-    // move left until you hit a vowel, then stop
-    for (let j = (focus = ((len - 1) / 2) | 0); j >= 0; j--) {
-      if (/[aeiou]/.test(str[j] ?? '')) {
-        focus = j;
-        break;
-      }
-    }
+    const focus = focusIndex(str);
 
     const speed = Number(this.props.readingSpeed);
 
@@ -643,7 +634,6 @@ class Reader extends Component<ReaderProps, ReaderState> {
       this.setState(
         {
           paused: false,
-          displaySurroundingReels: false,
         },
         () => {
           this.loop();
@@ -655,7 +645,6 @@ class Reader extends Component<ReaderProps, ReaderState> {
   pause(): void {
     this.setState({
       paused: true,
-      displaySurroundingReels: true,
     });
   }
 
@@ -742,13 +731,15 @@ class Reader extends Component<ReaderProps, ReaderState> {
     totalTimeEstimate /= 1000;
     remainingTimeEstimate /= 1000;
 
-    const prevReel = this.state.tape[this.state.index - 2];
-    const prevWord = prevReel !== undefined ? prevReel.text : '';
-
-    const postInd = this.state.index === 0 ? 1 : this.state.index;
-
-    const postReel = this.state.tape[postInd];
-    const postWord = postReel !== undefined ? postReel.text : '';
+    const position = currentPosition(
+      this.state.tape,
+      this.state.currentReel,
+      this.state.index,
+    );
+    const { before: prevWord, after: postWord } = surroundingWords(
+      this.state.tape,
+      position,
+    );
 
     // scrolling text on render
     if (!this.state.paused && this.state.scrollingEnabled) {
@@ -767,48 +758,53 @@ class Reader extends Component<ReaderProps, ReaderState> {
     }
 
     const statsBlock = (
-      <div className="card bg-base-200 p-4 gap-1 text-sm">
-        <h3 className="font-semibold mb-1">Stats</h3>
-        <p>Age estimate: {Math.round(this.state.ageEstimate)} years</p>
-        <p>
-          Reading: {this.state.index} / {this.state.tape.length} words
-        </p>
-        <p>
-          {utils.formatSeconds(totalTimeEstimate - remainingTimeEstimate)} /{' '}
-          {utils.formatSeconds(totalTimeEstimate)} seconds
-        </p>
-      </div>
+      <section className="readerStats" aria-label="Reading stats">
+        <h3>Stats</h3>
+        <dl>
+          <div>
+            <dt>Age estimate</dt>
+            <dd>{Math.round(this.state.ageEstimate)} years</dd>
+          </div>
+          <div>
+            <dt>Reading</dt>
+            <dd>
+              {this.state.index} / {this.state.tape.length} words
+            </dd>
+          </div>
+          <div className="readerStatsWide">
+            <dt>Time</dt>
+            <dd>
+              {utils.formatSeconds(totalTimeEstimate - remainingTimeEstimate)} /{' '}
+              {utils.formatSeconds(totalTimeEstimate)} seconds
+            </dd>
+          </div>
+        </dl>
+      </section>
     );
 
     return (
       <div className="Reader">
-        <div className="readerWordRow">
-          <span className="readerSurroundingWord readerSurroundingWord--before">
-            {this.state.enableSurroundingReels &&
-            this.state.displaySurroundingReels
-              ? prevWord
-              : ''}
-          </span>
-          <PlaybackHead currentReel={this.state.currentReel} />
-          <span className="readerSurroundingWord readerSurroundingWord--after">
-            {this.state.enableSurroundingReels &&
-            this.state.displaySurroundingReels
-              ? postWord
-              : ''}
-          </span>
-        </div>
+        <div className="readerCard">
+          <PlaybackHead
+            currentReel={this.state.currentReel}
+            before={prevWord}
+            after={postWord}
+          />
 
-        <div className="readerControlsRow flex flex-wrap justify-center gap-2 my-4">
-          <button className="btn" onClick={this.play}>
-            Play
-          </button>
-          <button className="btn" onClick={this.pause}>
-            Pause
-          </button>
-          <button className="btn" onClick={this.reset}>
-            Reset
-          </button>
-          {this.renderSpeedControl()}
+          <div className="readerControlsRow">
+            <button
+              type="button"
+              className="btn btn-primary readerPlay"
+              onClick={this.playpause}
+              aria-keyshortcuts="Space"
+            >
+              {this.state.paused ? 'Play' : 'Pause'}
+            </button>
+            <button type="button" className="btn" onClick={this.reset}>
+              Reset
+            </button>
+            {this.renderSpeedControl()}
+          </div>
         </div>
 
         <LoadingBar

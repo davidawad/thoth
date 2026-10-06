@@ -11,36 +11,116 @@
   border: 0;
 }
 
+/* The playback head: [before] [word on a fixed pivot] [after]. The focus
+ * letter sits at the exact centre of the middle column, so neighbouring words
+ * of any length never shift it. Content face (Atkinson Hyperlegible) via
+ * .Reader; the focus letter is bold + red (--color-error, same token the
+ * palette picker themes). */
+.playbackHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 9em) minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 1rem;
+  width: 100%;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
 .Reader-canvas {
-  font-size: 40px;
-  line-height: 1.5;
-  /* `border` has no color set, so it uses currentColor (the theme's
-   * base-content) - keep it that way so it tracks light/dark/sepia. */
-  border: 2px solid;
-  width: 21rem;
-  display: inline-block;
-  /* Prevent the flex row below from shrinking this below its set width -
-   * flex items default to flex-shrink: 1, so without this, three
-   * fixed-width boxes wider than the row's available space all get
-   * proportionally squeezed, silently un-fixing every width set here. */
-  flex-shrink: 0;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-radius: 0.25rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  color: var(--color-fg);
+}
+
+/* Small ticks above and below the pivot letter. */
+.Reader-canvas::before,
+.Reader-canvas::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 0.18em;
+  background: var(--color-border-strong);
+}
+.Reader-canvas::before {
+  top: -0.3em;
+}
+.Reader-canvas::after {
+  bottom: -0.3em;
+}
+
+.playbackHeadPre {
+  text-align: right;
+  overflow: hidden;
+}
+.playbackHeadPost {
+  text-align: left;
+  overflow: hidden;
+}
+.playbackHeadHot {
+  color: var(--color-error);
+  font-weight: 700;
+}
+.playbackHeadWhole {
+  grid-column: 1 / -1;
   text-align: center;
 }
 
-/* Row holding the previous/current/next words. Centered as a whole, with
- * the before/after words each given a fixed-width reserved box (below) so
- * that neither one's actual length ever shifts .Reader-canvas's position -
- * a shorter or longer neighboring word changes how much of its own box it
- * fills, not the box's width. */
-.readerWordRow {
+/* Quiet context words: smaller and dimmed, hugging the head. */
+.playbackHeadSide {
+  font-size: 0.38em;
+  color: var(--color-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.playbackHeadSide--before {
+  text-align: right;
+}
+.playbackHeadSide--after {
+  text-align: left;
+}
+
+/* Phone width: no room beside the word, so the context words drop to a
+ * line under it, one at each edge. */
+@media (max-width: 40rem) {
+  .playbackHead {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    font-size: 2.1rem;
+    row-gap: 0.9rem;
+  }
+  .Reader-canvas {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: min(9em, 100%);
+    justify-self: center;
+  }
+  .playbackHeadSide {
+    font-size: 0.5em;
+    grid-row: 2;
+  }
+  .playbackHeadSide--before {
+    grid-column: 1;
+    text-align: left;
+  }
+  .playbackHeadSide--after {
+    grid-column: 2;
+    text-align: right;
+  }
+}
+
+.readerControlsRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  gap: 1rem;
+  gap: 0.6rem 0.8rem;
+  margin: 1rem 0;
+}
+.readerPlay {
+  min-width: 5.5rem;
 }
 
 .Reader-word-content {
@@ -67,10 +147,6 @@
   text-align: center;
 }
 
-.red {
-  color: red;
-}
-
 .editor {
   /* see the note in src/App.css about why `@apply` isn't used here -
    * `currentColor` still tracks the active theme via inherited text color. */
@@ -83,33 +159,6 @@
   line-height: var(--line-height-body, 1.5);
   margin-left: auto;
   margin-right: auto;
-}
-
-.readerSurroundingWord {
-  font-size: 1em;
-  /* Fixed reserved width, not sized to content - this is what actually
-   * keeps .Reader-canvas from shifting left/right as neighboring words
-   * change length. An earlier approach padded the word text itself with
-   * unicode whitespace characters up to a fixed *count*, which only
-   * produces a fixed *width* in a monospace font - this app now uses the
-   * proportional Atkinson Hyperlegible font everywhere (for legibility),
-   * so that count-based padding no longer reserved a consistent width and
-   * the pivot word visibly drifted. A real CSS box width works regardless
-   * of font. */
-  display: inline-block;
-  width: 8rem;
-  flex-shrink: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.readerSurroundingWord--before {
-  text-align: right;
-}
-
-.readerSurroundingWord--after {
-  text-align: left;
 }
 
 .hide .settings-close {
