@@ -6,9 +6,9 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --webpack -p 4817",
     "build": "next build --webpack",
-    "start": "serve out -l 3000",
+    "start": "serve out -l 4817",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",

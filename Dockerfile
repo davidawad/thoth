@@ -26,7 +26,7 @@ COPY --from=builder /app/node_modules ./node_modules
 # node:alpine already ships an unprivileged "node" user - run as that
 # instead of root (flagged by Semgrep's dockerfile.security.missing-user).
 USER node
-EXPOSE 3000
+EXPOSE 4817
 CMD ["pnpm", "start"]
 
 # Stage 4: Tester image
