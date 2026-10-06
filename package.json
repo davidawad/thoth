@@ -21,7 +21,7 @@
     "commitlint": "commitlint --edit",
     "release": "semantic-release",
     "dockerbuild": "bash dockerbuild.sh",
-    "postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs"
+    "postinstall": "mkdir -p public && cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs"
   },
   "dependencies": {
     "@babel/core": "8.0.1",

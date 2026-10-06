@@ -1,0 +1,17 @@
+# Keep the Docker build context small and the layer cache stable: none of this
+# is needed to build or run the app image.
+.git
+.worktrees
+.claude
+.agents
+node_modules
+.next
+out
+coverage
+reports
+docs
+fuzz
+bench
+bombadil
+*.log
+.DS_Store
