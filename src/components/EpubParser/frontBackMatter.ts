@@ -178,3 +178,80 @@ export function isTocListingPage(lines: readonly string[]): boolean {
 export function isBlankPage(pageText: string): boolean {
   return pageText.trim().length === 0;
 }
+
+// ---------------------------------------------------------------------------
+// Title page + table of contents at the START of a section. Gutenberg (and
+// most EPUBs) open with "TITLE / By Author / Translated by X / Contents /
+// <one line per chapter>", often fused onto the first real chapter. These are
+// block-level (paragraphs split by a blank line, see extractBlocks).
+// ---------------------------------------------------------------------------
+
+// "By Plato" (capitalised name; "By the sea" is a heading, not a byline) and
+// the usual credit lines.
+const AUTHOR_BYLINE_RE = /^[Bb]y\s+[A-Z]/;
+const CREDIT_BYLINE_RE =
+  /^(?:(?:translated|edited|illustrated|compiled) by|(?:with an )?introduction by)\s+\S/i;
+const isByline = (s: string): boolean =>
+  AUTHOR_BYLINE_RE.test(s) || CREDIT_BYLINE_RE.test(s);
+const CONTENTS_HEADING_RE = /^(?:table of )?contents\.?$/i;
+// A title-page / contents line is short; real prose paragraphs are longer.
+const LEADING_LINE_MAX_WORDS = 14;
+// How far into a section a title page may reach.
+const TITLE_BLOCK_MAX_LINES = 6;
+
+const wordsIn = (s: string): number => s.split(/\s+/).filter(Boolean).length;
+const isShortLine = (s: string): boolean =>
+  wordsIn(s) <= LEADING_LINE_MAX_WORDS;
+
+/** Index just past the title block (title lines + "By ..." bylines), or 0. */
+function titleBlockEnd(paras: readonly string[]): number {
+  // The title block ends where the contents heading begins (a contents ENTRY
+  // such as "INTRODUCTION BY MRS X." must not be mistaken for a credit line).
+  const contents = paras.findIndex((p) => CONTENTS_HEADING_RE.test(p));
+  const limit =
+    contents >= 0
+      ? Math.min(contents, TITLE_BLOCK_MAX_LINES)
+      : TITLE_BLOCK_MAX_LINES;
+  const window = paras.slice(0, limit);
+  const lastByline = window.reduce(
+    (found, p, i) => (isByline(p) ? i : found),
+    -1,
+  );
+  if (lastByline < 0) {
+    return 0;
+  }
+  return window.slice(0, lastByline + 1).every(isShortLine)
+    ? lastByline + 1
+    : 0;
+}
+
+/** Index just past a "Contents" heading and the run of short entries after it. */
+function contentsEnd(paras: readonly string[], from: number): number {
+  const head = paras
+    .slice(from, from + 3)
+    .findIndex((p) => CONTENTS_HEADING_RE.test(p));
+  if (head < 0) {
+    return from;
+  }
+  let end = from + head + 1;
+  while (end < paras.length && isShortLine(paras[end] ?? '')) {
+    end++;
+  }
+  return end;
+}
+
+/**
+ * Drops a leading title page ("PHAEDO / By Plato / Translated by ...") and
+ * contents listing from a paragraph-preserving section text. Conservative:
+ * with no byline and no "Contents" heading near the top the text is returned
+ * unchanged, and prose paragraphs (long lines) always end the dropped run.
+ */
+export function stripTitlePageAndContents(text: string): string {
+  const paras = text
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const afterTitle = titleBlockEnd(paras);
+  const end = contentsEnd(paras, afterTitle);
+  return end === 0 ? text : paras.slice(end).join('\n\n');
+}

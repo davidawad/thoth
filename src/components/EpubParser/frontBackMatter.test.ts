@@ -3,6 +3,7 @@ import fc from 'fast-check';
 import {
   stripGutenbergBoilerplate,
   isSkippableFrontOrBackMatter,
+  stripTitlePageAndContents,
 } from './frontBackMatter';
 
 describe('stripGutenbergBoilerplate', () => {
@@ -122,5 +123,36 @@ describe('isSkippableFrontOrBackMatter', () => {
         expect(() => isSkippableFrontOrBackMatter(input)).not.toThrow();
       }),
     );
+  });
+});
+
+describe('stripTitlePageAndContents', () => {
+  const prose =
+    'After an interval of some months or years, the tale of the last hours of Socrates is narrated to Echecrates and other Phliasians by Phaedo the beloved disciple.';
+
+  it('drops a title page, byline and contents run before real prose', () => {
+    const text = [
+      'PHAEDO',
+      'By Plato',
+      'Translated by Benjamin Jowett',
+      'Contents',
+      'INTRODUCTION.',
+      'PHAEDO',
+      prose,
+    ].join('\n\n');
+    expect(stripTitlePageAndContents(text)).toBe(prose);
+  });
+
+  it('empties a section that is only a title page and contents', () => {
+    const text =
+      'MEDITATIONS\n\nBy Marcus Aurelius\n\nCONTENTS.\n\nBOOK I\n\nBOOK II';
+    expect(stripTitlePageAndContents(text)).toBe('');
+  });
+
+  it('leaves ordinary text, even with a short first line, untouched', () => {
+    const text = `Chapter One\n\n${prose}`;
+    expect(stripTitlePageAndContents(text)).toBe(text);
+    const byInText = `By the sea\n\n${prose}`;
+    expect(stripTitlePageAndContents(byInText)).toBe(byInText);
   });
 });

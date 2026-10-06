@@ -8,6 +8,7 @@ import { countWords } from './bookModel';
 import {
   isSkippableFrontOrBackMatter,
   stripGutenbergBoilerplate,
+  stripTitlePageAndContents,
 } from '../EpubParser/frontBackMatter';
 
 export interface RawSection {
@@ -132,7 +133,7 @@ export function buildChapters(
 ): Chapter[] {
   // Boilerplate off every section; '' marks a dropped (junk/empty) section.
   const texts = rawSections.map((s) => {
-    const t = stripGutenbergBoilerplate(s.text);
+    const t = stripTitlePageAndContents(stripGutenbergBoilerplate(s.text));
     return t.length > 0 && !isSkippableFrontOrBackMatter(t.replace(/\s+/g, ' '))
       ? t
       : '';

@@ -108,17 +108,23 @@ describe('scoreSentences', () => {
     expect(scoreSentences('').size).toBe(0);
   });
 
-  it('scores a whole book of sentences quickly', () => {
+  // Guards against an accidental quadratic algorithm, not against a slow
+  // machine: a wall-clock limit tight enough to catch a regression on the
+  // old 6k-sentence input flaked under CI load. Instead the input is large
+  // enough (30k sentences) that a quadratic scorer would need minutes, and the
+  // bound (60s) is so generous that only that kind of regression can trip it.
+  it('scores a very large book of sentences without blowing up', () => {
+    const count = 30000;
     const book = Array.from(
-      { length: 6000 },
+      { length: count },
       (_, i) => `Sentence number ${i} is about ${'word '.repeat(i % 12)}here.`,
     ).join(' ');
     const started = Date.now();
     const scores = scoreSentences(book);
 
-    expect(scores.size).toBeGreaterThan(1000);
-    expect(Date.now() - started).toBeLessThan(2000);
-  });
+    expect(scores.size).toBe(count);
+    expect(Date.now() - started).toBeLessThan(60000);
+  }, 120000);
 });
 
 describe('difficultyColor', () => {
