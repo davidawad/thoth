@@ -66,7 +66,7 @@ Only US 8,903,174 and its continuation applications (US 2017/0229101, 2019/03258
 
 - US 2017/0229101 A1 (15/433,983): continuation of 14/542,409 (abandoned), itself a continuation of 8,903,174. Same abstract as the 8,903,174 text I read. Claim 1 begins "A method of displaying text on an electronic display" with the same fixed-display-location limitation; I did not read the other independent claims.
 - US 2019/0325848 A1 (16/455,700, division of 15/433,983): title changed to "Electronic display of serial text using optimal recognition positions". Claim 86 as published: "the respective sets of words comprising no more than 20 characters in length ... serially displaying ... such that an optimal recognition position of at least some display elements ... is displayed at a substantially same location on the electronic display, referred to as a fixed display location." Claims 94-96 repeat the 2nd/3rd/4th character rule by word length.
-- US 2020/0193939 A1 and US 2021/0312890 A1: continuations of 16/455,700 and (per Google) of 17/202,218 respectively; same title and abstract family. Claims not read beyond the front page.
+- US 2020/0193939 A1 (16/716,286) is a continuation of 16/455,700, and US 2021/0312890 A1 (17/202,218) is a continuation of 16/716,286 (front page of the 2021/0312890 PDF: "Continuation of application No. 16/716,286 ... which is a continuation of application No. 16/455,700"); same title and abstract family. Claims not read beyond the front page.
 - These were abandoned applications; I did not find a granted patent from them.
 
 ### US 9,483,109 B2 - Methods and systems for displaying text using RSVP
