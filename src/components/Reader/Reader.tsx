@@ -65,6 +65,8 @@ interface ReaderState {
   index: number;
   paused: boolean;
   bodyText: string;
+  // What the tape was parsed from: bodyText, or its speed-writing rewrite.
+  displayText: string;
   editorState: EditorState;
   currentReel: DisplayReel;
   tape: DisplayReel[];
@@ -127,6 +129,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
       index: 0,
       paused: true,
       bodyText: this.props.content,
+      displayText: this.props.content,
       editorState: this.buildEditorState(this.props.content),
       // Start on the first word (as after Reset), so the head is never empty.
       currentReel: tape[0] ?? new DisplayReel('', -1, 1000),
@@ -272,7 +275,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     // Moving the wpm slider re-times the words but must not lose your place
     // (or restart the page): rebuild the tape and keep the index.
     if (changed.length === 1 && changed[0] === 'readingSpeed') {
-      this.setState({ tape: this.parse(this.state.bodyText) });
+      this.setState({ tape: this.parse(this.state.displayText) });
       return;
     }
 
@@ -433,6 +436,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     this.setState(
       {
         bodyText: sourceText,
+        displayText: displayText,
         tape: arr,
         speedWritingSubstitutions: substitutions,
         speedWritingActive: speedWritingActive,

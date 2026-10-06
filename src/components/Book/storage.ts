@@ -286,14 +286,32 @@ export async function removeBook(id: string): Promise<BookMeta[]> {
   return kept;
 }
 
-/** Wipes every book and every saved reading preference this app wrote. */
+// Every localStorage key this app writes starts with "thoth." or "thoth-"
+// (position, wpm, theme, palette, text size, dim, heat map, ...).
+const APP_KEY_PATTERN = /^thoth[.-]/;
+
+/** Wipes every book and every saved setting this app wrote in this browser. */
 export async function clearAllData(): Promise<void> {
   try {
     await tx('readwrite', (s) => s.clear());
   } catch {
     // nothing to clear / unavailable
   }
-  for (const k of [LS_CURRENT_BOOK, LS_POSITIONS, LS_LIBRARY, LS_WPM]) {
-    lsSet(k, null);
+  try {
+    const keys: string[] = [];
+
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+
+      if (key !== null && APP_KEY_PATTERN.test(key)) {
+        keys.push(key);
+      }
+    }
+
+    for (const key of keys) {
+      lsSet(key, null);
+    }
+  } catch {
+    // storage unavailable - nothing was saved to clear.
   }
 }
