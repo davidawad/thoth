@@ -3,13 +3,6 @@
  * uses Fraunces / Newsreader / IBM Plex Mono; the page text itself is
  * Atkinson Hyperlegible (--font-body) via the Reader. */
 
-.book-booting {
-  padding: 4rem 0;
-  text-align: center;
-  color: var(--color-fg-muted);
-  font-family: var(--font-chrome);
-}
-
 /* ---- Landing / hero ---------------------------------------------------- */
 .book-hero {
   margin-bottom: 2.5rem;

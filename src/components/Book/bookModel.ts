@@ -296,3 +296,15 @@ export function formatProgress(p: Progress): string {
   }
   return `Chapter ${p.chapterNumber} of ${p.chapterTotal} · page ${p.pageNumber} of ${p.pageTotal} · ${p.percent}% · ${formatTimeLeft(p.minutesLeft)}`;
 }
+
+/**
+ * The book the landing page's Continue card offers: the one read last (its
+ * saved id) when it is still in the library, otherwise the newest entry
+ * (the library index is kept newest first), otherwise none.
+ */
+export function pickContinueBook(
+  library: readonly BookMeta[],
+  currentId: string | null,
+): BookMeta | null {
+  return library.find((m) => m.id === currentId) ?? library[0] ?? null;
+}

@@ -7,6 +7,7 @@ import {
   formatTimeLeft,
   globalPageIndex,
   layoutBook,
+  pickContinueBook,
   positionOfGlobalPage,
   splitIntoPages,
   stepPosition,
@@ -182,5 +183,32 @@ describe('progress math', () => {
     expect(
       formatProgress(computeProgress(layout, { chapter: 1, page: 0 }, 100)),
     ).toBe('Chapter 2 of 2 · page 5 of 8 · 50% · ~4m left');
+  });
+});
+
+describe('pickContinueBook', () => {
+  const meta = (id: string) => ({
+    id,
+    title: id,
+    author: '',
+    language: '',
+    format: 'epub' as const,
+    addedAt: 0,
+    totalWords: 1,
+    chapterCount: 1,
+  });
+  const lib = [meta('new'), meta('old')];
+
+  it('offers the book that was read last when it is in the library', () => {
+    expect(pickContinueBook(lib, 'old')?.id).toBe('old');
+  });
+
+  it('falls back to the newest entry when the saved id is gone or unset', () => {
+    expect(pickContinueBook(lib, 'missing')?.id).toBe('new');
+    expect(pickContinueBook(lib, null)?.id).toBe('new');
+  });
+
+  it('is null for an empty library', () => {
+    expect(pickContinueBook([], 'x')).toBeNull();
   });
 });

@@ -8,11 +8,9 @@ import { ingestFile } from './ingest';
 import {
   clearAllData,
   getBook,
-  loadCurrentBookId,
   loadLibraryIndex,
   putBook,
   removeBook,
-  saveCurrentBookId,
 } from './storage';
 
 const SAVE_FAIL =
@@ -23,9 +21,8 @@ const messageFor = (e: unknown): string =>
     ? e.message
     : "This file couldn't be read. Try a different PDF or EPUB.";
 
-/** Book + library state: resume on load, ingest, open, remove, clear. */
+/** Book + library state: ingest, open, close, remove, clear (never auto-opens). */
 export function useLibrary(onClearedAll: () => void) {
-  const [booting, setBooting] = useState(true);
   const [book, setBook] = useState<Book | null>(null);
   const [library, setLibrary] = useState<BookMeta[]>([]);
   const [busy, setBusy] = useState<IngestProgress | null>(null);
@@ -35,27 +32,10 @@ export function useLibrary(onClearedAll: () => void) {
 
   const refresh = useCallback(() => setLibrary(loadLibraryIndex()), []);
 
-  // Resume: reopen the last book from IndexedDB.
+  // The landing page never opens a saved book by itself: on load we only read
+  // the library index, and the Continue card (pickContinueBook) offers the book.
   useEffect(() => {
-    let cancelled = false;
     refresh();
-    const id = loadCurrentBookId();
-    const restore = id ? getBook(id) : Promise.resolve(null);
-    restore.then((b) => {
-      if (cancelled) {
-        return;
-      }
-      if (b) {
-        setBook(b);
-      } else if (id) {
-        saveCurrentBookId(null);
-        setNotice('Your last book could not be restored from this browser.');
-      }
-      setBooting(false);
-    });
-    return () => {
-      cancelled = true;
-    };
   }, [refresh]);
 
   const ingest = useCallback(
@@ -123,8 +103,8 @@ export function useLibrary(onClearedAll: () => void) {
     [refresh],
   );
 
+  // Keeps the current-book id on purpose: it is what the Continue card offers.
   const close = useCallback((): void => {
-    saveCurrentBookId(null);
     setBook(null);
   }, []);
 
@@ -138,7 +118,6 @@ export function useLibrary(onClearedAll: () => void) {
   }, [refresh, onClearedAll]);
 
   return {
-    booting,
     book,
     library,
     busy,

@@ -58,11 +58,7 @@ export default function ReadingWorkspace({
       <div className="hidden lg:block" aria-hidden="true" />
 
       <main id="main-content" className="min-w-0">
-        {lib.booting ? (
-          <p className="book-booting" role="status">
-            Opening your library…
-          </p>
-        ) : book && layout && progress ? (
+        {book && layout && progress ? (
           <BookView
             book={book}
             layout={layout}
