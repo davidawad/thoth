@@ -7,3 +7,4 @@ node render.mjs 02-your-eyes-can-rest 02-your-eyes-can-rest/your-eyes-can-rest-1
 node render.mjs 03-open-the-book 03-open-the-book/open-the-book-16x9.mp4
 node render.mjs 04-drop-any-book 04-drop-any-book/drop-any-book-16x9.mp4
 node render.mjs 05-real-app 05-real-app/see-it-run-16x9.mp4
+# audio: node audio/build-audio.mjs (see README)
