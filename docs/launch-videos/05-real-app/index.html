@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Thoth 1.0 - See it run</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../shared/base.css">
+<style>
+#cam{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;will-change:transform}
+#cam img{position:absolute;left:0;top:0;width:1920px;height:1080px}
+#ring{position:absolute;border:3px solid #b4903f;border-radius:14px;box-shadow:0 0 30px rgba(180,144,63,.6);opacity:0}
+#cap{position:absolute;left:0;right:0;top:922px;display:flex;justify-content:center}
+#cap span{background:rgba(27,23,18,.92);border:1px solid rgba(180,144,63,.5);color:var(--fg);font-family:var(--display);font-size:40px;padding:14px 34px;border-radius:12px}
+#tag{position:absolute;left:36px;top:34px;font-size:15px;color:var(--fg);background:rgba(27,23,18,.9);padding:10px 16px;border-radius:6px;border:1px solid rgba(180,144,63,.5)}
+#tag i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--focus);margin-right:10px}
+#dip{position:absolute;inset:0;background:#1b1712;opacity:0}
+</style></head><body><div id="stage" style="background:#1b1712">
+<div id="cam"><img id="img" alt=""><div id="ring"></div></div>
+<div id="dip"></div><div id="tag" class="mono"><i></i>Screen capture of the running app</div><div id="cap"><span></span></div>
+</div>
+<script src="capture/index.js"></script>
+<script src="../shared/lib.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+// output-time -> source-time segments [outStart, outEnd, srcStart]  (1:1 speed)
+const SEG=[[0,6.2,.2,1],[6.2,13.7,7.2,1],[13.7,16.1,17.0,.3],[16.1,20.4,18.6,1]];
+const FADE=20.8, EC=FADE+.4, DUR=EC+4.4;
+const srcT=t=>{for(const [a,b,s,v] of SEG)if(t<b)return s+(t-a)*v;const l=SEG.at(-1);return l[2]+(l[1]-l[0])*l[3]};
+const frameAt=s=>{const a=CAP_T;let lo=0,hi=a.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(a[m]<=s)lo=m;else hi=m-1}return lo};
+// camera keyframes: [t, scale, centerX, centerY]
+const CAM=[[0,1,960,540],[.9,1,960,540],[2.0,2.0,780,290],[5.2,2.0,780,290],[6.0,1,960,540],[6.2,1,960,540],
+  [8.5,1,960,540],[9.6,1.0,960,540],[13.5,1.15,960,430],[13.7,1,960,540],[20.8,1,960,540]];
+const camAt=t=>{let i=0;while(i<CAM.length-2&&t>=CAM[i+1][0])i++;const a=CAM[i],b=CAM[i+1];const k=T.io(T.seg(t,a[0],b[0]===a[0]?b[0]+1e-6:b[0]));return [0,1,2,3].map(j=>j?a[j]+(b[j]-a[j])*k:0)};
+const CAPS=[[.4,1.9,'Captured from the running app.'],[2.6,5.9,'One word at a time. The red letter is where your eye rests.'],[7.6,9.6,'Open a built-in public-domain book.'],
+  [10.0,13.4,'The current sentence glows while the playback head runs.'],[13.9,16.0,'A two-page spread with a 3D page turn.'],[16.5,20.3,'Light, sepia and dark themes.']];
+const capEl=$('cap');
+let lastF=-1;
+async function update(t){
+  const s=srcT(t), f=frameAt(s);
+  if(f!==lastF){lastF=f;const im=$('img');im.src='capture/f'+String(f).padStart(5,'0')+'.jpg';await im.decode().catch(()=>{})}
+  const [_,sc,cx,cy]=camAt(t);
+  $('cam').style.transform=`translate(${960-cx*sc}px,${540-cy*sc}px) scale(${sc})`;
+  // cut dips
+  let dip=0;for(const [a] of SEG.slice(1)){dip=Math.max(dip,1-Math.min(1,Math.abs(t-a)/.22))}
+  dip=Math.max(dip,1-T.seg(t,0,.5),T.seg(t,FADE-.1,FADE+.5));$('dip').style.opacity=dip;
+  // theme ring over the real theme buttons (settings row, bottom-left) during theme segment
+  const ring=$('ring');const rk=T.seg(t,16.2,16.6)*(1-T.seg(t,20.0,20.4));
+  Object.assign(ring.style,{left:'350px',top:'1032px',width:'178px',height:'44px',opacity:rk*(.6+.4*Math.sin(t*6))});
+  let c='';let co=0;for(const [a,b,tx] of CAPS){if(t>=a&&t<b){c=tx;co=T.seg(t,a,a+.4)*(1-T.seg(t,b-.4,b))}}
+  capEl.firstChild.textContent=c;capEl.style.opacity=co;capEl.style.transform=`translateY(${(1-co)*14}px)`;
+  $('tag').style.opacity=T.seg(t,.4,.9)*(1-T.seg(t,2.2,2.7));
+  endf(Math.max(0,t-EC));if(t<EC)$('endcard').style.opacity=0;
+}
+const endf=T.endcard();T.start({duration:DUR,update});
+</script></body></html>

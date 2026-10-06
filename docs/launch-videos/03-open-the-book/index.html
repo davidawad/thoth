@@ -1,0 +1,174 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Thoth 1.0 - Open the book</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../shared/base.css">
+<style>
+:root{--bg2:#241b14;--hl:rgba(180,144,63,.22)}
+#stage{background:radial-gradient(120% 90% at 50% 40%,var(--bg2),var(--bg) 62%,var(--desk))}
+#top{position:absolute;left:0;right:0;top:0;height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;color:var(--muted);font-family:var(--mono);font-size:13px;letter-spacing:.14em}
+#top b{font-family:var(--display);font-weight:600;letter-spacing:0;color:var(--fg);font-size:20px;text-transform:none}
+#top i{font-style:normal;font-family:var(--display);color:var(--muted);font-size:20px;letter-spacing:0}
+#pill{position:absolute;left:660px;width:600px;top:10px;height:54px;border:1.5px solid var(--line);border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;color:var(--muted);font-family:var(--mono);font-size:13px;letter-spacing:.06em}
+#pill .play{width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center}
+#pill .play i{display:block;border-left:14px solid var(--bg);border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+#pillword{position:absolute;left:0;right:0;top:0;height:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;font-family:var(--legible);font-size:34px;color:var(--fg);padding:0 0}
+#pillword .pre{text-align:right}#pillword .f{color:var(--focus);font-weight:700}
+#book{position:absolute;left:310px;top:100px;width:1300px;height:800px;perspective:3000px}
+.half{position:absolute;top:0;width:650px;height:800px;overflow:hidden;background:var(--paper)}
+.half.l{left:0;border-radius:6px 0 0 6px;background:linear-gradient(90deg,var(--paper) 85%,var(--paper2))}
+.half.r{left:650px;border-radius:0 6px 6px 0;background:linear-gradient(270deg,var(--paper) 85%,var(--paper2))}
+#bookwrap{position:absolute;inset:0;box-shadow:0 40px 90px rgba(0,0,0,.55);border-radius:6px}
+.hd{position:absolute;top:50px;font-family:var(--mono);font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:var(--inkdim)}
+.pn{position:absolute;bottom:34px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:14px;color:var(--inkdim)}
+.txt{position:absolute;left:78px;right:78px;top:132px;font-family:var(--prose);font-size:37px;line-height:1.6;text-align:justify;hyphens:auto;color:var(--ink)}
+.hd{left:78px}
+.s{border-radius:4px;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:3px 0}
+.w.cur{background:rgba(224,102,74,.28);border-radius:4px;color:var(--ink)}.w.cur b{color:var(--focus)}.w b{font-weight:inherit}
+.w.cur b{font-weight:500}
+#leaf{position:absolute;left:650px;top:0;width:650px;height:800px;transform-origin:0 50%;transform-style:preserve-3d}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.face.front{background:linear-gradient(270deg,var(--paper) 85%,var(--paper2));border-radius:0 6px 6px 0}.face.back{background:linear-gradient(90deg,var(--paper) 85%,var(--paper2));border-radius:6px 0 0 6px;transform:rotateY(180deg)}
+.shade{position:absolute;inset:0;pointer-events:none;background:#000;opacity:0}
+#spine{position:absolute;left:640px;top:0;width:20px;height:800px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.3),transparent);z-index:5;pointer-events:none}
+#ribbon{position:absolute;left:626px;top:-14px;width:30px;height:110px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);z-index:6}
+#bar{position:absolute;left:0;right:0;bottom:0;height:70px;border-top:1px solid var(--line);display:flex;align-items:center;gap:34px;padding:0 20px;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+#bar .grp{display:flex;flex-direction:column;gap:7px}
+#bar .row{display:flex;align-items:center;gap:8px;color:var(--fg);letter-spacing:.05em;text-transform:none;font-size:13px}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}.seg span{padding:7px 12px;border-right:1px solid var(--line)}.seg span:last-child{border:0}.seg span.on{background:var(--accent);color:var(--bg)}
+.dot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line)}
+.trk{width:96px;height:7px;border-radius:5px;background:var(--line);position:relative}.trk i{position:absolute;left:0;top:0;bottom:0;width:40%;border-radius:5px;background:var(--fg)}
+.btn{border:1px solid var(--line);border-radius:4px;padding:7px 12px}
+#legend{position:absolute;left:0;right:0;justify-content:center;top:968px;display:flex;align-items:center;gap:12px;font-family:var(--prose);font-size:19px;color:var(--muted)}
+#legend .g{width:150px;height:12px;border-radius:7px;background:linear-gradient(90deg,rgb(110,175,95),rgb(220,170,70),rgb(220,95,75))}
+#cap{position:absolute;left:0;right:0;top:914px;text-align:center;font-family:var(--display);font-size:38px;color:var(--fg)}
+#title{position:absolute;left:0;right:0;top:420px;text-align:center;font-family:var(--display);font-size:120px;color:var(--fg)}#title em{color:var(--accent)}
+</style></head><body><div id="stage">
+<div id="title">Open the <em>book.</em></div>
+<div id="top"><span><i>‹</i> <b>Meditations</b> <i>· The Second Book</i></span><span>Settings</span></div>
+<div id="pill"><span style="display:flex;gap:16px;align-items:center;z-index:2">|&lt; <span class="play"><i></i></span> &gt;|</span><div id="pillword"></div><span style="z-index:2">500 wpm</span></div>
+<div id="book"><div id="bookwrap"></div>
+  <div class="half l" id="L1"></div><div class="half r" id="R2"><div class="shade" id="shR2"></div></div>
+  <div id="leaf"><div class="face front" id="F"></div><div class="face back" id="B"></div></div>
+  <div id="spine"></div><div id="ribbon"></div></div>
+<div id="legend"><span>Easier</span><div class="g"></div><span>Harder</span><span style="margin-left:10px">(relative to the rest of this text)</span></div>
+<div id="cap"></div>
+<div id="bar">
+ <div class="grp">Speed<div class="row"><div class="trk"><i></i></div>500 wpm</div></div>
+ <div class="grp">Text size<div class="row"><span class="btn">A−</span><span class="btn">A+</span>100%</div></div>
+ <div class="grp">Theme<div class="seg" id="thseg"><span>light</span><span class="on">dark</span><span>sepia</span></div></div>
+ <div class="grp">Palette<div class="row" id="pals"></div></div>
+ <div class="grp">Spotlight dim<div class="seg"><span class="on">full</span><span>soft</span><span>off</span></div></div>
+ <div class="grp">Book<div class="row"><span class="btn">≡ Contents</span></div></div>
+</div></div>
+<script src="../shared/lib.js"></script>
+<script>
+const rootS=document.documentElement.style;
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k);
+const css=a=>`rgb(${a.map(Math.round).join(',')})`;
+const TH={
+ dark:{bg:'#1b1712',bg2:'#241b14',desk:'#14110d',fg:'#ece1c9',muted:'#b9aa8c',accent:'#b4903f',focus:'#e0664a',paper:'#2a2119',paper2:'#201912',ink:'#ebe0c8',inkdim:'#8d806a',line:'#403628'},
+ light:{bg:'#f8f0dd',bg2:'#ece0c6',desk:'#e6dab9',fg:'#2a1e12',muted:'#5a4b37',accent:'#7a5a1a',focus:'#c0261b',paper:'#fdfaf0',paper2:'#ebe2c6',ink:'#2a1e12',inkdim:'#9a8c74',line:'#cbbf9f'},
+ sepia:{bg:'#f4ecd8',bg2:'#ece0c4',desk:'#d9c79c',fg:'#3b2f1e',muted:'#5f4f38',accent:'#8a5a2b',focus:'#b3261e',paper:'#f7edcf',paper2:'#e4d4a8',ink:'#3b2f1e',inkdim:'#a08c68',line:'#c4b080'},
+ slate:{bg:'#11161d',bg2:'#18202a',desk:'#0c1015',fg:'#e3e9f0',muted:'#a5b3c4',accent:'#6fa3d8',focus:'#ec7a68',paper:'#1c2530',paper2:'#141b24',ink:'#e3e9f0',inkdim:'#7d8da1',line:'#2f3b4a'},
+ sage:{bg:'#141a15',bg2:'#1b231c',desk:'#0e130f',fg:'#e2eadb',muted:'#a9b8a2',accent:'#8fb572',focus:'#e87c62',paper:'#202a21',paper2:'#182019',ink:'#e2eadb',inkdim:'#7f9078',line:'#334034'}
+};
+const TKEYS=Object.keys(TH.dark);
+function themeAt(a,b,k){const o={};TKEYS.forEach(key=>o[key]=mix(hex(TH[a][key]),hex(TH[b][key]),k));return o}
+// ---- content
+const SP=[
+ {L:{hd:'Meditations',pn:5,s:[["Remember how long thou hast already put off these things, and how often a certain day and hour, having been set unto thee by the gods, thou hast neglected it.",.15],["It is high time for thee to understand the true nature of the world.",.85]]},
+  R:{hd:'The Second Book',pn:6,s:[["Whatever this is that I am, it is a little flesh and breath, and the ruling part.",.45]]}},
+ {L:{hd:'Meditations',pn:7,s:[["Of human life the time is a point, and the substance is in a flux, and the perception dull, and the composition of the whole body subject to putrefaction, and the soul a whirl, and fortune hard to divine, and fame a thing devoid of judgement.",.9]]},
+  R:{hd:'The Second Book',pn:8,s:[["Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial.",.3],["All these things happen to them by reason of their ignorance of what is good and evil.",.65]]}}
+];
+const seq=[],sents=[];
+function page(p,cls){const el=document.createElement('div');el.style.cssText='position:absolute;inset:0;';
+  el.innerHTML=`<div class="hd">${p.hd}</div><div class="txt"></div><div class="pn">${p.pn}</div>`;
+  const txt=el.querySelector('.txt');
+  p.s.forEach(([text,heat],si)=>{const sp=document.createElement('span');sp.className='s';
+    const ws=text.split(' ');sp.innerHTML=ws.map(w=>{const f=T.focusIndex(w),a=[...w];return `<span class="w">${a.map((c,k)=>k===f?`<b>${c}</b>`:c).join('')}</span>`}).join(' ')+' ';
+    txt.appendChild(sp);const S={el:sp,heat,words:[...sp.querySelectorAll('.w')],texts:ws,page:el};sents.push(S);
+    S.words.forEach((we,i)=>seq.push({el:we,word:ws[i],S}));});
+  return el}
+const L1=page(SP[0].L),R1=page(SP[0].R),L2=page(SP[1].L),R2=page(SP[1].R);
+document.getElementById('L1').appendChild(L1);document.getElementById('F').appendChild(R1);
+document.getElementById('B').appendChild(L2);document.getElementById('R2').prepend(R2);
+// order seq: L1,R1,L2,R2 is DOM-creation order = reading order
+const n1=SP[0].L.s.concat(SP[0].R.s).reduce((a,[t])=>a+t.split(' ').length,0);
+// leaf shading overlays
+['F','B'].forEach(id=>{const sh=document.createElement('div');sh.className='shade';sh.id='sh'+id;document.getElementById(id).appendChild(sh)});
+const pals=document.getElementById('pals');
+[['#b4903f','#d8be85'],['#6fa3d8','#a9ccf0'],['#8fb572','#b9d6a1'],['#d98aa8','#eab5c8'],['#ffd54a','#6cc4ff']].forEach(([a,b],i)=>pals.insertAdjacentHTML('beforeend',`<span class="dot" style="background:conic-gradient(${a} 0 50%,${b} 50% 100%);${i===0?'outline:2px solid var(--muted);outline-offset:2px':''}"></span>`));
+// timeline
+const RATE=500/60, B0=1.1,B1=3.0, H0=3.4,H1=6.6, T0=7.0, TURN0=T0+n1/RATE+.2, TURN1=TURN0+1.6;
+const TH0=TURN1+.4, FADE=TH0+6.4, EC=FADE+.4, DUR=EC+4.4;
+const themeSched=[['dark','light',TH0],['light','sepia',TH0+1.4],['sepia','slate',TH0+2.8],['slate','sage',TH0+4.0],['sage','dark',TH0+5.3]];
+const pw=document.getElementById('pillword');let lastWord='';
+function setPill(w){if(w===lastWord)return;lastWord=w;const f=T.focusIndex(w),a=[...w];pw.innerHTML=`<span class="pre">${a.slice(0,f).join('')}</span><span class="f">${a[f]}</span><span>${a.slice(f+1).join('')}</span>`}
+const heatCol=h=>h<.5?mix([110,175,95],[220,170,70],h*2):mix([220,170,70],[220,95,75],(h-.5)*2);
+const bookEl=document.getElementById('book'),leaf=document.getElementById('leaf'),cap=document.getElementById('cap'),legend=document.getElementById('legend');
+const topEl=document.getElementById('top'),bar=document.getElementById('bar'),pill=document.getElementById('pill'),title=document.getElementById('title');
+const cx0=960,cy0=500;
+const centers=sents.map(S=>{const r=S.el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}});
+function update(t){
+  // theme
+  let cur=themeAt('dark','dark',0);
+  for(const [a,b,s] of themeSched){if(t>=s)cur=themeAt(a,b,T.io(T.seg(t,s,s+.9)))}
+  ['bg','bg2','desk','fg','muted','accent','focus','paper','paper2','ink','line'].forEach(k=>rootS.setProperty('--'+k,css(cur[k])));
+  rootS.setProperty('--inkdim',css(cur.inkdim));
+  document.querySelector('.vignette').style.opacity=Math.max(.15,1-(cur.bg[0]-27)/220);
+  // theme segment highlight
+  const tIdx=t<TH0?1:t<TH0+1.4?0:t<TH0+2.8?2:1;
+  [...document.getElementById('thseg').children].forEach((s,i)=>s.classList.toggle('on',i===tIdx));
+  const palIdx=t<TH0+2.8?0:t<TH0+4.0?1:t<TH0+5.3?2:0;[...pals.children].forEach((d,i)=>d.style.outline=i===palIdx?'2px solid var(--muted)':'none');
+  // intro
+  const ti=T.seg(t,.2,.9)*(1-T.seg(t,1.7,2.3));title.style.opacity=ti;title.style.transform=`translateY(${(1-ti)*20-T.seg(t,1.7,2.3)*30}px)`;
+  const b=T.out(T.seg(t,B0,B1));
+  bookEl.style.opacity=b;bookEl.style.transform=`translateY(${(1-b)*70}px) rotateX(${(1-b)*8}deg) scale(${T.lerp(1.08,1,b)})`;
+  topEl.style.opacity=bar.style.opacity=pill.style.opacity=T.seg(t,B0+.6,B1+.3);
+  // reading cursor
+  const tt=t<TURN0?t-T0:t<TURN1?n1/RATE-.001:(t-T0)-(TURN1-TURN0);
+  const idx=t<T0?-1:Math.min(seq.length-1,Math.floor(tt*RATE));
+  const reading=T.seg(t,T0-.3,T0+.4);
+  seq.forEach((q,i)=>q.el.classList.toggle('cur',i===idx));
+  const curS=idx>=0?seq[idx].S:null;
+  // heat ripple + spotlight dim
+  sents.forEach((S,i)=>{
+    const dist=Math.hypot(centers[i].x-cx0,centers[i].y-cy0);
+    const hp=T.out(T.seg(t,H0+dist/900*1.6,H0+dist/900*1.6+1.1));
+    const col=heatCol(S.heat);
+    const isCur=S===curS;
+    const a=hp*(isCur?.4:T.lerp(.3,.18,reading));
+    S.el.style.background=`rgba(${col.map(Math.round).join(',')},${a})`;
+    S.el.style.color=css(mix(hex('#000000').map(()=>0),[0,0,0],0)||cur.ink);
+    const ink=cur.ink,dim=mix(cur.ink,cur.inkdim,.85);
+    S.el.style.color=css(isCur||reading<.01?ink:mix(ink,dim,reading));
+    S.el.style.textShadow=isCur?`0 0 22px ${css(mix(cur.accent,cur.ink,.2)).replace('rgb','rgba').replace(')',',.5)')}`:'none';
+  });
+  legend.style.opacity=T.seg(t,H0,H0+.7)*(1-T.seg(t,T0+3,T0+3.6));
+  // pill word
+  if(idx>=0)setPill(seq[idx].word);else setPill('Thoth');
+  pw.style.opacity=T.seg(t,T0-.4,T0);
+  // page turn
+  const k=T.io(T.seg(t,TURN0,TURN1));
+  leaf.style.transform=`rotateY(${-180*k}deg)`;
+  const sh=Math.sin(Math.PI*k);
+  document.getElementById('shF').style.opacity=.45*sh*(k<.5?1:0);
+  document.getElementById('shB').style.opacity=.45*sh*(k>=.5?1:0);
+  document.getElementById('shR2').style.opacity=.5*sh*(1-k);
+  // captions
+  let c='';let co=0;
+  if(t<H1+.3){c='Difficulty heat map: green is easier, red is harder.';co=T.seg(t,H0+.4,H0+1.1)*(1-T.seg(t,H1-.3,H1+.3))}
+  else if(t<TURN0-.4){c='The current sentence glows. The rest of the page steps back.';co=T.seg(t,T0+.3,T0+1)*(1-T.seg(t,TURN0-1,TURN0-.4))}
+  else if(t<TH0+.3){c='A two-page spread, with a real page turn.';co=T.seg(t,TURN0-.2,TURN0+.4)*(1-T.seg(t,TURN1+.6,TURN1+1.2))}
+  else{c='Dark, light, sepia. Five palettes.';co=T.seg(t,TH0+.4,TH0+1)*(1-T.seg(t,FADE-.9,FADE-.3))}
+  cap.textContent=c;cap.style.opacity=co;
+  // fade out + end card
+  const fo=1-T.seg(t,FADE,FADE+.5);document.getElementById('stage').style.opacity=fo;
+  endf(Math.max(0,t-EC));document.getElementById('endcard').style.opacity=t<EC?0:document.getElementById('endcard').style.opacity;
+}
+const endf=T.endcard();
+// endcard sits outside stage fade: keep it dark regardless of theme
+document.getElementById('endcard').style.background='radial-gradient(70% 60% at 50% 45%,#2a2016 0%,#1b1712 70%)';
+T.start({duration:DUR,update});
+</script></body></html>

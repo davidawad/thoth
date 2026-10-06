@@ -1,0 +1,103 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Thoth 1.0 - Drop any book</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../shared/base.css">
+<style>
+.c{position:absolute;left:0;top:0;transform-origin:50% 50%}
+#title{position:absolute;left:0;right:0;top:440px;text-align:center;font-family:var(--display);font-size:120px;color:var(--fg)}#title em{color:var(--accent)}
+#zone{width:800px;height:420px;border:3px dashed #8a7a63;border-radius:18px;background:rgba(36,27,20,.55);text-align:center}
+#zone h2{font-family:var(--display);font-weight:400;font-size:44px;margin-top:104px;color:var(--fg)}
+#zone .btn{display:inline-block;margin-top:30px;padding:14px 26px;background:var(--accent);color:#1b1712;border-radius:6px;font-family:var(--mono);font-weight:500;font-size:22px}
+#zone p{margin-top:26px;font-size:22px;color:var(--muted)}
+#file{width:420px;height:130px;border-radius:14px;background:#2c2119;border:1.5px solid #5a4b37;box-shadow:0 30px 60px rgba(0,0,0,.55);display:flex;align-items:center;gap:22px;padding:0 26px}
+#file .ic{width:62px;height:80px;border-radius:6px;background:#3a2d22;border:1.5px solid var(--accent);position:relative;flex:none}
+#file .ic b{position:absolute;left:-10px;bottom:10px;background:var(--accent);color:#1b1712;font-family:var(--mono);font-size:13px;padding:3px 6px;border-radius:3px}
+#file .nm{font-family:var(--mono);font-size:25px;color:var(--fg)}
+#prog{width:420px;height:8px;border-radius:5px;background:rgba(237,227,205,.14);overflow:hidden}#prog i{display:block;height:100%;width:0;background:var(--accent)}
+#phase{width:420px;text-align:center;font-size:19px;color:var(--muted)}
+#cover{width:360px;height:520px;border-radius:6px 14px 14px 6px;background:linear-gradient(135deg,#3a2c20,#241b14);border:1.5px solid #5a4b37;box-shadow:0 40px 80px rgba(0,0,0,.6),inset 8px 0 0 rgba(0,0,0,.25);padding:44px 34px;display:flex;flex-direction:column;align-items:center;text-align:center;overflow:hidden}
+#cover svg{width:84px;height:84px;color:var(--accent)}
+#cover h3{font-family:var(--display);font-weight:600;font-size:46px;margin-top:70px;line-height:1.1;color:var(--fg)}
+#cover p{font-family:var(--prose);font-size:24px;color:var(--muted);margin-top:18px;font-style:italic}
+#cover .rib{position:absolute;right:46px;top:-4px;width:34px;height:96px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%)}
+#cover .pg{position:absolute;left:34px;right:34px;bottom:34px;height:5px;border-radius:3px;background:rgba(237,227,205,.15)}#cover .pg i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px}
+.meta{width:620px}.meta .k{font-family:var(--mono);font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.meta .v{font-family:var(--display);font-size:44px;color:var(--fg);margin-top:8px}
+.toc{font-family:var(--prose);font-size:27px;line-height:1.55;color:var(--fg)}.toc div{display:flex;gap:18px;border-bottom:1px solid var(--line);padding:4px 0}.toc span{font-family:var(--mono);font-size:15px;color:var(--accent);padding-top:9px;width:30px}
+#frame{width:1240px;height:640px;overflow:visible}
+#lockb{width:120px;height:120px;border-radius:50%;background:#241b14;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center}
+#lockb svg{width:60px;height:60px;color:var(--accent)}
+#cap{position:absolute;left:0;right:0;text-align:center;font-family:var(--display);font-size:50px;color:var(--fg)}
+#sub{position:absolute;left:0;right:0;text-align:center;font-size:19px;color:var(--muted)}
+</style></head><body><div id="stage">
+<div id="title">Drop any <em>book.</em></div>
+<div id="zone" class="c"><h2>Drop a PDF or EPUB here</h2><div class="btn">Choose a file</div><p>Runs entirely in your browser. Nothing is uploaded.</p></div>
+<svg id="frame" class="c" viewBox="0 0 1240 640"><rect id="fr" x="2" y="2" width="1236" height="636" rx="22" fill="none" stroke="#b4903f" stroke-width="2.5" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/><circle cx="34" cy="30" r="6" fill="#b4903f" opacity=".6"/><circle cx="58" cy="30" r="6" fill="#b4903f" opacity=".4"/><circle cx="82" cy="30" r="6" fill="#b4903f" opacity=".25"/></svg>
+<div id="cover" class="c"><div class="rib"></div><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="none" stroke="currentColor" stroke-width="3"/><g fill="currentColor"><rect x="22.5" y="8" width="3" height="8" rx="1.5"/><g transform="rotate(90 24 24)"><rect x="22.5" y="8" width="3" height="8" rx="1.5"/></g><g transform="rotate(180 24 24)"><rect x="22.5" y="8" width="3" height="8" rx="1.5"/></g><g transform="rotate(270 24 24)"><rect x="22.5" y="8" width="3" height="8" rx="1.5"/></g><circle cx="24" cy="24" r="4.5"/></g></svg><h3>Meditations</h3><p>Marcus Aurelius</p><div class="pg"><i></i></div></div>
+<div id="m1" class="c meta"><div class="k">Title</div><div class="v">Meditations</div></div>
+<div id="m2" class="c meta"><div class="k">Author</div><div class="v">Marcus Aurelius</div></div>
+<div id="m3" class="c meta"><div class="k">Format</div><div class="v">EPUB</div></div>
+<div id="m4" class="c meta"><div class="k">Contents</div><div class="toc"><div><span>01</span>Introduction</div><div><span>02</span>The First Book</div><div><span>03</span>The Second Book</div><div><span>04</span>The Third Book</div></div></div>
+<div id="file" class="c"><div class="ic"><b>EPUB</b></div><div class="nm">meditations.epub</div></div>
+<div id="prog" class="c"><i></i></div><div id="phase" class="c"></div>
+<div id="lockb" class="c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path id="shackle" d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+<div id="cap"></div><div id="sub" class="mono"></div>
+</div>
+<script src="../shared/lib.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const place=(e,x,y,s=1,r=0,o=1)=>{e.style.transform=`translate(${x}px,${y}px) rotate(${r}deg) scale(${s})`;e.style.opacity=o};
+const T_DROP=3.6, T_ING0=4.6, T_ING1=8.4, T_LIB=8.6, T_LOCK=14.0, T_RES=17.6, FADE=21.0, EC=FADE+.4, DUR=EC+4.4;
+const cap=$('cap'),sub=$('sub');cap.style.top='900px';sub.style.top='980px';
+function update(t){
+  // title
+  const ti=T.seg(t,.2,.9)*(1-T.seg(t,1.5,2.1));$('title').style.opacity=ti;$('title').style.transform=`translateY(${(1-ti)*20}px)`;
+  // zone
+  const zin=T.out(T.seg(t,1.7,2.6)), zout=T.seg(t,T_ING0-.2,T_ING0+.5);
+  const flash=Math.exp(-Math.max(0,t-T_DROP)*5)*(t>T_DROP?1:0);
+  const hover=T.seg(t,2.9,T_DROP);
+  const z=$('zone');place(z,560,330+(1-zin)*30,1+.012*hover+.02*flash,0,zin*(1-zout));
+  z.style.borderColor=`rgb(${mixc([138,122,99],[216,190,133],Math.max(hover*.8,flash)).join(',')})`;z.style.background=`rgba(${36+Math.round(12*hover)},${27+Math.round(8*hover)},${20+Math.round(4*hover)},.55)`;
+  z.firstChild.style.opacity=1-T.seg(t,T_DROP,T_DROP+.5);
+  // file card flies in
+  const fk=T.out(T.seg(t,2.2,T_DROP));
+  const fx=T.lerp(1650,750,fk), fy=T.lerp(-200,475,fk)+Math.sin(Math.PI*fk)*0, fr=(1-fk)*14;
+  const land=Math.max(0,t-T_DROP), sq=1+(t>T_DROP?-.06*Math.exp(-land*9)*Math.cos(land*30):0);
+  // after drop: file card moves to center & fades into cover
+  const mv=T.io(T.seg(t,T_ING0,T_ING0+.7));
+  const fo=1-T.seg(t,T_ING1,T_LIB+.4);
+  place($('file'),T.lerp(fx,750,mv),T.lerp(fy,400,mv),(t>T_DROP?sq:1)*(1+.06*mv),fr,T.seg(t,2.2,2.6)*fo);
+  // progress
+  const p=T.seg(t,T_ING0+.3,T_ING1-.3);const pr=$('prog');place(pr,750,570,1,0,T.seg(t,T_ING0+.2,T_ING0+.7)*fo);
+  pr.firstChild.style.width=(T.io(p)*100)+'%';
+  const ph=$('phase');ph.style.fontFamily='var(--mono)';ph.style.letterSpacing='.2em';ph.style.textTransform='uppercase';
+  ph.textContent=t<T_ING0+1.3?'Reading':t<T_ING0+3.0?'Parsing':'Saving';place(ph,750,600,1,0,T.seg(t,T_ING0+.2,T_ING0+.7)*fo);
+  // cover
+  const ck=T.out(T.seg(t,T_LIB,T_LIB+1.1)), shiftL=T.io(T.seg(t,T_LIB+.5,T_LIB+1.5));
+  place($('cover'),T.lerp(780,430,shiftL),T.lerp(280,250,shiftL)+(1-ck)*40,.8+.2*ck,0,ck);
+  const bm=T.out(T.seg(t,T_RES,T_RES+.7));$('cover').querySelector('.rib').style.transform=`translateY(${(bm-1)*100}px)`;
+  $('cover').querySelector('.pg i').style.width=(T.io(T.seg(t,T_RES+.2,T_RES+1.5))*38)+'%';
+  // meta rows
+  [['m1',255],['m2',365],['m3',475],['m4',590]].forEach(([id,y],i)=>{const k=T.out(T.seg(t,T_LIB+1.5+i*.45,T_LIB+2.3+i*.45));
+    place($(id),930+(1-k)*40,y,1,0,k)});
+  // lock beat
+  const fkk=T.io(T.seg(t,T_LOCK,T_LOCK+1.4));$('fr').setAttribute('stroke-dashoffset',1-fkk);
+  place($('frame'),340,215,1,0,fkk>0?1:0);
+  const lk=T.back(T.seg(t,T_LOCK+1.1,T_LOCK+1.7));
+  place($('lockb'),900,215-60+0,lk,0,T.seg(t,T_LOCK+1.1,T_LOCK+1.4));
+  $('shackle').setAttribute('d',t>T_LOCK+1.6?'M8 11V8a4 4 0 0 1 8 0v3':'M8 11V8a4 4 0 0 1 8 0v3');
+  // captions
+  let c='',s='';
+  if(t<T_ING0-.4){c='';}
+  if(t>=T_LIB+1.6&&t<T_LOCK-.2){c='Title, author and contents, read from the file.'}
+  else if(t>=T_LOCK&&t<T_RES-.2){c='Everything stays in your browser.';s='Nothing is uploaded'}
+  else if(t>=T_RES){c='It resumes where you left off.'}
+  const win=(a,b)=>T.seg(t,a,a+.6)*(1-T.seg(t,b-.5,b));
+  const co=t<T_LOCK-.2?win(T_LIB+1.6,T_LOCK-.2):t<T_RES-.2?win(T_LOCK+.5,T_RES-.2):win(T_RES,FADE);
+  cap.textContent=c;sub.textContent=s;cap.style.opacity=co;sub.style.opacity=co*(s?1:0);
+  // fade + endcard
+  const fa=1-T.seg(t,FADE,FADE+.5);$('stage').style.opacity=fa;
+  endf(Math.max(0,t-EC));if(t<EC)$('endcard').style.opacity=0;
+}
+const mixc=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k));
+const endf=T.endcard();T.start({duration:DUR,update});
+</script></body></html>

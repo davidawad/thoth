@@ -1,0 +1,101 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Thoth 1.0 - Your eyes can rest</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../shared/base.css">
+<style>
+#para{position:absolute;font-family:var(--prose);text-align:left;color:var(--ink-dim);visibility:hidden}
+.w{position:absolute;white-space:nowrap;font-family:var(--prose);color:#6f6451;will-change:transform}
+#trail{position:absolute;inset:0}
+#eye{position:absolute;border-radius:50%;border:2px solid var(--accent);box-shadow:0 0 30px rgba(180,144,63,.5)}
+#word{z-index:5;position:absolute;left:0;top:0;white-space:nowrap;font-family:var(--legible);color:var(--fg);transform-origin:0 0}
+#word .row{display:grid;grid-template-columns:1fr auto 1fr;align-items:baseline}
+#word .pre{text-align:right}#word .post{text-align:left}#word .f{color:var(--focus);font-weight:700;display:inline-block}
+.tick{position:absolute;width:2px;background:var(--accent)}
+#cap,#big{position:absolute;left:0;right:0;text-align:center;font-family:var(--display);color:var(--muted)}
+#cap{font-size:3.6vmin}#big{font-size:9vmin;color:var(--fg);font-weight:400}#big em{color:var(--accent)}
+#lab{position:absolute;left:0;right:0;text-align:center;font-size:1.8vmin;color:var(--muted)}
+</style></head><body><div id="stage">
+<div id="para"></div><div id="words"></div><canvas id="trail"></canvas><div id="eye"></div>
+<div class="tick" id="t1"></div><div class="tick" id="t2"></div><div id="word"></div>
+<div id="lab" class="mono"></div><div id="cap"></div><div id="big"></div>
+</div>
+<script src="../shared/lib.js"></script>
+<script>
+const W=innerWidth,H=innerHeight,vm=Math.min(W,H)/100,cx=W/2,cy=H*.47;
+const TEXT="Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial. All these things happen to them by reason of their ignorance of what is good and evil. But I who have seen the nature of the good that it is beautiful, and of the bad that it is ugly, and the nature of him who does wrong, that it is akin to me, not only of the same blood or seed, but that it participates in the same intelligence and the same portion of the divinity, I can neither be injured by any of them, for no one can fix on me what is ugly, nor can I be angry with my kinsman, nor hate him.";
+const words=TEXT.split(' '),N=words.length;
+// layout paragraph then freeze each word to absolute coords
+const para=document.getElementById('para');const fs=H*.043;
+Object.assign(para.style,{width:W*.8+'px',left:W*.1+'px',top:H*.17+'px',fontSize:fs+'px',lineHeight:1.75,visibility:'hidden'});
+para.innerHTML=words.map(w=>`<span>${w}</span>`).join(' ');
+const pos=[];[...para.children].forEach(sp=>{const r=sp.getBoundingClientRect();pos.push({x:r.left,y:r.top,cx:r.left+r.width/2,cy:r.top+r.height/2,w:r.width,h:r.height})});
+const wl=document.getElementById('words');
+const els=words.map((w,i)=>{const e=document.createElement('span');e.className='w';e.textContent=w;e.style.cssText=`left:${pos[i].x}px;top:${pos[i].y}px;font-size:${fs}px;line-height:1.75`;wl.appendChild(e);return e});
+// timeline
+const SC0=1.0,SIV=.062,SC1=SC0+N*SIV;      // scan
+const CO0=SC1+.6, CO1=CO0+2.6;             // collapse
+const R0=CO1-.4;                           // rsvp start
+const RW=18, riv=i=>T.lerp(.34,.12,Math.pow(i/(RW-1),.6));
+const rs=[];let a=R0;for(let i=0;i<RW;i++){rs.push(a);a+=riv(i)}const R1=a;
+const BIG0=R1+.2,FADE=BIG0+3.0,EC=FADE+.4,DUR=EC+4.4;
+// eye path with deterministic jitter
+const hash=n=>{const s=Math.sin(n*12.9898)*43758.5453;return s-Math.floor(s)};
+const pt=i=>({x:pos[i].cx+(hash(i)-.5)*24,y:pos[i].cy+(hash(i+99)-.5)*18});
+function eye(t){const u=(t-SC0)/SIV;const i=T.clamp(Math.floor(u),0,N-1),f=T.clamp(u-i,0,1);const A=pt(i),B=pt(Math.min(i+1,N-1));const k=T.io(T.clamp(f/.35));return{x:T.lerp(A.x,B.x,k),y:T.lerp(A.y,B.y,k),i}}
+const cv=document.getElementById('trail');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+const eyeEl=document.getElementById('eye'),er=vm*2.2;
+Object.assign(eyeEl.style,{width:er*2+'px',height:er*2+'px'});
+const t1=document.getElementById('t1'),t2=document.getElementById('t2');const wordPx=H*.14;
+Object.assign(t1.style,{left:cx-1+'px',top:cy-wordPx*.92+'px',height:wordPx*.42+'px'});Object.assign(t2.style,{left:cx-1+'px',top:cy+wordPx*.5+'px',height:wordPx*.42+'px'});
+const wordEl=document.getElementById('word');wordEl.style.fontSize=wordPx+'px';
+function showWord(w){const f=T.focusIndex(w),a=[...w];wordEl.innerHTML=`<div class="row" style="width:${wordPx*12}px"><span class="pre">${a.slice(0,f).join('')}</span><span class="f">${a[f]}</span><span class="post">${a.slice(f+1).join('')}</span></div>`}
+wordEl.style.transform=`translate(${cx-wordPx*6}px,${cy-wordPx*.6}px)`;
+const cap=document.getElementById('cap'),big=document.getElementById('big'),lab=document.getElementById('lab');
+cap.style.top=H*.87+'px';big.style.top=cy+wordPx*1.0+'px';lab.style.top=H*.08+'px';
+let lastW=-1;
+function update(t){
+  const fo=1-T.seg(t,FADE,FADE+.5);
+  // words: reading brightness + collapse
+  const e=t<SC1?eye(t):eye(SC1-.01);
+  els.forEach((el,i)=>{
+    const d=(i/N)*1.5,q=T.io(T.seg(t,CO0+d,CO0+d+1.1));
+    const read=t>=SC0&&e.i>=i||t>=SC1;
+    const x=(cx-pos[i].cx)*q,y=(cy-pos[i].cy)*q;
+    el.style.transform=`translate(${x}px,${y}px) scale(${1-.85*q})`;
+    el.style.transformOrigin='50% 50%';
+    el.style.opacity=T.seg(t,0,.8)*(1-q*q)*fo;
+    el.style.color=read?'#cdbf9f':'#6f6451';
+  });
+  // trail + eye
+  g.clearRect(0,0,W,H);
+  const scanning=t>=SC0&&t<CO0;
+  const tr=1-T.seg(t,SC1,SC1+.6);
+  if(t>=SC0&&tr>0){const T0=Math.max(SC0,Math.min(t,SC1)-3.0);g.lineWidth=2;g.lineJoin='round';
+    for(let s=T0;s<Math.min(t,SC1);s+=.02){const a=eye(s),b=eye(Math.min(s+.02,SC1-.001));const al=(1-(Math.min(t,SC1)-s)/3.0)*.8*tr;
+      g.strokeStyle=`rgba(180,144,63,${al})`;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke()}}
+  // eye dot
+  let ex,ey,eo;
+  if(t<SC0){ex=pos[0].cx;ey=pos[0].cy;eo=T.seg(t,.5,1.0)}
+  else if(t<CO0){ex=e.x;ey=e.y;eo=1}
+  else{const k=T.io(T.seg(t,CO0,CO0+1.4));const last=eye(SC1-.01);ex=T.lerp(last.x,cx,k);ey=T.lerp(last.y,cy-wordPx*.05,k);eo=1}
+  const settled=T.seg(t,CO0+1.4,CO0+2.2);
+  const rr=er*(1+settled*(wordPx*.9/er-1))*(1+.025*Math.sin(t*2.2)*settled);
+  Object.assign(eyeEl.style,{width:rr*2+'px',height:rr*2+'px',left:ex-rr+'px',top:ey-rr+'px',opacity:eo*fo*(1-T.seg(t,R0+.2,R0+.9)*.7)*(1-T.seg(t,BIG0-.2,BIG0+.4)),borderColor:t>=R0?'rgba(180,144,63,.35)':'#b4903f'});
+  // rsvp
+  let wi=-1;for(let i=0;i<RW;i++)if(t>=rs[i])wi=i;
+  if(wi!==lastW&&wi>=0){lastW=wi;showWord(words[wi])}
+  const since=wi>=0?t-rs[wi]:9,pk=Math.exp(-since*9);const f=wordEl.querySelector('.f');if(f)f.style.transform=`scale(${1+.16*pk})`;
+  wordEl.style.opacity=(wi>=0?T.seg(t,R0,R0+.25):0)*fo*(1-T.seg(t,R1+.1,R1+.5)*0);
+  const tk=T.seg(t,R0-.3,R0+.4)*fo;t1.style.opacity=t2.style.opacity=tk;
+  // text
+  lab.textContent=t<CO0?'Reading, as usual':'Thoth 1.0';lab.style.opacity=T.seg(t,.4,1)*fo;
+  let c='',co=0;
+  if(t<SC1+.3){c='Normally, your eyes scan along every line.';co=T.seg(t,1.4,2.2)*(1-T.seg(t,SC1-.3,SC1+.3))}
+  else if(t<R1){c='One fixed spot. The red letter marks where to rest your eye.';co=T.seg(t,CO0+1.2,CO0+2)*(1-T.seg(t,R1-.8,R1-.2))}
+  cap.textContent=c;cap.style.opacity=co*fo;
+  big.innerHTML='Your eyes can <em>rest.</em>';big.style.opacity=T.seg(t,BIG0,BIG0+.9)*fo;big.style.transform=`translateY(${(1-T.out(T.seg(t,BIG0,BIG0+1)))*2}vmin)`;
+  if(t>=BIG0){wordEl.style.transform=`translate(${cx-wordPx*6}px,${cy-wordPx*.6-T.io(T.seg(t,BIG0,BIG0+.8))*wordPx*1.1}px)`;
+    const sh=T.io(T.seg(t,BIG0,BIG0+.8))*wordPx*1.1;t1.style.transform=t2.style.transform=`translateY(${-sh}px)`;big.style.top=cy+wordPx*.45+'px'}
+  endf(Math.max(0,t-EC));if(t<EC)document.getElementById('endcard').style.opacity=0;
+}
+const endf=T.endcard();T.start({duration:DUR,update});
+</script></body></html>

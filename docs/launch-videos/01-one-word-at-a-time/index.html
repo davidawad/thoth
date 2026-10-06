@@ -1,0 +1,159 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Thoth 1.0 - One word at a time</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../shared/base.css">
+<style>
+#word{z-index:5;position:absolute;left:0;top:0;white-space:nowrap;font-family:var(--legible);color:var(--fg);transform-origin:0 0}
+#word .row{display:grid;grid-template-columns:1fr auto 1fr;align-items:baseline}
+#word .pre{text-align:right}#word .post{text-align:left}
+#word .f{color:var(--focus);font-weight:700}
+.tick{position:absolute;width:2px;background:var(--accent);opacity:.9}
+#glowdot{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(224,102,74,.55),rgba(224,102,74,0));pointer-events:none}
+#cap{position:absolute;left:0;right:0;text-align:center;font-family:var(--display);color:var(--muted);font-size:4.4vmin}
+#cap em{color:var(--fg);font-style:italic}
+#label{position:absolute;left:0;right:0;text-align:center;font-size:1.9vmin;color:var(--muted)}
+#spd{position:absolute;display:flex;align-items:center;gap:2vmin;font-family:var(--mono);color:var(--muted);font-size:2vmin;letter-spacing:.12em}
+#spd .trk{width:22vmin;height:.7vmin;border-radius:1vmin;background:rgba(237,227,205,.14);overflow:hidden}
+#spd .fill{height:100%;background:var(--accent);width:0}
+#pill{position:absolute;border:1.5px solid var(--line);border-radius:999px;background:rgba(36,27,20,.7);display:flex;align-items:center;justify-content:space-between;padding:0 2.4vmin;color:var(--muted);font-family:var(--mono);font-size:1.7vmin;letter-spacing:.06em}
+#pill .play{width:7vmin;height:7vmin;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center}
+#pill .play i{display:block;border-left:2.2vmin solid #1b1712;border-top:1.4vmin solid transparent;border-bottom:1.4vmin solid transparent;margin-left:.6vmin}
+#pill .ctl{display:flex;gap:2vmin;align-items:center}
+#book{position:absolute;perspective:2200px}
+#book .spread{position:absolute;inset:0;display:flex;background:var(--paper);border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform-origin:50% 100%}
+.page{flex:1;position:relative;overflow:hidden;font-family:var(--prose);color:var(--ink-dim);text-align:justify;hyphens:auto}
+.page .hd{position:absolute;font-family:var(--mono);font-size:1.5vmin;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim)}
+.page .pn{position:absolute;bottom:3vmin;left:0;right:0;text-align:center;font-family:var(--mono);font-size:1.5vmin;color:var(--ink-dim)}
+.page .txt{position:absolute}
+.page.l{background:linear-gradient(90deg,var(--paper),var(--paper) 88%,#1d1710 100%)}
+.page.r{background:linear-gradient(270deg,var(--paper),var(--paper) 88%,#1d1710 100%)}
+.s{transition:none}.s.on{color:var(--ink);text-shadow:0 0 18px rgba(236,225,201,.25)}
+.w.cur{background:rgba(224,102,74,.22);border-radius:3px}.w b{font-weight:inherit}.w.cur b{color:var(--focus);font-weight:500}
+#ribbon{position:absolute;top:-1.5vmin;width:3vmin;height:11vmin;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%)}
+</style></head><body><div id="stage">
+<div id="label" class="mono"></div>
+<div id="glowdot"></div><div class="tick" id="t1"></div><div class="tick" id="t2"></div>
+<div id="word"></div>
+<div id="spd"><span id="wpm">120 wpm</span><div class="trk"><div class="fill" id="fill"></div></div></div>
+<div id="cap"></div>
+<div id="book"><div class="spread" id="spread">
+  <div class="page l"><div class="hd" id="hdl">Meditations</div><div class="txt" id="txtl"></div><div class="pn">1</div></div>
+  <div class="page r" id="pr"><div class="hd" id="hdr">Introduction</div><div class="txt" id="txtr"></div><div class="pn">2</div></div>
+  <div id="ribbon"></div></div></div>
+<div id="pill"><div class="ctl"><span>|&lt;</span><div class="play"><i></i></div><span>&gt;|</span></div><span style="width:30vmin"></span><span id="pillwpm">500 wpm</span></div>
+</div>
+<script src="../shared/lib.js"></script>
+<script>
+const V=T.vertical, W=innerWidth, H=innerHeight, vm=Math.min(W,H)/100;
+const S1="Remember how long thou hast already put off these things, and how often a certain day and hour, having been set unto thee by the gods, thou hast neglected it.";
+const S2="It is high time for thee to understand the true nature of the world.";
+const REST="The Emperor Hadrian divined the fine character of the lad, whom he used to call not Verus but Verissimus, more Truthful than his own name.";const REST_X="He advanced Marcus to equestrian rank when six years of age, and at the age of eight made him a member of the ancient Salian priesthood.";
+const REST2="The boy's aunt, Annia Galeria Faustina, was married to Antoninus Pius, afterwards emperor. Hence it came about that Antoninus, having no son, adopted Marcus, changing his name to that which he is known by, and betrothed him to his daughter Faustina.";
+const words=(S1+" "+S2).split(" "), N=words.length;
+const sentOf=words.map((w,i)=>i<S1.split(" ").length?0:1);
+// phase-1 timing: accelerate from ~92 wpm to 500 wpm
+const P1=1.5; const iv=i=>T.lerp(0.55,0.12,Math.pow(i/(N-1),.45));
+const st=[];let acc=P1;for(let i=0;i<N;i++){st.push(acc);acc+=iv(i)}
+const P1END=acc;                       // ~ when last word ends
+const TR0=P1END+0.4, TR1=TR0+1.9;      // pull-back
+const P2=TR1+0.3, P2IV=60/500, P2END=P2+N*P2IV;
+const FADE=P2END+0.8, EC=FADE+0.5, DUR=EC+4.4;
+// layout
+const cx=W/2, cy=V?H*0.42:H*0.46, wordPx=V?W*0.12:H*0.15;
+const wordEl=document.getElementById('word');wordEl.innerHTML='<div class="row"><span class="pre"></span><span class="f">&nbsp;</span><span class="post"></span></div>';wordEl.style.fontSize=wordPx+'px';
+const t1=document.getElementById('t1'),t2=document.getElementById('t2'),gd=document.getElementById('glowdot');
+const tickH=wordPx*.45;
+Object.assign(t1.style,{left:cx-1+'px',top:cy-wordPx*.95+'px',height:tickH+'px'});
+Object.assign(t2.style,{left:cx-1+'px',top:cy+wordPx*.5+'px',height:tickH+'px'});
+const lab=document.getElementById('label');lab.style.top=(V?H*.1:H*.09)+'px';
+const cap=document.getElementById('cap');cap.style.top=(V?H*.72:H*.78)+'px';
+const spd=document.getElementById('spd');spd.style.left=cx-vm*17+'px';spd.style.top=(V?H*.82:H*.88)+'px';
+// pill + book
+const pill=document.getElementById('pill');
+const pw=V?W*.86:W*.4, ph=vm*(V?9:9);
+Object.assign(pill.style,{width:pw+'px',height:ph+'px',left:cx-pw/2+'px',top:(V?H*.05:H*.045)+'px'});
+const pillCx=cx, pillCy=parseFloat(pill.style.top)+ph/2;
+const book=document.getElementById('book');
+const bw=V?W*.9:W*.78, bh=V?H*.76:H*.74, bx=cx-bw/2, by=V?H*.17:H*.2;
+Object.assign(book.style,{width:bw+'px',height:bh+'px',left:bx+'px',top:by+'px'});
+const fs=V?W*.043:H*.031, lh=1.5;
+const padx=bw*(V?.09:.055)/(V?1:1);
+document.querySelectorAll('.page').forEach(p=>p.style.fontSize=fs+'px');
+const pagew=V?bw:bw/2;
+if(V){document.getElementById('pr').style.display='none'}
+const tx=document.getElementById('txtl'),tr=document.getElementById('txtr');
+for(const [el,w] of [[tx,pagew],[tr,pagew]]){el.style.left=pagew*.12+'px';el.style.width=pagew*.76+'px';el.style.top=bh*.17+'px';el.style.lineHeight=1.5}
+for(const id of ['hdl','hdr']){const e=document.getElementById(id);e.style.left=pagew*.12+'px';e.style.top=bh*.07+'px'}
+document.getElementById('ribbon').style.left=(V?pagew*.82:bw/2-vm*1.5)+'px';
+// build page words
+let html='';let wi=0;
+[S1,S2].forEach((s,si)=>{html+=`<span class="s" data-s="${si}">`+s.split(' ').map(w=>{const f=T.focusIndex(w);const a=[...w];
+  return `<span class="w" data-i="${wi++}">${a.map((c,k)=>k===f?`<b>${c}</b>`:c).join('')}</span>`}).join(' ')+' </span>'});
+tx.innerHTML=html+`<span>${REST}</span>`;tr.innerHTML=REST_X+' '+REST2;
+const wspans=[...tx.querySelectorAll('.w')], sspans=[...tx.querySelectorAll('.s')];
+let lastCur=-2;
+function setCur(i){if(i===lastCur)return;lastCur=i;wspans.forEach((s,k)=>s.classList.toggle('cur',k===i));
+  const si=i<0?-1:sentOf[i];sspans.forEach((s,k)=>s.classList.toggle('on',k===si))}
+// word renderer
+function showWord(w,pulse){const f=T.focusIndex(w),a=[...w];
+  wordEl.innerHTML=`<div class="row"><span class="pre">${a.slice(0,f).join('')}</span><span class="f">${a[f]}</span><span class="post">${a.slice(f+1).join('')}</span></div>`}
+let lastW=-2;
+function update(t){
+  // ---- scene A: the big word
+  const aOp=1-T.seg(t,TR0,TR0+.9);
+  // current word index
+  let wi=-1;for(let i=0;i<N;i++){if(t>=st[i])wi=i}
+  const live=t>=st[0]&&t<P1END+.4;
+  if(wi!==lastW&&wi>=0){lastW=wi;showWord(words[Math.min(wi,N-1)])}
+  // phase-2 word (in pill)
+  const p2i=t>=P2&&t<P2END?Math.floor((t-P2)/P2IV):-1;
+  const inP2=t>=P2;
+  if(inP2){const k=p2i<0?N-1:p2i;const key=1000+k;if(lastW!==key){lastW=key;showWord(words[k])}}
+  // pulse on focus letter
+  const since=inP2?(t-P2)%P2IV:(t-st[Math.max(wi,0)]);
+  const pk=Math.exp(-since*9);
+  wordEl.querySelector('.f')&&(wordEl.querySelector('.f').style.transform=`scale(${1+.16*pk})`,wordEl.querySelector('.f').style.display='inline-block');
+  // word placement: pivot at cx; measure pivot-offset by grid; place left so centre column is at cx
+  const k=T.io(T.seg(t,TR0,TR0+1.0));
+  const sc=T.lerp(1,(ph*.6)/wordPx,k);
+  const row=wordEl.firstChild; // 1fr auto 1fr -> make row width symmetric
+  row.style.width=wordPx*12+'px';
+  const x=T.lerp(cx-wordPx*6*sc/ (1) ,pillCx-wordPx*6*sc,k);
+  const y=T.lerp(cy-wordPx*.6,pillCy-ph*.5*0.78,k);
+  wordEl.style.transform=`translate(${x}px,${y}px) scale(${sc})`;
+  const wordShow=t<P2END+.3?1:0;
+  wordEl.style.opacity=(t<st[0]?0:1)*(t<TR0+1.0?1-T.seg(t,TR0+.45,TR0+.95):T.seg(t,P2-.15,P2))*(t>P2END+.1?1-T.seg(t,P2END+.1,P2END+.4):1);
+  // ticks/glow
+  const tk=T.seg(t,.3,1.2)*(1-T.seg(t,TR0,TR0+.8));
+  t1.style.opacity=t2.style.opacity=tk;
+  t1.style.transform=t2.style.transform=`scaleY(${T.out(T.seg(t,.3,1.1))})`;
+  const gsz=wordPx*1.6;Object.assign(gd.style,{width:gsz+'px',height:gsz+'px',left:cx-gsz/2+'px',top:cy-gsz/2-wordPx*.05+'px',opacity:(.25+.75*pk)*tk*(live?1:0)});
+  // label + caps
+  lab.textContent='Thoth 1.0';lab.style.opacity=T.seg(t,.2,.9)*(1-T.seg(t,2.4,3.0));
+  const capA=T.seg(t,5.2,5.9)*(1-T.seg(t,9.8,10.4));
+  const capB=T.seg(t,TR1+.3,TR1+.9)*(1-T.seg(t,P2END-.5,P2END));
+  const capC=T.seg(t,.9,1.4)*(1-T.seg(t,P1+2.0,P1+2.6));
+  if(t<TR0-1){cap.innerHTML=t<5?'One word at a time.':'The red letter marks where to rest your eye.'}
+  else cap.innerHTML='Then back to the page.';
+  cap.style.opacity=t<TR0-1?(t<5?T.seg(t,.8,1.5)*(1-T.seg(t,3.4,4.1)):capA):capB;
+  cap.style.transform=`translateY(${(1-cap.style.opacity)*1.2}vmin)`;
+  // speed readout
+  const w=Math.min(500,Math.round(60/(wi<0?.55:iv(Math.min(wi,N-1)))/10)*10);
+  document.getElementById('wpm').textContent=w+' wpm';
+  document.getElementById('fill').style.width=(w/500*100)+'%';
+  spd.style.opacity=T.seg(t,1.2,2)*(1-T.seg(t,TR0,TR0+.7));
+  // ---- scene B: the book
+  const b=T.out(T.seg(t,TR0+.7,TR1));
+  book.style.opacity=b*(1-T.seg(t,FADE-.2,FADE+.3));
+  book.style.transform=`translateY(${(1-b)*H*.06}px) scale(${T.lerp(1.12,1,b)})`;
+  document.getElementById('spread').style.transform=`rotateX(${(1-b)*10}deg)`;
+  pill.style.opacity=T.seg(t,TR0+.7,TR1);
+  document.getElementById('pillwpm').textContent='500 wpm';
+  setCur(inP2&&p2i>=0?p2i:-1);
+  // scene fade + end card
+  const fo=1-T.seg(t,FADE-.1,FADE+.4);
+  [wordEl,pill,cap].forEach(e=>{e.style.opacity=parseFloat(e.style.opacity)*fo});
+  endf(Math.max(0,t-EC));if(t<EC)document.getElementById('endcard').style.opacity=0;
+}
+const endf=T.endcard();
+T.start({duration:DUR,update});
+</script></body></html>
