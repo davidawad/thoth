@@ -11,6 +11,7 @@ import {
   LEGIBILITY_REFERENCES,
   DEFAULT_READABILITY_METRIC,
   SPEED_WRITING_STORAGE_KEY,
+  DIFFICULTY_HIGHLIGHT_STORAGE_KEY,
 } from '../constants';
 import type { AppSettings, UpdateCallback } from '../types';
 
@@ -150,6 +151,61 @@ interface SettingsPanelProps extends Partial<AppSettings> {
   updateCallback: UpdateCallback;
 }
 
+// Difficulty heat map toggle: persists the choice and bubbles it up so the
+// Reader rebuilds its editor with (or without) the per-sentence highlighting.
+function DifficultyHighlightToggle({
+  initial,
+  updateCallback,
+}: {
+  initial: boolean;
+  updateCallback: UpdateCallback;
+}) {
+  const [enabled, setEnabled] = useState(initial);
+
+  const handleToggle = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const next = event.target.checked;
+      setEnabled(next);
+
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(
+            DIFFICULTY_HIGHLIGHT_STORAGE_KEY,
+            String(next),
+          );
+        }
+      } catch {
+        // localStorage unavailable - the toggle still works this session.
+      }
+
+      updateCallback({ difficultyHighlightEnabled: next });
+    },
+    [updateCallback],
+  );
+
+  return (
+    <>
+      <label className="label cursor-pointer justify-start gap-2 px-0 mt-3">
+        <input
+          type="checkbox"
+          className="checkbox checkbox-sm"
+          name="difficultyHighlightEnabled"
+          data-testid="difficulty-highlight-toggle"
+          checked={enabled}
+          onChange={handleToggle}
+        />
+        <span className="label-text">Highlight text by difficulty</span>
+      </label>
+      <p className="text-sm opacity-70 mt-2">
+        Tints each sentence of the loaded text from green (easier) to red
+        (harder), so you can see where the difficult passages are before you
+        start. Difficulty is relative to the rest of the text. Red and green can
+        be hard to tell apart for some people; turn this off if so.
+      </p>
+    </>
+  );
+}
+
 const SettingsPanel = (props: SettingsPanelProps) => {
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [readabilityMetric, setReadabilityMetric] = useState(
@@ -277,6 +333,11 @@ const SettingsPanel = (props: SettingsPanelProps) => {
             </option>
           ))}
         </select>
+
+        <DifficultyHighlightToggle
+          initial={props.difficultyHighlightEnabled ?? true}
+          updateCallback={props.updateCallback}
+        />
       </section>
 
       <section className="mb-6">

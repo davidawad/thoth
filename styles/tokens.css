@@ -1,0 +1,103 @@
+/*
+ * Design tokens, shared with Seshat (the sibling study app) so the two tools
+ * read as one family. The names and values mirror Seshat's
+ * src/styles/tokens.css ("Illuminated Archive": a warm archive-room shell);
+ * keep them in sync by hand.
+ *
+ * Two typography systems, same split as Seshat:
+ *   1. CHROME - header, footer, buttons, labels, settings UI. Fraunces for
+ *      headings, Newsreader for prose, IBM Plex Mono for nav/buttons/labels.
+ *   2. CONTENT - the material being read (the RSVP word, the surrounding
+ *      words, the text editor). Atkinson Hyperlegible, chosen for character
+ *      distinction; see the legibility references in Settings.
+ *
+ * Thoth's themes (light / dark / sepia) are applied via data-theme on <html>
+ * (see pages/_document.tsx). Each block below sets Seshat's palette tokens
+ * and then points daisyui's own theme variables at them, so daisyui
+ * components (.btn, .card, .modal-box...) follow the same palette. The sepia
+ * theme is Thoth's own long-reading palette expressed in the same tokens.
+ *
+ * Contrast (WCAG 2.2): text pairs clear 4.5:1, interactive borders and the
+ * focus ring clear 3:1 - the dark and light values are Seshat's, which
+ * document the computed ratios.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #1b1712;
+  --color-bg-elevated: #241b14;
+  --color-bg-elevated-2: #2c2119;
+  --color-fg: #ece1c9;
+  --color-fg-muted: #b9aa8c;
+  --color-border: rgba(237, 227, 205, 0.09); /* decorative dividers only */
+  --color-border-strong: #8a7a63; /* form controls / interactive boundaries */
+  --color-accent: #b4903f;
+  --color-accent-contrast: #1b1712; /* text placed on top of --color-accent */
+  --color-focus-ring: #d8be85;
+  --color-success: #8cb08a;
+  --color-error: #e0664a;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: #f8f0dd;
+  --color-bg-elevated: #ece0c6;
+  --color-bg-elevated-2: #e3d5af;
+  --color-fg: #2a1e12;
+  --color-fg-muted: #5a4b37;
+  --color-border: rgba(42, 30, 18, 0.12);
+  --color-border-strong: #8a7a63;
+  --color-accent: #7a5a1a;
+  --color-accent-contrast: #f8f0dd;
+  --color-focus-ring: #7a5a1a;
+  --color-success: #3f5940;
+  --color-error: #7a2c1c;
+}
+
+:root[data-theme='sepia'] {
+  color-scheme: light;
+  --color-bg: #f4ecd8;
+  --color-bg-elevated: #ece0c4;
+  --color-bg-elevated-2: #ddcda2;
+  --color-fg: #3b2f1e;
+  --color-fg-muted: #5f4f38;
+  --color-border: rgba(59, 47, 30, 0.14);
+  --color-border-strong: #8a7a63;
+  --color-accent: #8a5a2b;
+  --color-accent-contrast: #fdf6e3;
+  --color-focus-ring: #8a5a2b;
+  --color-success: #3f6b3f;
+  --color-error: #a13d3d;
+}
+
+/* daisyui's own variables, pointed at the tokens above. */
+:root,
+:root[data-theme] {
+  --color-base-100: var(--color-bg);
+  --color-base-200: var(--color-bg-elevated);
+  --color-base-300: var(--color-bg-elevated-2);
+  --color-base-content: var(--color-fg);
+  --color-primary: var(--color-accent);
+  --color-primary-content: var(--color-accent-contrast);
+  --color-neutral: var(--color-bg-elevated-2);
+  --color-neutral-content: var(--color-fg);
+  --color-success-content: var(--color-bg);
+  --color-error-content: var(--color-bg);
+
+  /* ---- Radii: deliberately subtle; this is a manuscript, not a bubble UI */
+  --radius-page: 5px;
+  --radius-sm: 3px;
+
+  /* ---- Chrome typeface stacks (self-hosted via @fontsource) ---------- */
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-chrome: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --font-mono:
+    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  /* Fixed chrome face for nav/buttons/labels/data. */
+  --font-ui: var(--font-mono);
+
+  /* ---- Content typeface ---------------------------------------------- */
+  --font-atkinson: 'Atkinson Hyperlegible', Arial, Helvetica, sans-serif;
+  --font-body: var(--font-atkinson);
+}

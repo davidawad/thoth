@@ -74,19 +74,11 @@ export default class AppDocument extends Document {
     return (
       <Html lang="en" data-theme={DEFAULT_THEME}>
         <Head>
-          {/* Atkinson Hyperlegible: free accessibility-focused typeface from
-            the Braille Institute of America - see SettingsPanel for the
-            full attribution + legibility research citations. */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-            rel="stylesheet"
-          />
+          {/* Fonts are self-hosted via @fontsource (see pages/_app.tsx) - no
+            third-party font requests. Atkinson Hyperlegible: free
+            accessibility-focused typeface from the Braille Institute of
+            America; see SettingsPanel for the attribution + legibility
+            research citations. */}
 
           {/* Runs before paint to set the persisted theme; see comment above. */}
           <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

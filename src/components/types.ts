@@ -21,6 +21,7 @@ export interface AppSettings {
   verbose: boolean | undefined;
   readabilityMetric: string | undefined;
   speedWritingEnabled: boolean | undefined;
+  difficultyHighlightEnabled: boolean | undefined;
 }
 
 export type UpdateCallback = (settings: Partial<AppSettings>) => void;

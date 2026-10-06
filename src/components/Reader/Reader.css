@@ -2,9 +2,10 @@
   /* width: 600px; */
   width: 100%;
   margin: 0 auto;
-  /* inherit the sitewide Atkinson Hyperlegible font instead of the old
-   * hardcoded Courier - see styles/globals.css. */
-  font-family: inherit;
+  /* The reader is CONTENT, not chrome: Atkinson Hyperlegible (--font-body),
+   * while the buttons inside it keep the chrome UI face - see
+   * styles/tokens.css for the chrome/content split shared with Seshat. */
+  font-family: var(--font-body);
   margin: 0;
   padding: 0;
   border: 0;
@@ -146,4 +147,32 @@
 
 .speedWritingReplacement {
   font-weight: bold;
+}
+
+/* Difficulty heat map (see Reader/difficultyHighlight.tsx): each sentence is
+ * tinted green -> red; the legend below the editor explains the colors. */
+.difficultySentence {
+  border-radius: 2px;
+}
+
+.difficultyLegend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-fg-muted);
+}
+
+.difficultyLegendBar {
+  width: 6rem;
+  height: 0.6rem;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    hsla(120, 65%, 50%, 0.5),
+    hsla(60, 65%, 50%, 0.5),
+    hsla(0, 65%, 50%, 0.5)
+  );
 }

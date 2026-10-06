@@ -50,16 +50,17 @@ interface DropzoneStyleProps {
 }
 
 const getColor = (props: DropzoneStyleProps): string => {
+  // Theme tokens (styles/tokens.css) so the drop zone follows dark/light/sepia.
   if (props.$isDragAccept) {
-    return '#00e676';
+    return 'var(--color-success)';
   }
   if (props.$isDragReject) {
-    return '#ff1744';
+    return 'var(--color-error)';
   }
   if (props.$isDragActive) {
-    return '#2196f3';
+    return 'var(--color-accent)';
   }
-  return '#eeeeee';
+  return 'var(--color-border-strong)';
 };
 
 const Container = styled.div<DropzoneStyleProps>`
@@ -69,11 +70,11 @@ const Container = styled.div<DropzoneStyleProps>`
   align-items: center;
   padding: 20px;
   border-width: 2px;
-  border-radius: 2px;
+  border-radius: var(--radius-page);
   border-color: ${(props) => getColor(props)};
   border-style: dashed;
-  background-color: #fafafa;
-  color: #bdbdbd;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-fg-muted);
   outline: none;
   transition: border 0.24s ease-in-out;
 `;

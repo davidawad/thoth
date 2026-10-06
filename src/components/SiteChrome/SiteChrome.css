@@ -1,7 +1,23 @@
-/* Shared site chrome (header + footer), mirroring Seshat's .app-header /
- * .app-footer so the two tools read as one family. Colors come from the
- * daisyui theme custom properties (light/dark/sepia) rather than hardcoded
- * values, so the chrome tracks the active theme. */
+/* Shared site chrome (header + footer + skip link). These rules mirror
+ * Seshat's .app-header / .app-footer / .skip-link (src/index.css there) and use
+ * the same design tokens (styles/tokens.css), so the two tools read as one
+ * family. Keep them in sync by hand. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.5em 1em;
+  background: var(--color-bg-elevated);
+  color: var(--color-fg);
+  border: 2px solid var(--color-accent);
+}
+
+.skip-link:focus {
+  left: 0.5em;
+  top: 0.5em;
+}
+
 .app-shell {
   min-height: 100svh;
   display: flex;
@@ -13,28 +29,14 @@
   width: 100%;
 }
 
-.skip-link {
-  position: absolute;
-  left: -999px;
-  top: 0;
-  padding: 0.5rem 1rem;
-  background: var(--color-base-100);
-  color: var(--color-base-content);
-  z-index: 100;
-}
-
-.skip-link:focus {
-  left: 0.5rem;
-  top: 0.5rem;
-}
-
 .app-header {
   display: flex;
   align-items: center;
   gap: 2rem;
   padding: 1.1rem 1.5rem;
-  border-bottom: 1px solid color-mix(in oklab, currentColor 14%, transparent);
-  background: var(--color-base-200);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  /* One shared header: pinned to the top of every page. */
   position: sticky;
   top: 0;
   z-index: 10;
@@ -44,39 +46,19 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 1.25rem;
   letter-spacing: 0.01em;
-  color: inherit;
+  color: var(--color-fg);
   text-decoration: none;
 }
 
 .app-brand-mark {
   width: 20px;
   height: 20px;
-  color: var(--color-primary);
+  color: var(--color-accent);
   flex-shrink: 0;
-}
-
-.app-nav {
-  display: flex;
-  gap: 1.5rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.app-nav a {
-  color: color-mix(in oklab, currentColor 70%, transparent);
-  text-decoration: none;
-  font-size: 0.85rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.app-nav a:hover,
-.app-nav a[aria-current='page'] {
-  color: var(--color-primary);
 }
 
 .app-footer {
@@ -86,8 +68,9 @@
   justify-content: space-between;
   gap: 0.75rem 1rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid color-mix(in oklab, currentColor 14%, transparent);
-  background: var(--color-base-200);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  /* Pinned to the viewport bottom on every page, not just short ones. */
   position: sticky;
   bottom: 0;
   z-index: 10;
@@ -95,7 +78,7 @@
 
 .app-footer-copyright {
   font-size: 0.8rem;
-  color: color-mix(in oklab, currentColor 70%, transparent);
+  color: var(--color-fg-muted);
 }
 
 .app-footer-actions {
@@ -105,33 +88,34 @@
   gap: 0.75rem 1rem;
 }
 
-.app-footer-link,
-.app-footer-settings {
+.app-footer-link {
   font-size: 0.8rem;
-  color: color-mix(in oklab, currentColor 70%, transparent);
+  color: var(--color-fg-muted);
 }
 
-.app-footer-link:hover,
-.app-footer-settings:hover {
-  color: var(--color-primary);
+.app-footer-link:hover {
+  color: var(--color-accent);
 }
 
-/* The Settings button reads as a plain text link like its neighbours. */
+/* Footer buttons (Settings) read as plain text links like their neighbours. */
 .app-footer-settings {
   padding: 0;
   border: none;
   background: transparent;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: var(--color-fg-muted);
   text-decoration: underline;
   cursor: pointer;
 }
 
-@media (max-width: 640px) {
-  .app-header {
-    gap: 1rem;
-    padding: 0.8rem 1rem;
-  }
+.app-footer-settings:hover {
+  color: var(--color-accent);
+}
 
-  .app-footer {
-    padding: 0.75rem 1rem;
-  }
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }

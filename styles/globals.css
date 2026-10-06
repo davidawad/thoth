@@ -1,5 +1,6 @@
 /* Note, tailwind styles will break a lot of shit */
-@import "tailwindcss";
+@import 'tailwindcss';
+@import './tokens.css';
 @config "../tailwind.config.js";
 
 /* ---------------------------------------------------------------------------
@@ -14,11 +15,14 @@
  * by hand since daisyui's theme list can't be read from JS).
  * ------------------------------------------------------------------------ */
 @plugin "daisyui" {
-  themes: light --default, dark --prefersdark, sepia;
+  themes:
+    light --default,
+    dark --prefersdark,
+    sepia;
 }
 
 @plugin "daisyui/theme" {
-  name: "sepia";
+  name: 'sepia';
   default: false;
   prefersdark: false;
   color-scheme: light;
@@ -96,19 +100,67 @@ html {
 
 body {
   /* daisyui's theme background/text color (bg-base-100/text-base-content)
-   * is applied as a className directly on <body> in pages/_document.js
+   * is applied as a className directly on <body> in pages/_document.tsx
    * rather than via `@apply` here - `@apply`-ing daisyui's dynamic,
    * theme-driven utility classes isn't reliably supported by this project's
-   * Tailwind v4 + daisyui v4 (v3-plugin-API) combination (see the note in
-   * src/App.css for the same issue in per-component stylesheets). */
-  font-family: "Atkinson Hyperlegible", ui-sans-serif, system-ui,
-    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: var(--font-size-body);
-  font-weight: 400; /* Atkinson Hyperlegible only ships 400/700 - never use a lighter weight. */
+   * Tailwind v4 + daisyui combination (see the note in src/App.css for the
+   * same issue in per-component stylesheets).
+   *
+   * Chrome typography, as in Seshat (see styles/tokens.css): Newsreader for
+   * prose; headings and UI controls are set below. The material being read
+   * uses Atkinson Hyperlegible (--font-body) via the `.legible` class. */
+  font-family: var(--font-chrome);
+  font-size: 16px;
   line-height: var(--line-height-body);
+  font-weight: 400;
   text-align: left; /* never fully-justify body text - hurts legibility (Section 508 guidance) */
   min-height: 100vh;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  /* Seshat's soft warm glow behind the page. */
+  background-image:
+    radial-gradient(
+      ellipse 900px 500px at 15% -10%,
+      color-mix(in srgb, var(--color-accent) 6%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 700px 500px at 100% 20%,
+      color-mix(in srgb, var(--color-error) 4%, transparent),
+      transparent 55%
+    );
+  background-attachment: fixed;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+nav,
+button,
+input,
+select,
+textarea,
+optgroup,
+label,
+table,
+.app-brand,
+.skip-link {
+  font-family: var(--font-ui);
+}
+
+/* The material being read: Atkinson Hyperlegible, sized and spaced per the
+ * legibility research cited in Settings. Chrome stays in the faces above. */
+.legible {
+  font-family: var(--font-body);
 }
 
 /* Reading-measure utility: keeps paragraphs of body text at ~55-75 characters

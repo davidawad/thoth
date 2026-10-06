@@ -69,6 +69,9 @@ class App extends Component<Record<string, never>, AppState> {
       // in componentDidMount, same pattern used for other browser-only
       // setup in this app (e.g. PDF.js worker init).
       speedWritingEnabled: false,
+      // Difficulty heat map (green easy -> red hard per sentence): ON by
+      // default; the saved choice, if any, is restored in componentDidMount.
+      difficultyHighlightEnabled: true,
     };
 
     // set up our analytics on the first render
@@ -108,6 +111,19 @@ class App extends Component<Record<string, never>, AppState> {
     } catch {
       // localStorage unavailable (private browsing, disabled, etc) - keep
       // the safe (disabled) default.
+    }
+
+    try {
+      const storedHighlight = window.localStorage.getItem(
+        CONSTANTS.DIFFICULTY_HIGHLIGHT_STORAGE_KEY,
+      );
+      const parsedHighlight = storedBooleanSchema.safeParse(storedHighlight);
+
+      if (parsedHighlight.success) {
+        this.setState({ difficultyHighlightEnabled: parsedHighlight.data });
+      }
+    } catch {
+      // localStorage unavailable - keep the default.
     }
   }
 

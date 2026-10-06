@@ -13,6 +13,8 @@ export const UNICODE_WHITESPACE = '\u00a0';
 // Speed Writing (paper \u00a78.4): opt-in text simplification before reading.
 // localStorage key used to persist the user's opt-in choice across sessions.
 export const SPEED_WRITING_STORAGE_KEY = 'thoth-speed-writing-enabled';
+export const DIFFICULTY_HIGHLIGHT_STORAGE_KEY =
+  'thoth-difficulty-highlight-enabled';
 
 // accepted upload MIME types (single source of truth for file-type checks)
 export const PDF_MIME_TYPE = 'application/pdf';
@@ -136,7 +138,7 @@ export const FONT_ATTRIBUTION: FontAttribution = {
   name: 'Atkinson Hyperlegible',
   designer:
     'Applied Design Works, commissioned by the Braille Institute of America',
-  source: 'Google Fonts',
+  source: 'Fontsource (self-hosted)',
   url: 'https://fonts.google.com/specimen/Atkinson+Hyperlegible',
   license: 'SIL Open Font License 1.1 (free for commercial & personal use)',
 };

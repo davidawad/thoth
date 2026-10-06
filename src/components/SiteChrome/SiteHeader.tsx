@@ -1,6 +1,6 @@
-// Thoth's logomark: a ring (the same circle motif as the center of Seshat's
-// star) holding three lines of text - reading, as opposed to Seshat's rays.
-// Same rounded, even-weight strokes so the two marks read as a pair.
+// Thoth's logomark, built from the same pieces as Seshat's seven-pointed star
+// (a center disc and 3-wide rounded rays) but arranged differently: four short
+// rays inside a ring, like a reticle - the focus point of RSVP reading.
 function ThothMark() {
   return (
     <svg
@@ -18,9 +18,32 @@ function ThothMark() {
         strokeWidth="3"
       />
       <g fill="currentColor">
-        <rect x="14" y="15" width="20" height="3" rx="1.5" />
-        <rect x="14" y="22.5" width="20" height="3" rx="1.5" />
-        <rect x="14" y="30" width="12" height="3" rx="1.5" />
+        <rect x="22.5" y="8" width="3" height="8" rx="1.5" />
+        <rect
+          x="22.5"
+          y="8"
+          width="3"
+          height="8"
+          rx="1.5"
+          transform="rotate(90 24 24)"
+        />
+        <rect
+          x="22.5"
+          y="8"
+          width="3"
+          height="8"
+          rx="1.5"
+          transform="rotate(180 24 24)"
+        />
+        <rect
+          x="22.5"
+          y="8"
+          width="3"
+          height="8"
+          rx="1.5"
+          transform="rotate(270 24 24)"
+        />
+        <circle cx="24" cy="24" r="4.5" />
       </g>
     </svg>
   );

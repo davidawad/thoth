@@ -20,6 +20,10 @@ import {
   READER_EDITOR_KEY,
   createDeterministicContentState,
 } from './deterministicContent';
+import {
+  createDifficultyDecorator,
+  DifficultyLegend,
+} from './difficultyHighlight';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
 import type { AppSettings } from '../types';
@@ -102,9 +106,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
       index: 0,
       paused: true,
       bodyText: this.props.content,
-      editorState: EditorState.createWithContent(
-        createDeterministicContentState(this.props.content),
-      ),
+      editorState: this.buildEditorState(this.props.content),
       currentReel: new DisplayReel('Press "Play".', -1, 1000),
       tape: this.parse(this.props.content),
       readingSpeed: READING_SPEED,
@@ -264,10 +266,18 @@ class Reader extends Component<ReaderProps, ReaderState> {
     this.processCorpus(text);
 
     this.setState({
-      editorState: EditorState.createWithContent(
-        createDeterministicContentState(text),
-      ),
+      editorState: this.buildEditorState(text),
     });
+  }
+
+  // Editor state for `text`; with the difficulty heat map on, each sentence is
+  // tinted green (easy) to red (hard) by a decorator (see difficultyHighlight).
+  buildEditorState(text: string): EditorState {
+    const content = createDeterministicContentState(text);
+
+    return this.props.difficultyHighlightEnabled
+      ? EditorState.createWithContent(content, createDifficultyDecorator(text))
+      : EditorState.createWithContent(content);
   }
 
   // processes a new text sample and updates the state objects
@@ -675,9 +685,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
     const statsBlock = (
       <div className="card bg-base-200 p-4 gap-1 text-sm">
         <h3 className="font-semibold mb-1">Stats</h3>
-        <p>Age estimate: {this.state.ageEstimate}</p>
+        <p>Age estimate: {Math.round(this.state.ageEstimate)} years</p>
         <p>
-          Reading: {this.state.index} / {this.state.tape.length}
+          Reading: {this.state.index} / {this.state.tape.length} words
         </p>
         <p>
           {utils.formatSeconds(totalTimeEstimate - remainingTimeEstimate)} /{' '}
@@ -734,6 +744,10 @@ class Reader extends Component<ReaderProps, ReaderState> {
             customStyleMap={this.colorStyleMap}
           />
         </div>
+
+        <DifficultyLegend
+          visible={Boolean(this.props.difficultyHighlightEnabled)}
+        />
 
         {this.state.statsPortalTarget
           ? createPortal(statsBlock, this.state.statsPortalTarget)
