@@ -36,6 +36,9 @@ const PLAYPAUSE_KEY = CONSTANTS.PLAYPAUSE_KEY;
 const READING_SPEED = CONSTANTS.DEFAULT_READING_SPEED; // in words-per-minute (wpm)
 const MAX_DISPLAY_SIZE = CONSTANTS.MAX_DISPLAY_SIZE;
 
+// How long typing must pause before the edited text is re-parsed / re-scored.
+const COMMIT_DELAY_MS = 350;
+
 const DEFAULT_AGE = CONSTANTS.DEFAULT_AGE;
 
 // id of the sidebar slot (rendered by pages/index.tsx) that the reading
@@ -89,6 +92,7 @@ let ctx: Reader;
 class Reader extends Component<ReaderProps, ReaderState> {
   editor: Editor | null = null;
   loopTimer: ReturnType<typeof setTimeout> | null = null;
+  commitTimer: ReturnType<typeof setTimeout> | null = null;
   // set when playback ran off the end of a page and the parent is supplying the next one
   continuePlaying = false;
   colorStyleMap: DraftStyleMap = {};
@@ -210,6 +214,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
     if (this.loopTimer !== null) {
       clearTimeout(this.loopTimer);
     }
+    if (this.commitTimer !== null) {
+      clearTimeout(this.commitTimer);
+    }
   }
 
   handleGlobalKeyDown(event: KeyboardEvent): void {
@@ -287,18 +294,54 @@ class Reader extends Component<ReaderProps, ReaderState> {
     this.editor = editor;
   };
 
-  // change handler for draftjs, this strips out all the styles from the content and applies the new editor state.
+  // change handler for draftjs. The new editor state is applied untouched so
+  // the caret never jumps (rebuilding it per keystroke is what made typing with
+  // the heat-map decorator fragile). Edits are committed - tape, stats and the
+  // decorator's scores refreshed - once typing pauses, or at once on Play.
   onEditorChange = (editorState: EditorState): void => {
-    // get plain text from the paste event
+    const edited =
+      editorState.getCurrentContent() !==
+      this.state.editorState.getCurrentContent();
+
+    this.setState({ editorState });
+
+    if (edited) {
+      this.scheduleCommit();
+    }
+  };
+
+  scheduleCommit(): void {
+    if (this.commitTimer !== null) {
+      clearTimeout(this.commitTimer);
+    }
+
+    this.commitTimer = setTimeout(() => this.commitEdit(), COMMIT_DELAY_MS);
+  }
+
+  // Applies the editor's current text: re-parse for playback and re-score the
+  // heat map by swapping only the decorator (selection and content untouched).
+  commitEdit(): void {
+    if (this.commitTimer !== null) {
+      clearTimeout(this.commitTimer);
+      this.commitTimer = null;
+    }
+
     const text = this.state.editorState.getCurrentContent().getPlainText();
 
-    // pass text along to content handler.
-    this.contentHandler(text);
+    if (text === this.state.bodyText) {
+      return;
+    }
 
-    this.setState({
-      editorState: editorState,
-    });
-  };
+    this.processCorpus(text);
+
+    if (this.props.difficultyHighlightEnabled) {
+      this.setState((s) => ({
+        editorState: EditorState.set(s.editorState, {
+          decorator: createDifficultyDecorator(text),
+        }),
+      }));
+    }
+  }
 
   propHandler(): void {
     this.contentHandler(this.props.content, true);
@@ -597,6 +640,11 @@ class Reader extends Component<ReaderProps, ReaderState> {
       category: 'User',
       action: 'Hit Play Button',
     });
+
+    // play what is in the editor right now, even if typing just stopped
+    if (this.commitTimer !== null) {
+      this.commitEdit();
+    }
 
     // if paused, unpause and continue playing
     if (this.state.paused) {
