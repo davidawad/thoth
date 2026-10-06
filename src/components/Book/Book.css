@@ -331,111 +331,6 @@
   margin: 0 0 0.4rem;
 }
 
-/* ---- Reading view ------------------------------------------------------ */
-.book-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border);
-}
-.book-head-text {
-  min-width: 0;
-}
-.book-title {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  line-height: 1.15;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.book-byline {
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  color: var(--color-fg-muted);
-  margin: 0.35rem 0 0;
-}
-.book-head-actions {
-  display: flex;
-  gap: 0.4rem;
-  flex-shrink: 0;
-}
-.book-resumed {
-  font-family: var(--font-chrome);
-  font-style: italic;
-  color: var(--color-fg-muted);
-  margin: 0.75rem 0 0;
-}
-.book-chapter {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  margin: 1.5rem 0 1rem;
-  text-align: center;
-}
-.book-chapter-num {
-  font-family: var(--font-ui);
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-fg-muted);
-}
-.book-chapter-title {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  overflow-wrap: anywhere;
-}
-.book-page {
-  padding: 1.25rem 1rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-page);
-  background: var(--color-bg-elevated);
-}
-.book-page .editor {
-  max-height: 24rem;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-.book-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-.book-scrub {
-  flex: 1;
-  min-width: 0;
-}
-.book-progress {
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  color: var(--color-fg-muted);
-  text-align: center;
-  margin: 0.6rem 0 0.4rem;
-}
-.book-bar {
-  height: 4px;
-  background: var(--color-border-strong);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.book-bar-fill {
-  height: 100%;
-  background: var(--color-accent);
-  transition: width 0.3s ease;
-}
-.book-keys {
-  font-family: var(--font-ui);
-  font-size: 0.7rem;
-  color: var(--color-fg-muted);
-  text-align: center;
-  margin: 0.6rem 0 0;
-}
-
 /* Speed control in the Reader's controls row. */
 .readerSpeed {
   display: flex;
@@ -457,7 +352,8 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(0, 0, 0, 0.45);
+  background: color-mix(in srgb, var(--color-fg) 45%, transparent);
+  backdrop-filter: blur(2px);
 }
 .book-toc {
   position: absolute;
@@ -535,18 +431,13 @@
   color: var(--color-fg-muted);
 }
 
-.book button:focus-visible,
 .book-library button:focus-visible,
-.book-toc button:focus-visible,
-.book input:focus-visible {
+.book-toc button:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
 @media (max-width: 640px) {
-  .book-page {
-    padding: 0.75rem 0.5rem 0.25rem;
-  }
   .readerSpeed {
     width: 100%;
     justify-content: center;
@@ -555,12 +446,4 @@
     flex: 1;
     width: auto;
   }
-  .book-nav .btn {
-    padding-inline: 0.6rem;
-  }
-}
-
-/* Inside a book page the head is a little smaller than on the landing card. */
-.book-page .playbackHead {
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
 }

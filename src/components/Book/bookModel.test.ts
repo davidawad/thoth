@@ -9,6 +9,7 @@ import {
   layoutBook,
   pickContinueBook,
   positionOfGlobalPage,
+  splitIntoFullPages,
   splitIntoPages,
   stepPosition,
 } from './bookModel';
@@ -210,5 +211,33 @@ describe('pickContinueBook', () => {
 
   it('is null for an empty library', () => {
     expect(pickContinueBook([], 'x')).toBeNull();
+  });
+});
+
+describe('splitIntoFullPages', () => {
+  const para = (n: number, tag: string): string =>
+    Array.from({ length: n }, (_, i) => `${tag}${i} x.`).join(' ');
+  const text = [7, 6, 9, 4, 8, 10, 3]
+    .map((n, i) => para(n, `p${i}`))
+    .join('\n\n');
+
+  it('never exceeds the target and loses no words', () => {
+    const pages = splitIntoFullPages(text, 40);
+    expect(Math.max(...pages.map(countWords))).toBeLessThanOrEqual(40);
+    expect(pages.reduce((n, p) => n + countWords(p), 0)).toBe(countWords(text));
+  });
+  it('fills pages: all but the last are within one sentence of the target', () => {
+    const pages = splitIntoFullPages(text, 40);
+    for (const p of pages.slice(0, -1)) {
+      expect(countWords(p)).toBeGreaterThanOrEqual(38);
+    }
+  });
+  it('keeps paragraph breaks and splits a huge sentence on words', () => {
+    expect(splitIntoFullPages('one two.\n\nthree four.', 40)).toEqual([
+      'one two.\n\nthree four.',
+    ]);
+    const huge = Array.from({ length: 95 }, (_, i) => `w${i}`).join(' ');
+    expect(splitIntoFullPages(huge, 40).map(countWords)).toEqual([40, 40, 15]);
+    expect(splitIntoFullPages('   ', 40)).toEqual([]);
   });
 });

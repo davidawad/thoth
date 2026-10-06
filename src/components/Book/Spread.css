@@ -1,0 +1,629 @@
+/* The Spotlight reading view (docs/mockups/book-view 08 v2). Colours come only
+ * from the theme/palette tokens (styles/tokens.css). Chrome: Fraunces /
+ * Newsreader / IBM Plex Mono. The playback head is Atkinson Hyperlegible; the
+ * book pages are set in Newsreader. */
+
+.sp-app {
+  position: relative;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  overflow: hidden;
+}
+
+.sp-app button:focus-visible,
+.sp-app input:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---- top nav ------------------------------------------------------------ */
+.sp-nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.8rem 1.2rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+.sp-nav-l {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+.sp-nav-r {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+}
+.sp-back,
+.sp-link {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  background: none;
+  border: 0;
+  padding: 0.35rem 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sp-back:hover,
+.sp-link:hover {
+  color: var(--color-fg);
+  text-decoration: underline;
+}
+.sp-ttl {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.sp-ttl i {
+  font-style: normal;
+  color: var(--color-fg-muted);
+}
+.sp-ttl span {
+  color: var(--color-fg-muted);
+}
+
+/* The playback head pill. */
+.sp-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.25rem 0.9rem 0.25rem 0.3rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+}
+.sp-ib {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  padding: 0 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+.sp-ib:hover:not(:disabled) {
+  background: var(--color-bg-elevated-2);
+}
+.sp-ib:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.sp-ib--ring {
+  border-color: var(--color-border-strong);
+}
+.sp-play {
+  width: 2.7rem;
+  height: 2.7rem;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+.sp-play:hover:not(:disabled) {
+  background: var(--color-accent);
+  filter: brightness(1.08);
+}
+.sp-head {
+  width: 22rem;
+  margin: 0 0.5rem;
+  color: var(--color-fg);
+}
+.sp-head .playbackHead {
+  font-size: 1.55rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 7.8em) minmax(0, 1fr);
+  column-gap: 0.4rem;
+}
+.sp-head .Reader-canvas::before,
+.sp-head .Reader-canvas::after {
+  display: none;
+}
+.sp-wpm {
+  min-width: 4.6rem;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--color-fg-muted);
+  border-left: 1px solid var(--color-border-strong);
+  padding-left: 0.7rem;
+}
+
+/* ---- stage + spread ----------------------------------------------------- */
+.sp-stage {
+  display: grid;
+  place-items: center;
+  padding: 0.9rem 1.25rem;
+  min-height: 0;
+  overflow: hidden;
+}
+.sp-spread {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, var(--sp-pw));
+  height: var(--sp-ph);
+  perspective: 2600px;
+  font-size: var(--sp-fs);
+  border-radius: 4px;
+  box-shadow: 0 0.9rem 2.4rem
+    color-mix(in srgb, var(--color-fg) 22%, transparent);
+}
+.sp-spread[data-span='1'] {
+  grid-template-columns: var(--sp-pw);
+}
+.sp-sheet {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+}
+.sp-sheet--left {
+  border-radius: 4px 0 0 4px;
+}
+.sp-sheet--right {
+  border-radius: 0 4px 4px 0;
+}
+.sp-spread[data-span='1'] .sp-sheet {
+  border-radius: 4px;
+}
+/* shading toward the spine */
+.sp-sheet--left::after,
+.sp-sheet--right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9%;
+  pointer-events: none;
+  z-index: 2;
+}
+.sp-sheet--left::after {
+  right: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--color-fg) 14%, transparent)
+  );
+}
+.sp-sheet--right::before {
+  left: 0;
+  background: linear-gradient(
+    to left,
+    transparent,
+    color-mix(in srgb, var(--color-fg) 14%, transparent)
+  );
+}
+.sp-spread[data-span='1'] .sp-sheet--left::after {
+  display: none;
+}
+
+.sp-ribbon {
+  position: absolute;
+  top: -3px;
+  left: calc(var(--sp-pw) - 0.7rem);
+  width: 1.4rem;
+  height: 3.6rem;
+  background: var(--color-accent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  z-index: 3;
+}
+.sp-spread[data-span='1'] .sp-ribbon {
+  left: calc(var(--sp-pw) - 2.4rem);
+}
+
+/* ---- one page ----------------------------------------------------------- */
+.sp-page {
+  position: absolute;
+  inset: 0;
+  font-family: var(--font-chrome);
+  color: var(--color-fg);
+}
+.sp-runhead,
+.sp-folio {
+  position: absolute;
+  left: calc(var(--sp-pw) * 0.085);
+  right: calc(var(--sp-pw) * 0.085);
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: max(0.6rem, calc(var(--sp-fs) * 0.52));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-runhead {
+  top: calc(var(--sp-ph) * 0.05);
+}
+.sp-folio {
+  bottom: calc(var(--sp-ph) * 0.045);
+  text-align: center;
+}
+.sp-body {
+  position: absolute;
+  top: calc(var(--sp-ph) * 0.11);
+  bottom: calc(var(--sp-ph) * 0.1);
+  left: calc(var(--sp-pw) * 0.085);
+  right: calc(var(--sp-pw) * 0.085);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  font-size: var(--sp-fs);
+  line-height: 1.62;
+  text-align: justify;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+.sp-para {
+  margin: 0;
+  text-indent: 1.4em;
+}
+.sp-para:first-child {
+  text-indent: 0;
+}
+
+/* The spotlight: only the current sentence is at full strength. */
+.sp-spread {
+  --sp-dim: 44%;
+}
+.sp-spread[data-dim='soft'] {
+  --sp-dim: 68%;
+}
+.sp-spread[data-dim='off'] {
+  --sp-dim: 100%;
+}
+.sp-sent {
+  color: color-mix(
+    in srgb,
+    var(--color-fg) var(--sp-dim),
+    var(--color-bg-elevated)
+  );
+  transition: color 0.25s ease;
+  cursor: pointer;
+}
+.sp-sent.is-lit {
+  color: var(--color-fg);
+}
+
+/* The current word: tinted, with its focus letter in bold red. The bold letter
+ * is overlaid on a transparent real one, so the line never reflows. */
+.sp-cur {
+  color: var(--color-fg);
+  background: color-mix(in srgb, var(--color-error) 22%, transparent);
+  box-shadow: 0 0 0 0.12em
+    color-mix(in srgb, var(--color-error) 22%, transparent);
+  border-radius: 0.2em;
+}
+.sp-hot {
+  position: relative;
+  color: transparent;
+  text-decoration: underline;
+  text-decoration-color: var(--color-error);
+  text-decoration-thickness: 0.13em;
+  text-underline-offset: 0.16em;
+}
+.sp-hot::after {
+  content: attr(data-ch) / '';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 1;
+  text-indent: 0; /* the paragraph's first-line indent is inherited */
+  color: var(--color-error);
+  /* Atkinson Hyperlegible Bold (the playback head's face) + a hairline stroke:
+   * the letter must read at a glance, not as a faint tint. */
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.22em;
+  -webkit-text-stroke: 0.05em var(--color-error);
+}
+/* a tick above the letter, matching the one under it and the playback head's ticks */
+.sp-hot::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -0.2em;
+  width: 0.13em;
+  height: 0.22em;
+  transform: translateX(-50%);
+  background: var(--color-error);
+  border-radius: 1px;
+}
+
+/* ---- page-turn leaf ------------------------------------------------------ */
+.sp-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--sp-pw);
+  transform-style: preserve-3d;
+  z-index: 4;
+  will-change: transform;
+}
+.sp-leaf--right {
+  left: var(--sp-pw);
+}
+.sp-leaf--left {
+  left: 0;
+}
+.sp-leaf--fwd {
+  transform-origin: left center;
+}
+.sp-leaf--back {
+  transform-origin: right center;
+}
+.sp-spread[data-span='1'] .sp-leaf {
+  transform-origin: left center;
+}
+.sp-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 0 1.4rem color-mix(in srgb, var(--color-fg) 25%, transparent);
+}
+.sp-face--back {
+  transform: rotateY(180deg);
+}
+
+/* ---- bottom settings row -------------------------------------------------- */
+.sp-dock {
+  background: var(--color-bg-elevated);
+  border-top: 1px solid var(--color-border-strong);
+  padding: 0.55rem 1.2rem 0.65rem;
+}
+.sp-compact,
+.sp-sheet-h {
+  display: none;
+}
+.sp-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 1.25rem;
+}
+.sp-ctl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.sp-lbl {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+.sp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+.sp-row .range {
+  width: 6rem;
+}
+.sp-val,
+.sp-pr {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--color-fg-muted);
+}
+.sp-val {
+  min-width: 3rem;
+}
+.sp-pr {
+  color: var(--color-fg);
+  white-space: nowrap;
+}
+.sp-prog {
+  margin-left: auto;
+}
+.sp-prog .sp-ib {
+  min-width: 2rem;
+  height: 2rem;
+}
+.sp-seg {
+  display: inline-flex;
+  min-height: 2rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.sp-seg button {
+  padding: 0 0.7rem;
+  background: none;
+  border: 0;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+.sp-seg button + button {
+  border-left: 1px solid var(--color-border-strong);
+}
+.sp-seg button[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+.sp-swatches {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+}
+.sp-swatch {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-strong);
+  cursor: pointer;
+  padding: 0;
+}
+.sp-swatch[aria-checked='true'] {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+.sp-palname {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-fg);
+}
+.sp-toc-btn {
+  gap: 0.4rem;
+}
+
+/* ---- phone: single page, compact row + bottom sheet ----------------------- */
+@media (max-width: 759px) {
+  .sp-nav {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem 0.6rem;
+  }
+  .sp-nav-r {
+    display: none;
+  }
+  .sp-ttl {
+    font-size: 0.9rem;
+  }
+  .sp-strip {
+    justify-self: center;
+    max-width: 100%;
+    padding-right: 0.5rem;
+  }
+  .sp-head {
+    width: min(13.5rem, 46vw);
+    margin: 0 0.2rem;
+  }
+  .sp-head .playbackHead {
+    font-size: 1.3rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 5.4em) minmax(0, 1fr);
+    row-gap: 0;
+  }
+  .sp-head .playbackHeadSide {
+    font-size: 0.5em;
+    grid-row: auto;
+  }
+  .sp-head .Reader-canvas {
+    grid-column: auto;
+    grid-row: auto;
+    width: auto;
+  }
+  .sp-wpm {
+    display: none;
+  }
+  .sp-stage {
+    padding: 0.6rem 0.9rem;
+  }
+  .sp-dock {
+    padding: 0.4rem 0.7rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
+  }
+  .sp-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .sp-pr--compact {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    font-size: 0.64rem;
+    line-height: 1.25;
+    white-space: normal;
+  }
+  .sp-ib--ring {
+    min-width: 2.6rem;
+    height: 2.6rem;
+  }
+  .sp-ib--ring[aria-expanded='true'] {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+  .sp-settings {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    max-height: 70svh;
+    overflow-y: auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
+    padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    background: var(--color-bg-elevated);
+    border-top: 1px solid var(--color-border-strong);
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -0.6rem 1.4rem
+      color-mix(in srgb, var(--color-fg) 25%, transparent);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition:
+      transform 0.26s ease,
+      visibility 0s 0.26s;
+  }
+  .sp-dock[data-open='true'] .sp-settings {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.26s ease;
+  }
+  .sp-sheet-h {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    padding: 0.2rem 0 0.4rem;
+  }
+  .sp-ctl {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .sp-ctl--toc,
+  .sp-prog {
+    display: none;
+  }
+  .sp-row .range {
+    width: min(12rem, 48vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-sent {
+    transition: none;
+  }
+  .sp-settings {
+    transition: none;
+  }
+}

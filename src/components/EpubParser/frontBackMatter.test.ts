@@ -149,6 +149,27 @@ describe('stripTitlePageAndContents', () => {
     expect(stripTitlePageAndContents(text)).toBe('');
   });
 
+  it('drops a contents run with no "Contents" heading right after a byline', () => {
+    const text = [
+      'MEDITATIONS',
+      'By Marcus Aurelius',
+      'MARCUS AURELIUS ANTONINUS THE ROMAN EMPEROR',
+      'BOOKS',
+      'INTRODUCTION',
+      'HIS FIRST BOOK',
+      'THE SECOND BOOK',
+      prose,
+    ].join('\n\n');
+    expect(stripTitlePageAndContents(text)).toBe(prose);
+  });
+
+  it('keeps a short heading run that is not after a title block', () => {
+    const text = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', prose].join(
+      '\n\n',
+    );
+    expect(stripTitlePageAndContents(text)).toBe(text);
+  });
+
   it('leaves ordinary text, even with a short first line, untouched', () => {
     const text = `Chapter One\n\n${prose}`;
     expect(stripTitlePageAndContents(text)).toBe(text);

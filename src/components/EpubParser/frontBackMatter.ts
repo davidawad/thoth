@@ -240,6 +240,25 @@ function contentsEnd(paras: readonly string[], from: number): number {
   return end;
 }
 
+// Without a "Contents" heading a listing is recognised by shape: a run of
+// heading-like lines (ALL CAPS, "Chapter X", "XII. Title") right after the title
+// block, with no prose in between.
+const HEADING_LINE_RE =
+  /^(?:chapter|book|part|section|canto|act|letter)\b|^[IVXLCDM]+\.\s/i;
+const MIN_LISTING_LINES = 5;
+const hasLowercase = (s: string): boolean => /[a-z]/.test(s);
+const isHeadingLine = (s: string): boolean =>
+  isShortLine(s) && (!hasLowercase(s) || HEADING_LINE_RE.test(s));
+
+/** Index just past a leading run of at least MIN_LISTING_LINES heading-like lines. */
+function listingEnd(paras: readonly string[], from: number): number {
+  let end = from;
+  while (end < paras.length && isHeadingLine(paras[end] ?? '')) {
+    end++;
+  }
+  return end - from >= MIN_LISTING_LINES ? end : from;
+}
+
 /**
  * Drops a leading title page ("PHAEDO / By Plato / Translated by ...") and
  * contents listing from a paragraph-preserving section text. Conservative:
@@ -252,6 +271,11 @@ export function stripTitlePageAndContents(text: string): string {
     .map((p) => p.trim())
     .filter(Boolean);
   const afterTitle = titleBlockEnd(paras);
-  const end = contentsEnd(paras, afterTitle);
+  const afterContents = contentsEnd(paras, afterTitle);
+  // a heading-shaped listing only counts straight after a title block
+  const end =
+    afterContents === afterTitle && afterTitle > 0
+      ? listingEnd(paras, afterTitle)
+      : afterContents;
   return end === 0 ? text : paras.slice(end).join('\n\n');
 }

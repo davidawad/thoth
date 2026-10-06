@@ -27,6 +27,7 @@ import {
 import SpeedControl from './SpeedControl';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
+import { wordDisplayTime } from './wordTiming';
 import { currentPosition, focusIndex, surroundingWords } from './wordRow';
 import type { AppSettings } from '../types';
 
@@ -425,45 +426,10 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
   // creates an array of DisplayReel Objects that contain the timing and other information for word display.
   timingBelt(words: DisplayReel[], str: string): DisplayReel[] {
-    const word = str;
     const len = str.length;
     const focus = focusIndex(str);
 
-    const speed = Number(this.props.readingSpeed);
-
-    // time that this word will be displayed in milliseconds
-    let t = 60000 / speed;
-
-    // if t is over lenth of 6, increase time by 1/4th
-    if (len > 6) {
-      t += t / 4;
-    }
-
-    // if t has a comma, add half time
-    if (~str.indexOf(',')) {
-      t += t / 2;
-    }
-
-    // if t has a question mark / scale up by 1.5
-    if (/[.?!]/.test(str)) {
-      t += t * 1.5;
-    }
-
-    const wordIsPronoun = word.charAt(0) === word.charAt(0).toLowerCase();
-
-    const punctuationStrippedWord =
-      TextParsingTools.stripPunctuation(word).toLowerCase();
-
-    // Scale the display time continuously by how difficult the word is
-    // (syllable count + dictionary-familiarity tier), rather than applying
-    // a single fixed multiplier to every "unfamiliar" word. Pronouns and
-    // very short words are excluded, same as before.
-    if (!wordIsPronoun && word.length > 2) {
-      t *= TextParsingTools.wordDifficultyMultiplier(punctuationStrippedWord);
-    }
-
-    // TODO scale the timing by a factor of the perceived text complexity:
-    // t = t * (1 + (MAX_AGE - Number(ctx.state.ageEstimate)) / MAX_AGE)
+    const t = wordDisplayTime(str, Number(this.props.readingSpeed));
 
     let ret = words.concat([new DisplayReel(str, focus, t)]);
 

@@ -180,16 +180,15 @@ class App extends Component<Record<string, never>, AppState> {
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
-        <SiteHeader />
-        <div className="App">
-          <ReadingWorkspace
-            settings={settings}
-            onSpeedChange={this.setReadingSpeed}
-            onClearedAll={this.resetReadingSpeed}
-          />
-        </div>
-
-        <SiteFooter onOpenSettings={this.openSettings} />
+        <ReadingWorkspace
+          settings={settings}
+          onSpeedChange={this.setReadingSpeed}
+          onClearedAll={this.resetReadingSpeed}
+          header={<SiteHeader />}
+          footer={<SiteFooter onOpenSettings={this.openSettings} />}
+          onOpenSettings={this.openSettings}
+          modalOpen={settingsOpen}
+        />
 
         <ModalWrapper
           updateCallback={this.updateSettings}

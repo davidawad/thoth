@@ -123,3 +123,20 @@ describe('degrades when localStorage throws (private browsing)', () => {
     expect(() => savePosition('a', { chapter: 0, page: 0 })).not.toThrow();
   });
 });
+
+describe('saved word offset', () => {
+  it('round-trips the chapter word offset next to page and percent', () => {
+    savePosition('b', { chapter: 3, page: 4 }, 12, 987);
+    expect(loadPositions()['b']).toEqual({
+      chapter: 3,
+      page: 4,
+      pct: 12,
+      word: 987,
+    });
+  });
+  it('ignores a malformed word offset but keeps the position', () => {
+    expect(parsePositions('{"a":{"chapter":1,"page":2,"word":-4}}')).toEqual({
+      a: { chapter: 1, page: 2 },
+    });
+  });
+});

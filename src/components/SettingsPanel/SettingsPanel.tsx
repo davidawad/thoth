@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import TextParsingTools from '../TextParsingTools';
 import PaletteField from '../palette/PaletteField';
 import { applyStoredPalette } from '../palette/applyPalette';
+import { applyTheme, getActiveTheme } from '../Book/theme';
 import {
   THEMES,
-  THEME_STORAGE_KEY,
   DEFAULT_THEME,
   FONT_ATTRIBUTION,
   FOUNDATIONAL_RESEARCH,
@@ -16,37 +16,6 @@ import {
   DIFFICULTY_HIGHLIGHT_STORAGE_KEY,
 } from '../constants';
 import type { AppSettings, UpdateCallback } from '../types';
-
-// Reads the theme currently applied to <html data-theme="..."> - set before
-// first paint by the inline script in pages/_document.js - so this selector
-// starts in sync with what's already on screen rather than flashing to a
-// default value once the component mounts.
-function getActiveTheme(): string {
-  if (typeof document === 'undefined') {
-    return DEFAULT_THEME;
-  }
-
-  return document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
-}
-
-// Applies + persists a theme. Swapping `data-theme` is daisyui's own
-// mechanism (see tailwind.config.js `daisyui.themes`) - no parallel
-// CSS-variable system needed.
-function applyTheme(themeId: string): void {
-  if (typeof document === 'undefined') {
-    return;
-  }
-
-  document.documentElement.setAttribute('data-theme', themeId);
-
-  try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, themeId);
-  } catch {
-    // localStorage can throw (private browsing, storage disabled, quota,
-    // etc). The theme still applies for this session, it just won't
-    // persist across visits.
-  }
-}
 
 function TypefaceSection() {
   return (

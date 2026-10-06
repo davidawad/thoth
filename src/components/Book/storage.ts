@@ -48,7 +48,14 @@ export function parseWpm(raw: string | null): number {
 }
 
 /** A saved reading position, plus the percent read (for the library list). */
-export type SavedPosition = Position & { pct?: number };
+export type SavedPosition = Position & {
+  pct?: number;
+  /**
+   * Offset of the current word inside its chapter. Unlike `page` it survives
+   * re-pagination (text size, window size), so it is what resume uses when set.
+   */
+  word?: number;
+};
 
 const isCount = (v: unknown): v is number =>
   typeof v === 'number' && Number.isFinite(v) && v >= 0;
@@ -58,10 +65,12 @@ function parseOnePosition(v: unknown): SavedPosition | null {
     return null;
   }
   const pct = v['pct'];
+  const word = v['word'];
   return {
     chapter: Math.floor(v['chapter']),
     page: Math.floor(v['page']),
     ...(isCount(pct) && pct <= 100 ? { pct: Math.floor(pct) } : {}),
+    ...(isCount(word) ? { word: Math.floor(word) } : {}),
   };
 }
 
@@ -169,9 +178,18 @@ export const saveCurrentBookId = (id: string | null): void =>
 
 export const loadPositions = (): Record<string, SavedPosition> =>
   parsePositions(lsGet(LS_POSITIONS));
-export function savePosition(id: string, pos: Position, pct?: number): void {
+export function savePosition(
+  id: string,
+  pos: Position,
+  pct?: number,
+  word?: number,
+): void {
   const all = loadPositions();
-  all[id] = pct === undefined ? { ...pos } : { ...pos, pct };
+  all[id] = {
+    ...pos,
+    ...(pct === undefined ? {} : { pct }),
+    ...(word === undefined ? {} : { word }),
+  };
   lsSet(LS_POSITIONS, JSON.stringify(all));
 }
 export function forgetPosition(id: string): void {

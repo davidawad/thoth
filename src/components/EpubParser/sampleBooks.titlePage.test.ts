@@ -40,8 +40,9 @@ describe('sample EPUB title pages and contents are stripped at ingest', () => {
       expect(c.text.slice(0, 300)).not.toMatch(/By Marcus Aurelius\n\n/);
       expect(c.text.startsWith('MEDITATIONS\n\nBy')).toBe(false);
     }
-    expect(book.chapters[0]?.text.startsWith('MARCUS AURELIUS ANTONINUS')).toBe(
-      true,
+    expect(book.chapters[0]?.title).toBe('INTRODUCTION');
+    expect(book.chapters[0]?.text.slice(0, 300)).not.toMatch(
+      /ROMAN EMPEROR|HIS FIRST BOOK/,
     );
     expect(book.title).toContain('Meditations');
   }, 60000);

@@ -129,6 +129,59 @@ export function splitIntoPages(text: string, target = PAGE_WORDS): string[] {
   return pages;
 }
 
+/**
+ * Sentence-granular pagination for the spread: pages are filled to (but never
+ * past) `target` words, breaking between sentences - even inside a paragraph,
+ * as a printed book does - so pages come out nearly full instead of ending
+ * early to keep a long paragraph whole. A single sentence longer than a page
+ * is cut on word count. Paragraph breaks are kept (blank line).
+ */
+export function splitIntoFullPages(
+  text: string,
+  target = PAGE_WORDS,
+): string[] {
+  const size = Math.max(20, Math.floor(target));
+  interface Piece {
+    text: string;
+    words: number;
+    paraStart: boolean;
+  }
+  const pieces: Piece[] = [];
+  for (const para of text.split(/\n{2,}/)) {
+    const sentences = para
+      .trim()
+      .split(/(?<=[.!?…]["'”’)\]]*)\s+/)
+      .filter(Boolean);
+    sentences.forEach((sentence, i) => {
+      const words = sentence.split(/\s+/).filter(Boolean);
+      for (let w = 0; w < words.length; w += size) {
+        const chunk = words.slice(w, w + size);
+        pieces.push({
+          text: chunk.join(' '),
+          words: chunk.length,
+          paraStart: i === 0 && w === 0,
+        });
+      }
+    });
+  }
+  const pages: string[] = [];
+  let out = '';
+  let count = 0;
+  for (const p of pieces) {
+    if (count > 0 && count + p.words > size) {
+      pages.push(out);
+      out = '';
+      count = 0;
+    }
+    out += out === '' ? p.text : (p.paraStart ? '\n\n' : ' ') + p.text;
+    count += p.words;
+  }
+  if (out) {
+    pages.push(out);
+  }
+  return pages;
+}
+
 /** Page layout of a whole book, computed once when a book is opened. */
 export interface BookLayout {
   /** pages[c] = the pages of chapter c (a chapter with no text has 0 pages). */
@@ -144,8 +197,13 @@ export interface BookLayout {
 export function layoutBook(
   chapters: readonly Chapter[],
   target = PAGE_WORDS,
+  strict = false,
 ): BookLayout {
-  const pages = chapters.map((c) => splitIntoPages(c.text, target));
+  const pages = chapters.map((c) =>
+    strict
+      ? splitIntoFullPages(c.text, target)
+      : splitIntoPages(c.text, target),
+  );
   const pageWords = pages.map((ps) => ps.map(countWords));
   const firstPage: number[] = [];
   let total = 0;
