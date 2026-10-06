@@ -346,9 +346,10 @@ h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem
 .card:hover { border-color: var(--accent); }
 .card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: var(--bg3); display: block; }
 .card div { padding: 0 1rem 1rem; } .card h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; margin: 0 0 .3rem; }
+.badge { font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: .15rem .4rem; border-radius: 3px; margin-left: .3rem; vertical-align: middle; white-space: nowrap; }
 .card p { margin: 0; color: var(--muted); font-size: .98rem; line-height: 1.4; } .no { font-family: var(--font-mono); color: var(--accent); font-size: .8rem; margin-right: .3rem; }
 </style></head><body><div class="wrap">
-<h1>Book view: ten directions</h1>
+<h1>Book view: eleven mockups</h1>
 <p class="lede">The reading view as a rendered two-page book, separate from the landing page. The RSVP playback head is its own element and the current word's red focus letter shows in both the head and the book text. Each mockup turns pages (arrow keys or click a page), plays a demo word (space), and switches theme (T). Text is from Meditations (Marcus Aurelius, public domain).</p>
 <div class="bar"><button class="btn" type="button" data-act="theme">Theme: <span data-themename>dark</span></button><span class="lbl">applies to this gallery only</span></div>
 <div class="grid">
@@ -362,6 +363,7 @@ h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem
 <a class="card" href="08-spotlight.html"><img src="screenshots/08.png" alt="Screenshot of mockup 08" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">08</span> Spotlight</h2><p>Focus mode: larger type, text already read and still to come recede, and only the current sentence is lit. The playback head is a slim full-width bar along the bottom edge; a hairline progress line runs across the top.</p></div></a>
 <a class="card" href="09-chapter-rail.html"><img src="screenshots/09.png" alt="Screenshot of mockup 09" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">09</span> Chapter Rail</h2><p>A navigator’s layout: a chapter rail down the left, a word scrubber under the book, and a ribbon plus a margin arrow that points at the line being read. The playback head is a lectern tab that slides up from the bottom edge and collapses to a tab.</p></div></a>
 <a class="card" href="10-folio-fold.html"><img src="screenshots/10.png" alt="Screenshot of mockup 10" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">10</span> Folio Fold</h2><p>The most physical one: the whole book tilts back on the desk with visible page-stack edges and deep curl shading on every turn. A dog-eared corner marks the page being read, a thin band marks the sentence, and a small reading-lamp card holds the playback head.</p></div></a>
+<a class="card" href="08-spotlight-v2.html"><img src="screenshots/08-v2.png" alt="Screenshot of mockup 08" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">08</span> Spotlight <span class="badge">chosen direction, revised</span></h2><p>Spotlight, revised after review: the playback head moves up into the top nav above the book (word with its red focus letter, prev / play / next, wpm), and a slim always-visible settings row sits on the bottom (speed, text size, theme, five palettes, spotlight dim, contents, progress). Collapses to a bottom sheet on phones. Open #landing to see the entry screen the reader is reached from.</p></div></a>
 </div></div>
 <script>
 (function(){var th=['dark','light','sepia'];var s=null;try{s=localStorage.getItem('bv-theme')}catch(e){}

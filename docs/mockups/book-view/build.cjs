@@ -26,9 +26,11 @@ const palCss = (pal) =>
     .join('\n');
 
 designs.forEach((d, i) => {
-  const n = String(i + 1).padStart(2, '0');
+  const n = d.num || String(i + 1).padStart(2, '0');
   d.n = n;
+  d.shot = d.shot || `${n}.png`;
   d.out = `${n}-${d.slug}.html`;
+  const eng = d.patchEngine ? d.patchEngine(engine) : engine;
   const html = `<!doctype html>
 <html lang="en" data-theme="dark">
 <head>
@@ -41,14 +43,14 @@ ${base}
 /* ---- design ${n}: ${d.title} ---- */
 ${palCss(d.pal)}
 ${d.css}
-</style>
+</style>${d.head ? '\n' + d.head : ''}
 </head>
 <body class="d${n}">
 ${d.html}
 <script>window.BOOK_TEXT = ${text};\nwindow.BOOK_CFG = ${JSON.stringify(d.cfg || {})};</script>
 <script>
-${engine}
-</script>
+${eng}
+</script>${d.js ? `\n<script>\n${d.js}\n</script>` : ''}
 </body>
 </html>
 `;
@@ -58,7 +60,7 @@ ${engine}
 const cards = designs
   .map(
     (d) =>
-      `<a class="card" href="${d.out}"><img src="screenshots/${d.n}.png" alt="Screenshot of mockup ${d.n}" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">${d.n}</span> ${d.title}</h2><p>${d.desc}</p></div></a>`,
+      `<a class="card" href="${d.out}"><img src="screenshots/${d.shot}" alt="Screenshot of mockup ${d.n}" loading="lazy" onerror="this.style.visibility='hidden'"><div><h2><span class="no">${d.n}</span> ${d.title}${d.badge ? ` <span class="badge">${d.badge}</span>` : ''}</h2><p>${d.desc}</p></div></a>`,
   )
   .join('\n');
 fs.writeFileSync(
@@ -77,9 +79,10 @@ h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem
 .card:hover { border-color: var(--accent); }
 .card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: var(--bg3); display: block; }
 .card div { padding: 0 1rem 1rem; } .card h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; margin: 0 0 .3rem; }
+.badge { font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: .15rem .4rem; border-radius: 3px; margin-left: .3rem; vertical-align: middle; white-space: nowrap; }
 .card p { margin: 0; color: var(--muted); font-size: .98rem; line-height: 1.4; } .no { font-family: var(--font-mono); color: var(--accent); font-size: .8rem; margin-right: .3rem; }
 </style></head><body><div class="wrap">
-<h1>Book view: ten directions</h1>
+<h1>Book view: eleven mockups</h1>
 <p class="lede">The reading view as a rendered two-page book, separate from the landing page. The RSVP playback head is its own element and the current word's red focus letter shows in both the head and the book text. Each mockup turns pages (arrow keys or click a page), plays a demo word (space), and switches theme (T). Text is from Meditations (Marcus Aurelius, public domain).</p>
 <div class="bar"><button class="btn" type="button" data-act="theme">Theme: <span data-themename>dark</span></button><span class="lbl">applies to this gallery only</span></div>
 <div class="grid">
