@@ -11,6 +11,12 @@ interface Props {
   onClose: () => void;
 }
 
+/** The chapter's opening words: tells apart chapters that share a title. */
+const snippet = (text: string): string => {
+  const flat = text.slice(0, 120).replace(/\s+/g, ' ').trim();
+  return flat.length > 64 ? `${flat.slice(0, 64).trimEnd()}…` : flat;
+};
+
 const FOCUSABLE =
   'button, [href], input, select, [tabindex]:not([tabindex="-1"])';
 
@@ -100,6 +106,7 @@ export default function TocDrawer({
                   onClick={() => onPick(i)}
                 >
                   <span className="book-toc-title">{c.title}</span>
+                  <span className="book-toc-snippet">{snippet(c.text)}</span>
                   <span className="book-toc-meta">
                     p. {(layout.firstPage[i] ?? 0) + 1} ·{' '}
                     {countWords(c.text).toLocaleString()} words

@@ -425,6 +425,13 @@
   font-family: var(--font-chrome);
   font-size: 1rem;
 }
+.book-toc-snippet {
+  font-family: var(--font-chrome);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--color-fg-muted);
+  margin: 0.1rem 0;
+}
 .book-toc-meta {
   font-family: var(--font-ui);
   font-size: 0.68rem;

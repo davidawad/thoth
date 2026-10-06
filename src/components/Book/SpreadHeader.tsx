@@ -27,7 +27,9 @@ export default function SpreadHeader(p: Props) {
         </button>
         <h1 className="sp-ttl">
           {p.bookTitle}
-          {p.chapterTitle ? (
+          {p.chapterTitle &&
+          p.chapterTitle.trim().toLowerCase() !==
+            p.bookTitle.trim().toLowerCase() ? (
             <>
               <i aria-hidden="true"> · </i>
               <span>{p.chapterTitle}</span>

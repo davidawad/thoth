@@ -339,7 +339,7 @@
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 1.22em;
-  -webkit-text-stroke: 0.05em var(--color-error);
+  -webkit-text-stroke: 0.035em var(--color-error);
 }
 /* a tick above the letter, matching the one under it and the playback head's ticks */
 .sp-hot::before {
