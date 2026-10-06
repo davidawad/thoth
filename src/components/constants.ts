@@ -1,6 +1,6 @@
 export const MAX_DISPLAY_SIZE = 8; // max length in characters before separating a word.
 export const LARGEST_WORD_SIZE = 10; // number of spaces before / after displayhead
-export const DEFAULT_READING_SPEED = 500; // in words-per-minute (wpm)
+export const DEFAULT_READING_SPEED = 300; // in words-per-minute (wpm)
 // KeyboardEvent.code value for the play/pause shortcut - "Space" rather
 // than the deprecated numeric .keyCode (32).
 export const PLAYPAUSE_KEY = 'Space';

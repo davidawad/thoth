@@ -24,6 +24,7 @@ import {
   createDifficultyDecorator,
   DifficultyLegend,
 } from './difficultyHighlight';
+import SpeedControl from './SpeedControl';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
 import type { AppSettings } from '../types';
@@ -43,6 +44,14 @@ export const READER_STATS_PORTAL_ID = 'reader-stats-slot';
 
 interface ReaderProps extends Partial<AppSettings> {
   content: string;
+  /** Called when the user moves the wpm slider (the parent persists it). */
+  onSpeedChange?: (wpm: number) => void;
+  /**
+   * Called when playback reaches the end of the text. Return true if the
+   * parent is loading more text (the next book page): playback then carries
+   * on by itself instead of stopping.
+   */
+  onFinished?: () => boolean;
 }
 
 interface ReaderState {
@@ -77,6 +86,9 @@ let ctx: Reader;
 
 class Reader extends Component<ReaderProps, ReaderState> {
   editor: Editor | null = null;
+  loopTimer: ReturnType<typeof setTimeout> | null = null;
+  // set when playback ran off the end of a page and the parent is supplying the next one
+  continuePlaying = false;
   colorStyleMap: DraftStyleMap = {};
 
   constructor(props: ReaderProps) {
@@ -191,6 +203,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
   componentWillUnmount(): void {
     document.removeEventListener('keydown', this.handleGlobalKeyDown);
+    if (this.loopTimer !== null) {
+      clearTimeout(this.loopTimer);
+    }
   }
 
   handleGlobalKeyDown(event: KeyboardEvent): void {
@@ -220,7 +235,12 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // the parent re-renders for unrelated reasons (opening the Settings modal),
   // and treating that as a settings change would reset and reparse the text.
   componentDidUpdate(prevProps: ReaderProps): void {
-    const changed = utils.changedKeys(prevProps, this.props);
+    // Callback / slot props get a new identity on every parent render; they
+    // are not settings and must never trigger a reparse.
+    const NON_SETTINGS = ['onSpeedChange', 'onFinished'];
+    const changed = utils
+      .changedKeys(prevProps, this.props)
+      .filter((k) => !NON_SETTINGS.includes(String(k)));
 
     if (changed.length === 0) {
       return;
@@ -238,7 +258,19 @@ class Reader extends Component<ReaderProps, ReaderState> {
       return;
     }
 
-    const { content: _content, ...settings } = this.props;
+    // Moving the wpm slider re-times the words but must not lose your place
+    // (or restart the page): rebuild the tape and keep the index.
+    if (changed.length === 1 && changed[0] === 'readingSpeed') {
+      this.setState({ tape: this.parse(this.state.bodyText) });
+      return;
+    }
+
+    const {
+      content: _content,
+      onSpeedChange: _a,
+      onFinished: _b,
+      ...settings
+    } = this.props;
     this.setState(
       settings as Pick<ReaderState, keyof ReaderState>,
       this.propHandler,
@@ -357,7 +389,19 @@ class Reader extends Component<ReaderProps, ReaderState> {
         speedWritingSubstitutions: substitutions,
         speedWritingActive: speedWritingActive,
       },
-      this.reset,
+      () => {
+        this.reset();
+        // Page turned while playing (or auto-advanced at the end of a page):
+        // keep going on the new page. loop() clears any pending timer first,
+        // so a manual page turn never leaves two loops running.
+        if (this.continuePlaying || !this.state.paused) {
+          this.continuePlaying = false;
+          if (this.loopTimer !== null) {
+            clearTimeout(this.loopTimer);
+          }
+          this.setState({ paused: false }, () => this.loop());
+        }
+      },
     );
   }
 
@@ -538,16 +582,22 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
     // are we at the end of the reading
     if (this.state.index === arr.length) {
-      // pause & reset index when done reading
-
-      this.setState({
-        paused: true,
-        index: 0,
-      });
-
       ReactGA.event({
         category: 'User',
         action: 'User finished reading.',
+      });
+
+      // In a book, the parent turns to the next page; playback then resumes
+      // by itself once that page's tape is ready (see applyProcessedText).
+      if (this.props.onFinished?.()) {
+        this.continuePlaying = true;
+        return;
+      }
+
+      // pause & reset index when done reading
+      this.setState({
+        paused: true,
+        index: 0,
       });
 
       return;
@@ -575,7 +625,10 @@ class Reader extends Component<ReaderProps, ReaderState> {
       this.loop();
     };
 
-    setTimeout(next_callback, newReel.displayTime);
+    if (this.loopTimer !== null) {
+      clearTimeout(this.loopTimer);
+    }
+    this.loopTimer = setTimeout(next_callback, newReel.displayTime);
   }
 
   play(): void {
@@ -627,6 +680,19 @@ class Reader extends Component<ReaderProps, ReaderState> {
       index: 0,
       currentReel: reel,
     });
+  }
+
+  renderSpeedControl() {
+    const onChange = this.props.onSpeedChange;
+    if (!onChange) {
+      return null;
+    }
+    return (
+      <SpeedControl
+        wpm={Number(this.props.readingSpeed) || 300}
+        onChange={onChange}
+      />
+    );
   }
 
   render() {
@@ -742,6 +808,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
           <button className="btn" onClick={this.reset}>
             Reset
           </button>
+          {this.renderSpeedControl()}
         </div>
 
         <LoadingBar

@@ -132,3 +132,49 @@ export function isSkippableFrontOrBackMatter(pageText: string): boolean {
 
   return false;
 }
+
+// ---------------------------------------------------------------------------
+// PDF front/back matter. PDFs carry no Gutenberg markers or spine flags, so
+// this is purely page-level and deliberately conservative: it only drops a
+// short page that is clearly a copyright/imprint page or a table-of-contents
+// listing, never a page of real prose.
+// ---------------------------------------------------------------------------
+
+const IMPRINT_MARKERS = [
+  /©|\(c\)\s*\d{4}/i,
+  /\ball rights reserved\b/i,
+  /\bisbn[\s:-]*(?:\d|x)/i,
+  /library of congress/i,
+  /\bprinted in\b/i,
+  /\bfirst (?:published|edition|printing)\b/i,
+  /\bno part of this (?:book|publication)\b/i,
+  /\bcreative commons\b|\blicen[sc]ed under\b/i,
+];
+const IMPRINT_MAX_WORDS = 300;
+
+/** True for a copyright/imprint/license page (>=2 distinct markers, short). */
+export function isImprintPage(pageText: string): boolean {
+  const text = pageText.trim();
+  if (!text || text.split(/\s+/).length > IMPRINT_MAX_WORDS) {
+    return false;
+  }
+  return IMPRINT_MARKERS.filter((re) => re.test(text)).length >= 2;
+}
+
+/** True for a page of "Chapter ........ 12"-style table-of-contents lines. */
+export function isTocListingPage(lines: readonly string[]): boolean {
+  const real = lines.map((l) => l.trim()).filter(Boolean);
+  if (real.length < 8) {
+    return false;
+  }
+  const entries = real.filter(
+    (l) => /(?:\.{2,}|\s)\d{1,4}$/.test(l) && l.length < 90,
+  );
+  const dotted = real.filter((l) => /\.{3,}|(?:\. ){3,}/.test(l)).length;
+  return entries.length / real.length >= 0.6 && dotted >= 3;
+}
+
+/** True for a page with no text at all (blank separator pages). */
+export function isBlankPage(pageText: string): boolean {
+  return pageText.trim().length === 0;
+}
