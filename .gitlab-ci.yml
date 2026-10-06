@@ -34,15 +34,12 @@ unit-tests:
     expire_in: 1 week
 
 # GitLab Pages: static export served at https://davidawad.gitlab.io/thoth/
-# Other branches deploy as parallel previews at
-# https://davidawad.gitlab.io/thoth/<branch-slug>/ (path_prefix below), so the
-# export's base path has to include that prefix too.
 pages:
   stage: deploy
   needs: []
   cache: []
   variables:
-    NEXT_PUBLIC_BASE_PATH: /thoth$PREVIEW_PATH
+    NEXT_PUBLIC_BASE_PATH: /thoth
   script:
     - pnpm build
     # Pages serves whatever is in public/.
@@ -51,11 +48,5 @@ pages:
   artifacts:
     paths:
       - public
-  pages:
-    path_prefix: $PREVIEW_PREFIX
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_BRANCH
-      variables:
-        PREVIEW_PREFIX: $CI_COMMIT_REF_SLUG
-        PREVIEW_PATH: /$CI_COMMIT_REF_SLUG
