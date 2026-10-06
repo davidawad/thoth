@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { bookIdFor, sniffKind } from './ingest';
 import { ingestEpub } from './epubIngest';
-import { buildChapters } from './chapters';
+import { buildChapters, pickSectionLabel } from './chapters';
 import { layoutBook, countWords } from './bookModel';
 
 const dir = path.join(
@@ -80,6 +80,39 @@ describe('buildChapters', () => {
   it('empty input gives no chapters', () => {
     expect(buildChapters([], [])).toEqual([]);
   });
+  it('titles a file by the entry after "Contents" when several entries point into it', () => {
+    // Phaedo's shape: the first file holds the title page, contents and the
+    // introduction; the second holds the dialogue, which carries the book title.
+    const ch = buildChapters(
+      [sec('a.html', long), sec('b.html', long)],
+      [
+        { label: 'PHAEDO', href: 'a.html#t0' },
+        { label: 'Translated by Benjamin Jowett', href: 'a.html#t1' },
+        { label: 'Contents', href: 'a.html#t2' },
+        { label: 'INTRODUCTION.', href: 'a.html#t3' },
+        { label: 'PHAEDO', href: 'b.html#t4' },
+      ],
+    );
+    expect(ch.map((c) => c.title)).toEqual(['INTRODUCTION', 'PHAEDO']);
+  });
+});
+
+describe('pickSectionLabel', () => {
+  it('uses the first label when there is no Contents entry', () => {
+    expect(pickSectionLabel(['One', 'Two'])).toBe('One');
+  });
+  it('uses the first label after the last Contents entry', () => {
+    expect(pickSectionLabel(['Title', 'Contents', 'Intro', 'More'])).toBe(
+      'Intro',
+    );
+    expect(pickSectionLabel(['Table of Contents', 'Preface'])).toBe('Preface');
+  });
+  it('falls back to the first label when nothing follows Contents', () => {
+    expect(pickSectionLabel(['Title', 'Contents'])).toBe('Title');
+  });
+  it('is empty for no labels', () => {
+    expect(pickSectionLabel([])).toBe('');
+  });
 });
 
 describe('ingestEpub on the shipped sample books', () => {
@@ -110,4 +143,13 @@ describe('ingestEpub on the shipped sample books', () => {
       expect(layout.totalWords).toBe(book.totalWords);
     }, 60000);
   }
+
+  it('phaedo-plato.epub: chapters have distinct titles (not two "PHAEDO")', async () => {
+    const file = 'phaedo-plato.epub';
+    const buf = new Uint8Array(readFileSync(path.join(dir, file))).buffer;
+    const book = await ingestEpub(buf, file, 'id', () => undefined);
+    const titles = book.chapters.map((c) => c.title);
+
+    expect(titles).toEqual(['INTRODUCTION', 'PHAEDO']);
+  }, 60000);
 });

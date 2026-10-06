@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
-import PlaybackHead from './PlaybackHead';
+import PlaybackHead, { fitScale } from './PlaybackHead';
 
 const q = (c: HTMLElement, sel: string) => c.querySelector(sel);
 
@@ -56,5 +56,50 @@ describe('PlaybackHead', () => {
     );
     expect(q(container, '.playbackHeadSide--before')?.textContent).toBe('');
     expect(q(container, '.playbackHeadSide--after')?.textContent).toBe('');
+  });
+});
+
+describe('fitScale', () => {
+  it('leaves ordinary words at full size', () => {
+    expect(fitScale('Remember', 2)).toBe(1);
+    expect(fitScale('how', 1)).toBe(1);
+    expect(fitScale('', null)).toBe(1);
+  });
+
+  it('shrinks a long word so the longer side of the focus letter fits', () => {
+    const scale = fitScale('disproportionately', 5);
+
+    expect(scale).toBeLessThan(1);
+    expect(scale).toBeGreaterThanOrEqual(0.5);
+  });
+
+  it('shrinks a long word that has no focus letter', () => {
+    expect(fitScale('internationalization-of-everything', null)).toBe(0.5);
+    expect(fitScale('abcdefghijklmnopqrst', null)).toBeLessThan(1);
+  });
+
+  it('never goes below the floor, however long the word', () => {
+    expect(fitScale('x'.repeat(200), 100)).toBe(0.5);
+  });
+
+  it('is applied to the rendered word as a font size', () => {
+    const { container } = render(
+      <PlaybackHead
+        currentReel={{ text: 'disproportionately', hotCharInd: 5 }}
+      />,
+    );
+    const canvas = container.querySelector('.Reader-canvas') as HTMLElement;
+
+    expect(canvas.style.fontSize).toMatch(/em$/);
+    expect(parseFloat(canvas.style.fontSize)).toBeLessThan(1);
+  });
+
+  it('adds no inline size to a short word', () => {
+    const { container } = render(
+      <PlaybackHead currentReel={{ text: 'how', hotCharInd: 1 }} />,
+    );
+    const canvas = container.querySelector('.Reader-canvas') as HTMLElement;
+
+    expect(canvas.style.fontSize).toBe('');
   });
 });

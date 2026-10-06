@@ -397,7 +397,11 @@
     if (spreadOfWord(nx) !== spread) {
       ci = nx;
       head();
+      var session = playSession;
       turn(1, function () {
+        // Paused (and maybe resumed) during the turn: a newer session owns
+        // the loop now, so this callback must not start a second one.
+        if (session !== playSession) return;
         setCur(nx);
         timer = setTimeout(tick, rate);
       });
@@ -412,8 +416,10 @@
         (/[.!?]["”’)]?$/.test(w) ? 2.2 : 1);
     timer = setTimeout(tick, d);
   }
+  var playSession = 0;
   function play(on) {
     playing = on === undefined ? !playing : on;
+    playSession += 1;
     document.body.classList.toggle('playing', playing);
     $$('[data-playlabel]').forEach(function (e) {
       e.textContent = playing ? 'Pause' : 'Play';

@@ -20,6 +20,7 @@ import {
   READER_EDITOR_KEY,
   createDeterministicContentState,
 } from './deterministicContent';
+import { hyphenateWord } from './hyphenate';
 import {
   createDifficultyDecorator,
   DifficultyLegend,
@@ -458,17 +459,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
   }
 
   hyphenate(word: string): string {
-    const len = word.length;
-
-    // fragile: rewriting this nested ternary tends to break hyphenation
-    const ret =
-      len < MAX_DISPLAY_SIZE
-        ? word
-        : len < 11
-          ? word.slice(0, len - 3) + '- ' + word.slice(len - 3)
-          : word.slice(0, 7) + '- ' + this.hyphenate(word.slice(7));
-
-    return ret;
+    return hyphenateWord(word, MAX_DISPLAY_SIZE);
   }
 
   // creates an array of DisplayReel Objects that contain the timing and other information for word display.

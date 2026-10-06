@@ -63,16 +63,43 @@ const cleanTitle = (s: string): string => s.replace(/\s+/g, ' ').trim();
 const countJoined = (texts: readonly string[]): number =>
   countWords(texts.join(' '));
 
+const CONTENTS_LABEL = /^(table of )?contents\.?$/i;
+
+/**
+ * The title for a spine section that several TOC entries point into. When one
+ * of the entries is "Contents", everything before it describes the title-page
+ * material that gets stripped (book title, translator, ...), so the chapter
+ * takes the first entry after it; otherwise the first entry, as before.
+ */
+export function pickSectionLabel(labels: readonly string[]): string {
+  let afterContents = 0;
+  labels.forEach((label, i) => {
+    if (CONTENTS_LABEL.test(label.trim())) {
+      afterContents = i + 1;
+    }
+  });
+
+  return labels[afterContents] ?? labels[0] ?? '';
+}
+
 function chapterStarts(
   sections: readonly RawSection[],
   toc: readonly TocEntry[],
 ): Map<number, string> {
-  const starts = new Map<number, string>();
+  const labelsBySection = new Map<number, string[]>();
   for (const entry of toc) {
     const idx = spineIndexForHref(sections, entry.href);
-    if (idx >= 0 && !starts.has(idx)) {
-      starts.set(idx, cleanTitle(entry.label));
+    if (idx >= 0) {
+      labelsBySection.set(idx, [
+        ...(labelsBySection.get(idx) ?? []),
+        cleanTitle(entry.label),
+      ]);
     }
+  }
+
+  const starts = new Map<number, string>();
+  for (const [idx, labels] of labelsBySection) {
+    starts.set(idx, pickSectionLabel(labels).replace(/\.$/, ''));
   }
   return starts;
 }
