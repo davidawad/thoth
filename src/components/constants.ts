@@ -404,21 +404,10 @@ export const LEGIBILITY_REFERENCES: LegibilityReference[] = [
     note: 'Recommends sans-serif for body text, 11-12pt/15-16px minimum, and >=4.5:1 contrast. Implemented: Atkinson Hyperlegible sans-serif at 1rem (16px = 12pt), themes chosen for AA contrast.',
   },
 ];
-export const INTRO_TEXT = `Hello!
-
-This is Thoth, an open source speed reading tool inspired by Zethos and Spritz ($3.5mil series A).
-
-It combines a few different features of other powerful speed readers and lets you set options yourself.
-
-It's free and open source on GitHub.
-
-It implements the ideas in my research paper, "Improved Rapid Serial Visual Presentation using Natural Language Processing" (https://arxiv.org/abs/1908.01699).
-
-All you have to do is paste in some text and you'll be breezing through it in no time.
-
-Seek truth, but faster. Enjoy!
-
-- David`;
+// The sample passage the landing page's editor starts with (Meditations,
+// Marcus Aurelius, public domain). Editable; paste your own text over it.
+export const DEFAULT_TEXT =
+  'Remember how long thou hast already put off these things, and how often a certain day and hour, having been set unto thee by the gods, thou hast neglected it. It is high time for thee to understand the true nature of the world.';
 
 // an excerpt from The Enchiridion : http://classics.mit.edu/Epictetus/epicench.html
 // useful for testing.

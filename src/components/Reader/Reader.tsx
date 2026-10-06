@@ -45,6 +45,8 @@ export const READER_STATS_PORTAL_ID = 'reader-stats-slot';
 
 interface ReaderProps extends Partial<AppSettings> {
   content: string;
+  /** Visible caption above the text box (the landing page sets one). */
+  textLabel?: string;
   /** Called when the user moves the wpm slider (the parent persists it). */
   onSpeedChange?: (wpm: number) => void;
   /**
@@ -238,7 +240,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
   componentDidUpdate(prevProps: ReaderProps): void {
     // Callback / slot props get a new identity on every parent render; they
     // are not settings and must never trigger a reparse.
-    const NON_SETTINGS = ['onSpeedChange', 'onFinished'];
+    const NON_SETTINGS = ['onSpeedChange', 'onFinished', 'textLabel'];
     const changed = utils
       .changedKeys(prevProps, this.props)
       .filter((k) => !NON_SETTINGS.includes(String(k)));
@@ -268,6 +270,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
     const {
       content: _content,
+      textLabel: _label,
       onSpeedChange: _a,
       onFinished: _b,
       ...settings
@@ -813,8 +816,14 @@ class Reader extends Component<ReaderProps, ReaderState> {
           color={CONSTANTS.START_COLOR}
         />
 
+        {this.props.textLabel ? (
+          <p className="readerTextLabel" id="reader-text-label">
+            {this.props.textLabel}
+          </p>
+        ) : null}
         <div className="editor">
           <Editor
+            ariaLabel={this.props.textLabel ?? 'Text to read'}
             ref={this.setEditor}
             editorKey={READER_EDITOR_KEY}
             editorState={this.state.editorState}

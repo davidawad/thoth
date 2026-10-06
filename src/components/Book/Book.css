@@ -3,23 +3,186 @@
  * uses Fraunces / Newsreader / IBM Plex Mono; the page text itself is
  * Atkinson Hyperlegible (--font-body) via the Reader. */
 
-/* ---- Landing / hero ---------------------------------------------------- */
-.book-hero {
-  margin-bottom: 2.5rem;
+/* ---- Landing -------------------------------------------------------------
+ * Layout and look follow docs/mockups/book-view (08 Spotlight v2, #landing):
+ * RSVP card + text box on the left, stats / drop zone / continue card in a
+ * 21rem column on the right. Tokens only (styles/tokens.css + the palette). */
+.landing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 21rem;
+  gap: 1.6rem;
+  max-width: 74rem;
+  margin: 0 auto;
+  align-items: start;
 }
-.book-hero-title {
+.landing-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  min-width: 0;
+}
+.landing-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .landing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The RSVP card: playback head + Play / Reset / speed. */
+.landing-main .readerCard {
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-bg-elevated);
+  padding: 2.6rem 1rem 1.2rem;
+  margin-bottom: 1.4rem;
+}
+.landing-main .readerControlsRow {
+  margin: 1.6rem 0 0;
+}
+
+/* The text box, in the mock's textarea look. */
+.readerTextLabel {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  margin: 0 0 0.4rem;
+}
+.landing-main .editor {
+  max-width: none;
+  min-height: 9rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-bg-elevated);
+  padding: 0.9rem 1rem;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+/* Cards in the right-hand column. */
+.readerStats,
+.landing-card {
+  border: 1px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-bg-elevated);
+  padding: 1rem 1.1rem;
+}
+.readerStats h3,
+.book-library .landing-card h3 {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(1.9rem, 5vw, 2.6rem);
-  line-height: 1.15;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-fg);
+  margin: 0 0 0.7rem;
+}
+.readerStats dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem 1rem;
+  margin: 0;
+}
+.readerStats dt {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+.readerStats dd {
+  margin: 0.1rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+}
+.readerStatsWide {
+  grid-column: 1 / -1;
+}
+.landing-side .book-drop {
+  background: transparent;
+}
+
+.landing-continue-book {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+}
+.landing-cover {
+  flex: none;
+  width: 3.1rem;
+  height: 4.3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 2px 4px 4px 2px;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+}
+.landing-continue-text {
+  min-width: 0;
+}
+.book-library .landing-continue h3 {
+  margin: 0;
+}
+.landing-continue p {
+  margin: 0.1rem 0 0;
+  color: var(--color-fg-muted);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+.landing-continue-bar {
+  height: 4px;
+  background: var(--color-border-strong);
+  border-radius: 2px;
+  margin: 0.9rem 0;
+  overflow: hidden;
+}
+.landing-continue-bar i {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+}
+.landing-continue-open {
+  width: 100%;
+}
+.landing-continue-remove {
+  display: block;
+  margin: 0.7rem auto 0;
+}
+
+/* Description under the reader, then the small credit. */
+.landing-about {
+  max-width: 44rem;
+  font-family: var(--font-chrome);
+}
+.landing-about h2 {
+  font-weight: 500;
+  font-size: 1.35rem;
   margin: 0 0 0.5rem;
 }
-.book-hero-copy {
-  font-family: var(--font-chrome);
-  font-size: 1.1rem;
+.landing-about p {
+  margin: 0 0 0.8rem;
+  line-height: 1.55;
+}
+.landing-about .landing-credit {
+  font-size: 0.8rem;
   color: var(--color-fg-muted);
-  max-width: 44rem;
-  margin: 0 0 1.25rem;
+  margin: 1.1rem 0 0;
+}
+.landing-about .landing-credit a {
+  color: inherit;
+  text-decoration: underline;
+}
+.landing-about .landing-credit a:hover {
+  color: var(--color-fg);
 }
 
 /* ---- Library panel ----------------------------------------------------- */
@@ -397,24 +560,7 @@
   }
 }
 
-/* Phones: the previous/next context words don't fit beside the focus word. */
-@media (max-width: 640px) {
-  .book-page .readerSurroundingWord,
-  .book-hero + .Reader .readerSurroundingWord {
-    display: none;
-  }
-  .book-page .Reader-canvas,
-  .book-hero + .Reader .Reader-canvas {
-    width: min(21rem, 100%);
-    font-size: 2rem;
-  }
-}
-
-/* Keep the context words inside the page card. */
-.book-page .readerSurroundingWord {
-  width: 6rem;
-  font-size: 0.9em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Inside a book page the head is a little smaller than on the landing card. */
+.book-page .playbackHead {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
 }

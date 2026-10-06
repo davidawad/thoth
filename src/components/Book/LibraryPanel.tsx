@@ -4,6 +4,7 @@ import type { SampleBook } from '../constants';
 import type { BookMeta } from './bookModel';
 import type { SavedPosition } from './storage';
 import type { IngestProgress } from './ingestTypes';
+import ContinueCard from './ContinueCard';
 
 const accept = {
   [CONSTANTS.PDF_MIME_TYPE]: ['.pdf'],
@@ -11,8 +12,10 @@ const accept = {
 };
 
 export interface LibraryPanelProps {
-  variant: 'hero' | 'compact';
+  variant: 'landing' | 'compact';
   library: readonly BookMeta[];
+  /** The book the Continue card offers (landing variant only). */
+  continueBook?: BookMeta | null;
   positions: Readonly<Record<string, SavedPosition>>;
   currentId: string | null;
   busy: IngestProgress | null;
@@ -70,7 +73,7 @@ function DropArea({ p }: { p: LibraryPanelProps }) {
       ) : (
         <>
           <p className="book-drop-title">
-            {p.variant === 'hero'
+            {p.variant === 'landing'
               ? 'Drop a PDF or EPUB here'
               : 'Open another book'}
           </p>
@@ -97,7 +100,9 @@ function bookLabel(m: BookMeta, saved: SavedPosition | undefined): string {
 }
 
 function RecentBooks({ p }: { p: LibraryPanelProps }) {
-  if (p.library.length === 0) {
+  // On the landing page a single saved book is the Continue card already.
+  const shown = p.variant === 'landing' ? 2 : 1;
+  if (p.library.length < shown) {
     return null;
   }
   return (
@@ -138,7 +143,7 @@ function RecentBooks({ p }: { p: LibraryPanelProps }) {
 }
 
 function Samples({ p }: { p: LibraryPanelProps }) {
-  if (p.variant !== 'hero' && p.library.length > 0) {
+  if (p.variant === 'compact' && p.library.length > 0) {
     return null;
   }
   return (
@@ -217,8 +222,17 @@ export default function LibraryPanel(p: LibraryPanelProps) {
           {p.notice}
         </p>
       ) : null}
-      <RecentBooks p={p} />
+      {p.variant === 'landing' && p.continueBook ? (
+        <ContinueCard
+          book={p.continueBook}
+          pct={p.positions[p.continueBook.id]?.pct}
+          disabled={p.busy !== null}
+          onOpen={p.onOpen}
+          onRemove={p.onRemove}
+        />
+      ) : null}
       <Samples p={p} />
+      <RecentBooks p={p} />
       <Privacy p={p} />
     </section>
   );
