@@ -1,0 +1,8 @@
+{
+  "name": "thoth-launch-videos",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "playwright-core": "*"
+  }
+}
