@@ -34,11 +34,13 @@ const customStyles: Modal.Styles = {
 
 interface ModalWrapperProps extends Partial<AppSettings> {
   updateCallback: UpdateCallback;
+  // Open/closed is owned by the page so the footer's Settings button (see
+  // SiteChrome/SiteFooter) can open it - there is no trigger button here.
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-interface ModalWrapperState extends Partial<AppSettings> {
-  modalIsOpen: boolean;
-}
+type ModalWrapperState = Partial<AppSettings>;
 
 class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
   subtitle: HTMLHeadingElement | null = null;
@@ -46,19 +48,9 @@ class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
   constructor(props: ModalWrapperProps) {
     super(props);
 
-    this.state = {
-      modalIsOpen: false,
-    };
+    this.state = {};
 
-    this.openModal = this.openModal.bind(this);
     this.afterOpenModal = this.afterOpenModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-  }
-
-  openModal(): void {
-    this.setState({
-      modalIsOpen: true,
-    });
   }
 
   afterOpenModal(): void {
@@ -67,16 +59,15 @@ class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
     // `.modal-box`'s `text-base-content` class in render()).
   }
 
-  closeModal(): void {
-    this.setState({
-      modalIsOpen: false,
-    });
-  }
-
   // Update state when props change
   componentDidUpdate(prevProps: ModalWrapperProps): void {
     if (this.props !== prevProps) {
-      const { updateCallback: _updateCallback, ...settings } = this.props;
+      const {
+        updateCallback: _updateCallback,
+        isOpen: _isOpen,
+        onClose: _onClose,
+        ...settings
+      } = this.props;
       this.setState(settings);
     }
   }
@@ -84,14 +75,10 @@ class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
   render() {
     return (
       <div>
-        <button className="btn btn-sm" onClick={this.openModal}>
-          Settings
-        </button>
-
         <Modal
-          isOpen={this.state.modalIsOpen}
+          isOpen={this.props.isOpen}
           onAfterOpen={this.afterOpenModal}
-          onRequestClose={this.closeModal}
+          onRequestClose={this.props.onClose}
           ariaHideApp={false}
           style={customStyles}
           contentLabel="SettingsModal ContentLabel"
@@ -105,7 +92,7 @@ class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
               <button
                 type="button"
                 className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                onClick={this.closeModal}
+                onClick={this.props.onClose}
                 aria-label="Close settings"
               >
                 ✕
@@ -125,7 +112,7 @@ class ModalWrapper extends Component<ModalWrapperProps, ModalWrapperState> {
               <SettingsPanel {...this.props} />
 
               <div className="closeButtonWrapper mt-4">
-                <button className="btn btn-sm" onClick={this.closeModal}>
+                <button className="btn btn-sm" onClick={this.props.onClose}>
                   Close
                 </button>
               </div>

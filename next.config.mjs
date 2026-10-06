@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 import { fileURLToPath } from 'url';
 import path from 'path';
+import pkg from './package.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +29,8 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
 
 const nextConfig = {
   output: 'export',
+  // Shown in the footer (see SiteChrome/SiteFooter).
+  env: { NEXT_PUBLIC_APP_VERSION: pkg.version },
   basePath,
   images: { unoptimized: true },
   reactStrictMode: true,

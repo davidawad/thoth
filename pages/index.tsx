@@ -5,6 +5,8 @@ import Reader, {
 } from '../src/components/Reader/Reader';
 import ModalWrapper from '../src/components/ModalWrapper/ModalWrapper';
 import FileParser from '../src/components/FileParser/FileParser';
+import SiteHeader from '../src/components/SiteChrome/SiteHeader';
+import SiteFooter from '../src/components/SiteChrome/SiteFooter';
 
 import ReactGA from 'react-ga';
 
@@ -37,8 +39,8 @@ function initializeReactGA(): void {
 }
 
 interface AppState extends AppSettings {
-  year: number;
   content: string;
+  settingsOpen: boolean;
 }
 
 class App extends Component<Record<string, never>, AppState> {
@@ -46,10 +48,13 @@ class App extends Component<Record<string, never>, AppState> {
     super(props);
 
     this.updateSettings = this.updateSettings.bind(this);
+    this.openSettings = this.openSettings.bind(this);
+    this.closeSettings = this.closeSettings.bind(this);
 
     this.state = {
       year: new Date().getFullYear(),
       content: initialContent,
+      settingsOpen: false,
       readingSpeed: READING_SPEED,
       baseColorStop: START_COLOR,
       finalColorStop: STOP_COLOR,
@@ -124,58 +129,57 @@ class App extends Component<Record<string, never>, AppState> {
     this.setState(newSettings as Pick<AppState, keyof AppState>);
   }
 
+  openSettings(): void {
+    this.setState({ settingsOpen: true });
+  }
+
+  closeSettings(): void {
+    this.setState({ settingsOpen: false });
+  }
+
   render() {
+    // Reader/ModalWrapper take the reading settings only, not the page's own
+    // UI state.
+    const { settingsOpen, ...settings } = this.state;
+
     return (
-      <div className="App">
-        {/* Equal-width spacer + sidebar columns either side of `main` keep
+      <div className="app-shell">
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
+        <SiteHeader />
+        <div className="App">
+          {/* Equal-width spacer + sidebar columns either side of `main` keep
             the reader visually centered on the page - it's the star of the
             show, not something the sidebar should shove off-center. Spacer
             is hidden below `lg`, where the sidebar drops beneath `main`
             instead of sitting next to it. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)_20rem] gap-8 items-start">
-          <div className="hidden lg:block" aria-hidden="true" />
+          <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)_20rem] gap-8 items-start">
+            <div className="hidden lg:block" aria-hidden="true" />
 
-          <main className="min-w-0">
-            <Reader {...this.state} />
-          </main>
+            <main id="main-content" className="min-w-0">
+              <Reader {...settings} />
+            </main>
 
-          <aside className="flex flex-col gap-4">
-            <div id={READER_STATS_PORTAL_ID} className="contents" />
+            <aside className="flex flex-col gap-4">
+              <div id={READER_STATS_PORTAL_ID} className="contents" />
 
-            <FileParser
-              updateCallback={this.updateSettings}
-              verbose={this.state.verbose}
-            />
-          </aside>
+              <FileParser
+                updateCallback={this.updateSettings}
+                verbose={this.state.verbose}
+              />
+            </aside>
+          </div>
         </div>
 
-        <footer className="mt-10 py-4 text-center text-xs opacity-60">
-          <p>
-            Thoth is an{' '}
-            <a href="https://github.com/davidawad/thoth" className="link">
-              open source
-            </a>{' '}
-            <a href="http://arxiv.org/abs/1908.01699" className="link">
-              research project
-            </a>{' '}
-            by{' '}
-            <a href="http://davidawad.com" className="link">
-              David Awad
-            </a>{' '}
-            &copy; {this.state.year}
-          </p>
-          <p>
-            Reading is for Thoth. For studying, try{' '}
-            <a href="https://github.com/davidawad/Seshat" className="link">
-              Seshat
-            </a>
-            .
-          </p>
-        </footer>
+        <SiteFooter onOpenSettings={this.openSettings} />
 
-        <div className="fixed bottom-4 right-4 z-40">
-          <ModalWrapper updateCallback={this.updateSettings} {...this.state} />
-        </div>
+        <ModalWrapper
+          updateCallback={this.updateSettings}
+          {...settings}
+          isOpen={settingsOpen}
+          onClose={this.closeSettings}
+        />
       </div>
     );
   }
