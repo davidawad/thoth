@@ -15,7 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
     "fuzz:epub": "NODE_OPTIONS=--experimental-strip-types jazzer fuzz/epub-extract-text.fuzz.js -- -max_total_time=30",
-    "fuzz:pdf": "NODE_OPTIONS=--experimental-strip-types jazzer fuzz/pdf-document-parse.fuzz.js --disableBugDetectors=prototype-pollution -- -max_total_time=30",
+    "fuzz:pdf": "NODE_OPTIONS=--experimental-strip-types jazzer fuzz/pdf-document-parse.fuzz.cjs --disableBugDetectors=prototype-pollution -- -max_total_time=30",
     "bench": "vitest bench --run --compare=bench/baseline.json",
     "bench:update": "vitest bench --run --outputJson=bench/baseline.json",
     "commitlint": "commitlint --edit",

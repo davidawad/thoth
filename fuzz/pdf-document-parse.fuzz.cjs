@@ -7,7 +7,7 @@
 // hanging or crashing the process, since PDFParser has no timeout of its
 // own around this call. Run:
 //   NODE_OPTIONS=--experimental-strip-types pnpm exec jazzer \
-//     fuzz/pdf-document-parse.fuzz.js --disableBugDetectors=prototype-pollution \
+//     fuzz/pdf-document-parse.fuzz.cjs --disableBugDetectors=prototype-pollution \
 //     -- -max_total_time=60
 //
 // prototype-pollution detection is disabled here: pdfjs-dist's legacy
@@ -21,15 +21,20 @@
 // own docs point Node consumers at the "legacy" build instead, which also
 // runs happily without a real Worker (falls back to an in-process "fake
 // worker"), avoiding the workerSrc setup PDFParser.tsx needs in a browser.
-import * as PDFJS from 'pdfjs-dist/legacy/build/pdf.js';
+// pdfjs-dist v6 ships only ES modules (legacy/build/pdf.mjs), so this CommonJS
+// harness loads it with a dynamic import (jazzer.js cannot instrument an ES
+// module harness that imports an .mjs).
+let pdfjs;
 
-export async function fuzz(data) {
+module.exports.fuzz = async function fuzz(data) {
+  pdfjs = pdfjs ?? (await import('pdfjs-dist/legacy/build/pdf.mjs'));
+
   try {
-    const doc = await PDFJS.getDocument({ data: new Uint8Array(data) }).promise;
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(data) }).promise;
     await doc.destroy();
   } catch {
     // A rejection here is completely expected for arbitrary bytes - that's
-    // exactly the contract PDFParser.tsx's .catch() handler is built on.
+    // exactly the contract the PDF ingest's error handling is built on.
     // Only a hang or an uncaught crash would be a real finding.
   }
-}
+};

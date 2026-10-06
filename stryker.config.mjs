@@ -1,6 +1,10 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
   packageManager: 'pnpm',
+  // Stryker rewrites the tsconfig through TypeScript's JS API, which
+  // TypeScript 7 (the native port) does not expose. Pointing it at a file that
+  // does not exist skips that step; vitest transpiles the TS itself.
+  tsconfigFile: 'tsconfig.stryker-unused.json',
   testRunner: 'vitest',
   plugins: ['@stryker-mutator/vitest-runner'],
   reporters: ['html', 'json', 'clear-text', 'progress'],
