@@ -10,15 +10,13 @@ interface SentenceProps {
   cur: number;
 }
 
-/** The current word: the focus letter is overlaid in bold red (see Spread.css) so the line never reflows. */
+/** The current word: its focus letter is plain inline text, bold and red (see Spread.css). */
 function CurrentWord({ text }: { text: string }) {
   const hot = focusIndex(text);
   return (
     <span className="sp-cur" data-testid="book-current-word">
       {text.slice(0, hot)}
-      <span className="sp-hot" data-ch={text[hot]}>
-        {text[hot]}
-      </span>
+      <span className="sp-hot">{text[hot]}</span>
       {text.slice(hot + 1)}
     </span>
   );

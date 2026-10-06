@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import TextParsingTools from '../TextParsingTools';
 import PaletteField from '../palette/PaletteField';
+import HeadFontField from '../Reader/HeadFontField';
 import { applyStoredPalette } from '../palette/applyPalette';
 import { applyTheme, getActiveTheme } from '../Book/theme';
 import {
@@ -282,6 +283,8 @@ const SettingsPanel = (props: SettingsPanelProps) => {
       </section>
 
       <PaletteField />
+
+      <HeadFontField />
 
       <section className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Readability</h3>

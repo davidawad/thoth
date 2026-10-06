@@ -79,7 +79,9 @@ describe('SpreadReader', () => {
     expect(progress()).toMatch(/^pages 1-2 of \d+ · 0% · /);
     const cur = screen.getByTestId('book-current-word');
     expect(cur.textContent).toBe('Sentence');
-    expect(cur.querySelector('.sp-hot')?.getAttribute('data-ch')).toBe('e');
+    // The focus letter is real inline text (bold + red via CSS), not an overlay.
+    expect(cur.querySelector('.sp-hot')?.textContent).toBe('e');
+    expect(cur.querySelector('.sp-hot')?.hasAttribute('data-ch')).toBe(false);
   });
 
   it('turns pages with the arrow keys and the page buttons', () => {

@@ -100,4 +100,24 @@
   /* ---- Content typeface ---------------------------------------------- */
   --font-atkinson: 'Atkinson Hyperlegible', Arial, Helvetica, sans-serif;
   --font-body: var(--font-atkinson);
+  /* The playback head's own face: configurable, Atkinson Hyperlegible by
+   * default (see src/components/Reader/headFont.ts). */
+  --font-head: var(--font-atkinson);
+}
+
+:root[data-head-font='verdana'] {
+  --font-head: Verdana, Geneva, sans-serif;
+}
+:root[data-head-font='inter'] {
+  --font-head: 'Inter', system-ui, -apple-system, sans-serif;
+}
+:root[data-head-font='source-serif-4'] {
+  --font-head: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+:root[data-head-font='georgia'] {
+  --font-head: Georgia, 'Times New Roman', serif;
+}
+:root[data-head-font='ibm-plex-mono'] {
+  --font-head:
+    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
 }

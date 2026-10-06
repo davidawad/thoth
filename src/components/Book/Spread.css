@@ -307,51 +307,24 @@
   color: var(--color-fg);
 }
 
-/* The current word: tinted, with its focus letter in bold red. The bold letter
- * is overlaid on a transparent real one, so the line never reflows. */
+/* The live passage glows softly: the lit sentence carries an ambient glow and
+ * the current word a stronger one (the look of the chosen concept). The focus
+ * letter is plain inline text, just bold and red - no overlay, no ticks. */
+.sp-sent.is-lit {
+  text-shadow: 0 0 0.9em
+    color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
 .sp-cur {
   color: var(--color-fg);
-  background: color-mix(in srgb, var(--color-error) 22%, transparent);
-  box-shadow: 0 0 0 0.12em
-    color-mix(in srgb, var(--color-error) 22%, transparent);
-  border-radius: 0.2em;
+  font-weight: 600;
+  text-shadow:
+    0 0 0.55em color-mix(in srgb, var(--color-accent) 75%, transparent),
+    0 0 1.3em color-mix(in srgb, var(--color-accent) 45%, transparent);
 }
 .sp-hot {
-  position: relative;
-  color: transparent;
-  text-decoration: underline;
-  text-decoration-color: var(--color-error);
-  text-decoration-thickness: 0.13em;
-  text-underline-offset: 0.16em;
-}
-.sp-hot::after {
-  content: attr(data-ch) / '';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  line-height: 1;
-  text-indent: 0; /* the paragraph's first-line indent is inherited */
   color: var(--color-error);
-  /* Atkinson Hyperlegible Bold (the playback head's face) + a hairline stroke:
-   * the letter must read at a glance, not as a faint tint. */
-  font-family: var(--font-body);
   font-weight: 700;
-  font-size: 1.22em;
-  -webkit-text-stroke: 0.035em var(--color-error);
-}
-/* a tick above the letter, matching the one under it and the playback head's ticks */
-.sp-hot::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: -0.2em;
-  width: 0.13em;
-  height: 0.22em;
-  transform: translateX(-50%);
-  background: var(--color-error);
-  border-radius: 1px;
+  text-shadow: 0 0 0.5em color-mix(in srgb, var(--color-error) 55%, transparent);
 }
 
 /* ---- page-turn leaf ------------------------------------------------------ */

@@ -16,6 +16,11 @@ import {
 import { PALETTE_STORAGE_KEY } from '../src/components/palette/applyPalette';
 import { resolvePaletteCssVars } from '../src/components/palette/palettes';
 import { paletteSchema } from '../src/components/palette/types';
+import {
+  HEAD_FONTS,
+  HEAD_FONT_ATTRIBUTE,
+  HEAD_FONT_STORAGE_KEY,
+} from '../src/components/Reader/headFont';
 
 // Applies the persisted (or OS-preferred) theme to <html data-theme="..."> as
 // early as possible - before hydration/first paint - so there is no flash of
@@ -76,6 +81,17 @@ const PALETTE_INIT_SCRIPT = `(function () {
   } catch (e) {}
 })();`;
 
+// Pre-paint playback-head font (no flash of the default before a saved choice).
+const HEAD_FONT_INIT_SCRIPT = `(function () {
+  try {
+    var ids = ${JSON.stringify(HEAD_FONTS.map((font) => font.id))};
+    var saved = window.localStorage.getItem(${JSON.stringify(HEAD_FONT_STORAGE_KEY)});
+    if (ids.indexOf(saved) !== -1) {
+      document.documentElement.setAttribute(${JSON.stringify(HEAD_FONT_ATTRIBUTE)}, saved);
+    }
+  } catch (e) {}
+})();`;
+
 export default class AppDocument extends Document {
   // Collect styled-components styles during SSR so the server-rendered class
   // names match the client (otherwise: hydration mismatch on FileParser).
@@ -115,6 +131,7 @@ export default class AppDocument extends Document {
           {/* Runs before paint to set the persisted theme; see comment above. */}
           <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
           <script dangerouslySetInnerHTML={{ __html: PALETTE_INIT_SCRIPT }} />
+          <script dangerouslySetInnerHTML={{ __html: HEAD_FONT_INIT_SCRIPT }} />
         </Head>
         <body className="bg-base-100 text-base-content min-h-screen">
           <Main />

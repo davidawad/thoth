@@ -4,6 +4,10 @@ import type { AppProps } from 'next/app';
 // material being read; Fraunces / Newsreader / IBM Plex Mono for the chrome.
 import '@fontsource/atkinson-hyperlegible/400.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/source-serif-4/400.css';
+import '@fontsource/source-serif-4/700.css';
 import '@fontsource/fraunces/400.css';
 import '@fontsource/fraunces/500.css';
 import '@fontsource/fraunces/600.css';
