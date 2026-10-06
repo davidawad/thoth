@@ -122,3 +122,27 @@ describe('utils.formatSeconds', () => {
     );
   });
 });
+
+describe('utils.changedKeys', () => {
+  it('is empty for equal values, even in a new object', () => {
+    // Regression: a parent re-render (e.g. opening Settings) hands the Reader a
+    // NEW props object with the same values; that must not look like a change.
+    expect(utils.changedKeys({ a: 1, b: 'x' }, { a: 1, b: 'x' })).toEqual([]);
+  });
+
+  it('lists exactly the keys whose values differ', () => {
+    expect(utils.changedKeys({ a: 1, b: 'x' }, { a: 2, b: 'x' })).toEqual([
+      'a',
+    ]);
+    expect(utils.changedKeys({ a: 1, b: 'x' }, { a: 2, b: 'y' })).toEqual([
+      'a',
+      'b',
+    ]);
+  });
+
+  it('treats a key that is new in the next object as changed', () => {
+    expect(
+      utils.changedKeys<{ a: number; b?: number }>({ a: 1 }, { a: 1, b: 2 }),
+    ).toEqual(['b']);
+  });
+});

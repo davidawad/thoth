@@ -96,6 +96,29 @@ describe('scoreSentences', () => {
     expect(scores.has('First one.')).toBe(true);
     expect(scores.has('Second one.')).toBe(true);
   });
+
+  it('scores equally difficult sentences the same, around the middle', () => {
+    const scores = scoreSentences('The cat sat. The dog ran.');
+
+    expect(scores.get('The cat sat.')).toBe(scores.get('The dog ran.'));
+    expect(scores.get('The cat sat.')).toBe(0.5);
+  });
+
+  it('returns no scores for empty text', () => {
+    expect(scoreSentences('').size).toBe(0);
+  });
+
+  it('scores a whole book of sentences quickly', () => {
+    const book = Array.from(
+      { length: 6000 },
+      (_, i) => `Sentence number ${i} is about ${'word '.repeat(i % 12)}here.`,
+    ).join(' ');
+    const started = Date.now();
+    const scores = scoreSentences(book);
+
+    expect(scores.size).toBeGreaterThan(1000);
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
 });
 
 describe('difficultyColor', () => {

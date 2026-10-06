@@ -216,15 +216,33 @@ class Reader extends Component<ReaderProps, ReaderState> {
     this.playpause();
   }
 
-  // Update state when props change
+  // Update state when props change. Only reacts to props whose VALUES changed:
+  // the parent re-renders for unrelated reasons (opening the Settings modal),
+  // and treating that as a settings change would reset and reparse the text.
   componentDidUpdate(prevProps: ReaderProps): void {
-    if (this.props !== prevProps) {
-      const { content: _content, ...settings } = this.props;
-      this.setState(
-        settings as Pick<ReaderState, keyof ReaderState>,
-        this.propHandler,
-      );
+    const changed = utils.changedKeys(prevProps, this.props);
+
+    if (changed.length === 0) {
+      return;
     }
+
+    // Toggling the difficulty heat map only changes how the editor shows the
+    // text - rebuild it around the CURRENT text rather than reloading the
+    // original, so pasted or typed text isn't thrown away.
+    if (changed.length === 1 && changed[0] === 'difficultyHighlightEnabled') {
+      const currentText = this.state.editorState
+        .getCurrentContent()
+        .getPlainText();
+
+      this.setState({ editorState: this.buildEditorState(currentText) });
+      return;
+    }
+
+    const { content: _content, ...settings } = this.props;
+    this.setState(
+      settings as Pick<ReaderState, keyof ReaderState>,
+      this.propHandler,
+    );
   }
 
   // required function for draft.js

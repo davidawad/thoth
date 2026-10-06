@@ -68,22 +68,46 @@ function sentencesOf(text: string): string[] {
     );
 }
 
+// Binary search in the ascending `sorted`: the index of the first element that
+// is >= target, or, with `strict`, the first element that is > target.
+function boundary(sorted: number[], target: number, strict: boolean): number {
+  let low = 0;
+  let high = sorted.length;
+
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    const value = sorted[mid] as number;
+    const goesRight = strict ? value <= target : value < target;
+
+    if (goesRight) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low;
+}
+
 // Maps each sentence's text to its difficulty percentile in [0, 1]: 0 is easier
 // than every other sentence, 1 is harder than every other. Ties share the
-// middle of their span; a lone sentence is 0.5.
+// middle of their span; a lone sentence is 0.5. O(n log n), so a whole book
+// (thousands of sentences) scores instantly.
 export function scoreSentences(text: string): Map<string, number> {
   const sentences = sentencesOf(text);
   const raw = new Map(
     sentences.map((sentence) => [sentence, sentenceDifficulty(sentence)]),
   );
-  const values = sentences.map((sentence) => raw.get(sentence) as number);
+  const sorted = sentences
+    .map((sentence) => raw.get(sentence) as number)
+    .sort((a, b) => a - b);
   const scores = new Map<string, number>();
 
   for (const [sentence, value] of raw) {
-    const below = values.filter((other) => other < value).length;
-    const equal = values.filter((other) => other === value).length;
+    const below = boundary(sorted, value, false);
+    const equal = boundary(sorted, value, true) - below;
 
-    scores.set(sentence, (below + equal / 2) / values.length);
+    scores.set(sentence, (below + equal / 2) / sorted.length);
   }
 
   return scores;

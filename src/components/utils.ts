@@ -21,5 +21,14 @@ function formatSeconds(seconds: number): string {
   return Number(seconds.toFixed(2)).toString();
 }
 
-const funcs = { sigmoid, roundToPrecision, formatSeconds };
+// The keys whose values differ between two props/settings objects. Used so a
+// parent re-render that passes identical values (e.g. opening the Settings
+// modal) is not mistaken for a settings change.
+function changedKeys<T extends object>(previous: T, next: T): (keyof T)[] {
+  return (Object.keys(next) as (keyof T)[]).filter(
+    (key) => previous[key] !== next[key],
+  );
+}
+
+const funcs = { sigmoid, roundToPrecision, formatSeconds, changedKeys };
 export default funcs;
