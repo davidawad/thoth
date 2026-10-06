@@ -1,3 +1,4 @@
+import { DEFAULT_WPM } from '../Book/defaults';
 import { Component } from 'react';
 import { createPortal } from 'react-dom';
 import LoadingBar from 'react-top-loading-bar';
@@ -690,7 +691,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
     }
     return (
       <SpeedControl
-        wpm={Number(this.props.readingSpeed) || 300}
+        wpm={Number(this.props.readingSpeed) || DEFAULT_WPM}
         onChange={onChange}
       />
     );

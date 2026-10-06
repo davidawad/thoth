@@ -8,6 +8,7 @@
   long the book is, and keeps saved positions valid if page size is retuned
   (position = chapter index + page index inside the chapter, clamped on load).
 */
+import { DEFAULT_WPM } from './defaults';
 
 export interface Chapter {
   title: string;
@@ -316,7 +317,7 @@ export function computeProgress(
   for (let i = 0; i < p.page; i++) {
     wordsRead += layout.pageWords[p.chapter]?.[i] ?? 0;
   }
-  const speed = Number.isFinite(wpm) && wpm > 0 ? wpm : 300;
+  const speed = Number.isFinite(wpm) && wpm > 0 ? wpm : DEFAULT_WPM;
   const wordsLeft = Math.max(layout.totalWords - wordsRead, 0);
   const pageTotal = layout.totalPages;
   const pageNumber = globalPageIndex(layout, p) + 1;

@@ -10,6 +10,7 @@
   functions are pure so malformed saved data is unit-testable.
 */
 import type { Book, BookMeta, Position } from './bookModel';
+import { DEFAULT_WPM } from './defaults';
 
 export const LS_CURRENT_BOOK = 'thoth.currentBook';
 export const LS_POSITIONS = 'thoth.positions';
@@ -18,7 +19,7 @@ export const LS_LIBRARY = 'thoth.libraryIndex';
 
 export const MIN_WPM = 100;
 export const MAX_WPM = 1000;
-export const DEFAULT_WPM = 300;
+export { DEFAULT_WPM };
 export const MAX_LIBRARY_BOOKS = 5;
 
 const isObj = (v: unknown): v is Record<string, unknown> =>

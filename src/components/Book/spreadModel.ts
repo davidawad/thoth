@@ -7,6 +7,7 @@
   when the text size or window changes the page length - which is what makes a
   saved position keep its meaning. Pages are derived from the BookLayout.
 */
+import { DEFAULT_WPM } from './defaults';
 import {
   clampPosition,
   globalPageIndex,
@@ -227,7 +228,7 @@ export function spreadProgress(
   }
   read += st.cursor.offset;
   const words = Math.max(ix.layout.totalWords, 1);
-  const speed = Number.isFinite(wpm) && wpm > 0 ? wpm : 300;
+  const speed = Number.isFinite(wpm) && wpm > 0 ? wpm : DEFAULT_WPM;
   const atEnd = here.global >= total - 1 && left + span >= total;
   return {
     pageFrom: total === 0 ? 0 : left + 1,

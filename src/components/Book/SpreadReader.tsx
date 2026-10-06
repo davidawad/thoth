@@ -1,3 +1,4 @@
+import { DEFAULT_WPM } from './defaults';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { focusIndex } from '../Reader/wordRow';
 import type { AppSettings } from '../types';
@@ -76,7 +77,7 @@ export default function SpreadReader({
   onOpenSettings,
   modalOpen,
 }: Props) {
-  const wpm = Number(settings.readingSpeed) || 300;
+  const wpm = Number(settings.readingSpeed) || DEFAULT_WPM;
   const span: 1 | 2 = useMedia(PHONE_QUERY) ? 1 : 2;
   const reducedMotion = useMedia(REDUCED_QUERY);
   const prefs = useViewPrefs();

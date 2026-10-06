@@ -16,7 +16,7 @@ export default function LandingIntro() {
       <p>
         Paste text into the box above, drop a PDF or EPUB on the drop zone, or
         try a sample book. Drag the speed slider to set your pace (it starts at
-        300 words per minute), and press Space or the Play button to start and
+        500 words per minute), and press Space or the Play button to start and
         pause. The difficulty heat map tints each sentence from green (easy) to
         red (hard), so you can see where to slow down; switch it off in
         Settings.
