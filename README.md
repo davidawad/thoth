@@ -30,8 +30,9 @@ Available scorers are `wordDifficulty`, `fleschKincaid`, `gunningFog`, `smog`,
 In Settings, enable or disable dynamic pacing and adjust each scorer's weight,
 the minimum and maximum multiplier, the curve around the baseline, and
 smoothing between consecutive words. These settings are saved in
-`localStorage`. For long texts, pacing values can be precomputed in a Web
-Worker, with a chunked fallback when workers are unavailable.
+`localStorage`. Playback computes each word's pacing as it is scheduled.
+`src/components/pacing/precompute.ts` also provides an internal Web Worker
+precompute cache (with a chunked fallback); it is not yet used by playback.
 
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 
