@@ -26,6 +26,12 @@ typecheck:
 test:
     pnpm test
 
+# land's merge-candidate gate: runs in a fresh scratch worktree, so install first
+test-gate:
+    pnpm install --frozen-lockfile
+    pnpm exec tsc --noEmit
+    pnpm test
+
 test-watch:
     pnpm test:watch
 
