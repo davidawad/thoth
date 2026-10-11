@@ -1,3 +1,9 @@
+# Unreleased
+
+### Documentation
+
+* document dynamic pacing, its scorers, settings, and precomputation
+
 # [1.3.0](https://github.com/davidawad/thoth/compare/v1.2.2...v1.3.0) (2026-10-06)
 
 
