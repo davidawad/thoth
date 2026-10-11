@@ -6,6 +6,7 @@ import {
   pacingConfigSchema,
   DEFAULT_PACING_CONFIG,
   storedBooleanSchema,
+  type PacingConfig,
 } from '../schemas';
 
 export function loadPacingSettings() {
@@ -61,27 +62,40 @@ export function wordDisplayTime(
     t += t * 1.5;
   }
 
-  // Scale continuously by word difficulty. Lower-case-initial words (articles,
-  // pronouns, ...) and very short words are excluded.
+  const { config, enabled } = loadPacingSettings();
+  return t * pacingMultiplier(word, config, enabled, sentence);
+}
+
+const LEGACY_SCORER = 'wordDifficulty';
+
+/**
+ * The dwell multiplier applied to `word` by wordDisplayTime. The legacy word
+ * difficulty scorer skips lower-case-initial (articles, pronouns, ...) and very
+ * short words, as it always has; configured and sentence scorers apply to every
+ * word. Disabled pacing keeps only the legacy word difficulty baseline.
+ */
+export function pacingMultiplier(
+  word: string,
+  config: PacingConfig,
+  enabled: boolean,
+  sentence = word,
+): number {
   const lowerInitial = word.charAt(0) === word.charAt(0).toLowerCase();
-  if (!lowerInitial && word.length > 2) {
-    const { config, enabled } = loadPacingSettings();
-    if (enabled) {
-      t *= scoreDwellMultiplier(
-        TextParsingTools.stripPunctuation(word).toLowerCase(),
-        config,
-        undefined,
-        sentence,
-      );
-    } else {
-      // The toggle only disables configurable scorers. Preserve the original
-      // word difficulty adjustment regardless of the dynamic pacing setting.
-      const baseline = scorerRegistry.get('wordDifficulty');
-      if (baseline) {
-        t *= baseline.score(TextParsingTools.stripPunctuation(word).toLowerCase());
-      }
-    }
+  const legacyEligible = !lowerInitial && word.length > 2;
+  const scored = TextParsingTools.stripPunctuation(word).toLowerCase();
+
+  if (!enabled) {
+    // The toggle only disables configurable scorers. Preserve the original
+    // word difficulty adjustment regardless of the dynamic pacing setting.
+    const baseline = scorerRegistry.get(LEGACY_SCORER);
+    return legacyEligible && baseline ? baseline.score(scored) : 1;
   }
 
-  return t;
+  const weights = legacyEligible
+    ? config.weights
+    : Object.fromEntries(
+        Object.entries(config.weights).filter(([id]) => id !== LEGACY_SCORER),
+      );
+  if (!Object.values(weights).some((weight) => weight > 0)) return 1;
+  return scoreDwellMultiplier(scored, { ...config, weights }, undefined, sentence);
 }

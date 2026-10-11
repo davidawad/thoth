@@ -19,3 +19,16 @@ export function sentenceRanges(text: string): SentenceRange[] {
 
   return ranges;
 }
+
+/** The complete sentence each whitespace-free token belongs to, in order. */
+export function tokenSentences(tokens: string[]): string[] {
+  const text = tokens.join(' ');
+  const ranges = sentenceRanges(text);
+  let offset = 0;
+  return tokens.map((token) => {
+    const start = offset;
+    offset += token.length + 1;
+    const range = ranges.find((r) => start >= r.start && start < r.end);
+    return range ? text.slice(range.start, range.end) : token;
+  });
+}

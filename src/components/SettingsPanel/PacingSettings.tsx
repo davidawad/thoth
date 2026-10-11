@@ -6,9 +6,11 @@ import {
   storedBooleanSchema,
   type PacingConfig,
 } from '../schemas';
-import { scoreDwellMultiplier } from '../pacing/dwellMultiplier';
 import { scorerRegistry } from '../pacing/scorers';
-import { notifyPacingSettingsChanged } from '../Reader/wordTiming';
+import {
+  notifyPacingSettingsChanged,
+  pacingMultiplier,
+} from '../Reader/wordTiming';
 import '../pacing';
 
 export const PACING_CONFIG_STORAGE_KEY = 'thoth.pacingConfig';
@@ -68,17 +70,8 @@ export default function PacingSettings() {
 
   const update = (changes: Partial<PacingConfig>) =>
     setConfig((current) => ({ ...current, ...changes }));
-  const preview = scoreDwellMultiplier(
-    SAMPLE_SENTENCE,
-    enabled
-      ? config
-      : {
-          ...config,
-          weights: Object.fromEntries(
-            Object.keys(config.weights).map((id) => [id, 0]),
-          ),
-        },
-  );
+  // Same path playback takes (wordDisplayTime), including when disabled.
+  const preview = pacingMultiplier(SAMPLE_SENTENCE, config, enabled);
 
   return (
     <section className="mb-6" aria-labelledby="pacing-settings-heading">

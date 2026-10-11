@@ -31,8 +31,7 @@ import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
 import { wordDisplayTime } from './wordTiming';
 import '../pacing';
-import { sentenceRanges } from '../pacing/sentences';
-import { endsSentence } from '../Book/pageWords';
+import { tokenSentences } from '../pacing/sentences';
 import { currentPosition, focusIndex, surroundingWords } from './wordRow';
 import type { AppSettings } from '../types';
 
@@ -467,29 +466,17 @@ class Reader extends Component<ReaderProps, ReaderState> {
   }
 
   // creates an array of DisplayReel Objects that contain the timing and other information for word display.
-  timingBelt(words: DisplayReel[], str: string): DisplayReel[] {
+  timingBelt(words: DisplayReel[], str: string, sentence = str): DisplayReel[] {
     const len = str.length;
     const focus = focusIndex(str);
 
-    const sentenceWords = [...words.map((item) => item.text), str];
-    let sentenceStart = 0;
-    for (let index = sentenceWords.length - 2; index >= 0; index -= 1) {
-      if (endsSentence(sentenceWords[index] ?? '')) {
-        sentenceStart = index + 1;
-        break;
-      }
-    }
-    const sentenceText = sentenceWords.slice(sentenceStart).join(' ');
-    const ranges = sentenceRanges(sentenceText);
-    const containing = ranges.find((range) => range.end === sentenceText.length);
-    const sentence = containing ? sentenceText.slice(containing.start, containing.end) : str;
     const t = wordDisplayTime(str, Number(this.props.readingSpeed), sentence);
 
     let ret = words.concat([new DisplayReel(str, focus, t)]);
 
     // note: these length thresholds are arbitrary, not empirically tuned
     if (len > 14 || len - focus > 7) {
-      ret = words.concat(this.parse(this.hyphenate(str)));
+      ret = words.concat(this.parse(this.hyphenate(str), sentence));
     }
 
     return ret;
@@ -572,8 +559,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
   }
 
   // parses a chunk of text into an array of DisplayReel objects that we can use for display
-  parse(words: string): DisplayReel[] {
-    const timingBelt = this.timingBelt;
+  // `sentence`, when given, is the complete sentence every token belongs to
+  // (hyphenated pieces keep their source word's sentence).
+  parse(words: string, sentence?: string): DisplayReel[] {
 
     // strings will be broken out into words
     // find the focus point of the word
@@ -582,11 +570,19 @@ class Reader extends Component<ReaderProps, ReaderState> {
     //   re-run parser after hyphenating the words
 
     // return array of displayReels
-    return words
+    const tokens = words
       .trim()
       .replace(/([.?!])([A-Z-])/g, '$1 $2')
-      .split(/\s+/)
-      .reduce(timingBelt, [] as DisplayReel[]);
+      .split(/\s+/);
+    // segment the full token list first so sentence scorers see whole sentences
+    const sentences = sentence
+      ? tokens.map(() => sentence)
+      : tokenSentences(tokens);
+    return tokens.reduce(
+      (reels, token, index) =>
+        this.timingBelt(reels, token, sentences[index]),
+      [] as DisplayReel[],
+    );
   }
 
   // the "actual" play function.

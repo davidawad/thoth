@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import PacingSettings, { PACING_CONFIG_STORAGE_KEY } from './PacingSettings';
+import { pacingMultiplier } from '../Reader/wordTiming';
+import { DEFAULT_PACING_CONFIG } from '../schemas';
+import TextParsingTools from '../TextParsingTools';
 
 describe('PacingSettings', () => {
   beforeEach(() => window.localStorage.clear());
@@ -62,6 +65,29 @@ describe('PacingSettings', () => {
     expect(screen.getByTestId('pacing-enabled-toggle')).toHaveProperty(
       'checked',
       false,
+    );
+  });
+});
+
+describe('PacingSettings preview when disabled', () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => cleanup());
+
+  it('shows the legacy baseline playback still applies', () => {
+    window.localStorage.setItem('thoth.pacingEnabled', 'false');
+    render(<PacingSettings />);
+    const sample =
+      'The curious reader paused to consider the unfamiliar word.';
+    const expected = pacingMultiplier(sample, DEFAULT_PACING_CONFIG, false);
+
+    expect(expected).toBe(
+      TextParsingTools.wordDifficultyMultiplier(
+        TextParsingTools.stripPunctuation(sample).toLowerCase(),
+      ),
+    );
+    expect(expected.toFixed(2)).not.toBe('1.00');
+    expect(screen.getByTestId('pacing-preview').textContent).toContain(
+      `${expected.toFixed(2)}× baseline`,
     );
   });
 });
