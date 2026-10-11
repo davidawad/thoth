@@ -98,6 +98,11 @@ export const MAX_LEXICAL_DENSITY = 0.75;
 export const LEXICAL_DENSITY_MIN_AGE = 8;
 export const LEXICAL_DENSITY_MAX_AGE = 20;
 
+// --- Sentence-level formula pacing. The existing age band is mapped to a
+// positive dwell multiplier; these values are kept separate from word timing.
+export const SENTENCE_PACING_MIN_MULTIPLIER = 0.7;
+export const SENTENCE_PACING_MAX_MULTIPLIER = 1.8;
+
 // ---------------------------------------------------------------------------
 // Theming (daisyui `data-theme`) - see src/components/SettingsPanel/SettingsPanel.js
 // ---------------------------------------------------------------------------
