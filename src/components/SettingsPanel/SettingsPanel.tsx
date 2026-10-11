@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import TextParsingTools from '../TextParsingTools';
 import PaletteField from '../palette/PaletteField';
 import HeadFontField from '../Reader/HeadFontField';
+import PacingSettings from './PacingSettings';
 import { applyStoredPalette } from '../palette/applyPalette';
 import { applyTheme, getActiveTheme } from '../Book/theme';
 import {
@@ -340,6 +341,8 @@ const SettingsPanel = (props: SettingsPanelProps) => {
           unavailable, reading falls back to your original text automatically.
         </p>
       </section>
+
+      <PacingSettings />
 
       <FoundationalResearchSection />
       <TypefaceSection />
