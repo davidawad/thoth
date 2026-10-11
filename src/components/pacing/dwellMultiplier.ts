@@ -45,10 +45,16 @@ export function scoreDwellMultiplier(
   word: string,
   config: PacingConfig,
   previous?: number,
+  containingSentence?: string,
 ): number {
   const values = Object.keys(config.weights).flatMap((scorerId) => {
     const scorer = scorerRegistry.get(scorerId);
-    return scorer ? [{ scorerId, value: scorer.score(word) }] : [];
+    if (!scorer) return [];
+    const sentenceScore =
+      scorer.granularity === 'sentence' && containingSentence
+        ? scorer.scoreSentence?.(containingSentence)
+        : undefined;
+    return [{ scorerId, value: sentenceScore ?? scorer.score(word) }];
   });
   return dwellMultiplier(values, config, previous);
 }

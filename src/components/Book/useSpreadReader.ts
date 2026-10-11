@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { layoutBook, type Book } from './bookModel';
 import { wordDisplayTime } from '../Reader/wordTiming';
+import '../pacing';
 import { tokenizePage } from './pageWords';
 import { loadPositions, saveCurrentBookId, savePosition } from './storage';
 import {

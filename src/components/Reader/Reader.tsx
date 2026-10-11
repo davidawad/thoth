@@ -30,6 +30,8 @@ import SpeedControl from './SpeedControl';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
 import { wordDisplayTime } from './wordTiming';
+import '../pacing';
+import { sentenceRanges } from '../pacing/sentences';
 import { currentPosition, focusIndex, surroundingWords } from './wordRow';
 import type { AppSettings } from '../types';
 
@@ -468,7 +470,11 @@ class Reader extends Component<ReaderProps, ReaderState> {
     const len = str.length;
     const focus = focusIndex(str);
 
-    const t = wordDisplayTime(str, Number(this.props.readingSpeed));
+    const sentenceText = [...words.map((item) => item.text), str].join(' ');
+    const ranges = sentenceRanges(sentenceText);
+    const containing = ranges.find((range) => range.end === sentenceText.length);
+    const sentence = containing ? sentenceText.slice(containing.start, containing.end) : str;
+    const t = wordDisplayTime(str, Number(this.props.readingSpeed), sentence);
 
     let ret = words.concat([new DisplayReel(str, focus, t)]);
 

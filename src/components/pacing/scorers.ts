@@ -3,6 +3,7 @@ import TextParsingTools from '../TextParsingTools';
 /** Scorers return a positive relative dwell multiplier; 1 means baseline. */
 export interface Scorer {
   id: string;
+  label?: string;
   /** Defaults to 'word'. A 'sentence' scorer implements scoreSentence. */
   granularity?: 'word' | 'sentence';
   score: (word: string) => number;

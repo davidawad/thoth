@@ -1,6 +1,27 @@
 import TextParsingTools from '../TextParsingTools';
-import { DEFAULT_PACING_CONFIG } from '../schemas';
 import { scoreDwellMultiplier } from '../pacing/dwellMultiplier';
+import '../pacing';
+import {
+  pacingConfigSchema,
+  DEFAULT_PACING_CONFIG,
+  storedBooleanSchema,
+} from '../schemas';
+
+export function loadPacingSettings() {
+  try {
+    const raw = window.localStorage.getItem('thoth.pacingConfig');
+    const parsed = raw ? pacingConfigSchema.safeParse(JSON.parse(raw)) : null;
+    const enabledRaw = storedBooleanSchema.safeParse(
+      window.localStorage.getItem('thoth.pacingEnabled'),
+    );
+    return {
+      config: parsed?.success ? parsed.data : DEFAULT_PACING_CONFIG,
+      enabled: enabledRaw.success ? enabledRaw.data : true,
+    };
+  } catch {
+    return { config: DEFAULT_PACING_CONFIG, enabled: true };
+  }
+}
 
 /**
  * How long one word stays on screen, in ms, at `wpm` words per minute. The
@@ -9,7 +30,11 @@ import { scoreDwellMultiplier } from '../pacing/dwellMultiplier';
  * familiarity). Shared by the landing Reader and the book spread so both pace
  * text identically.
  */
-export function wordDisplayTime(word: string, wpm: number): number {
+export function wordDisplayTime(
+  word: string,
+  wpm: number,
+  sentence = word,
+): number {
   let t = 60000 / wpm;
 
   // over six characters: a quarter longer
@@ -31,10 +56,15 @@ export function wordDisplayTime(word: string, wpm: number): number {
   // pronouns, ...) and very short words are excluded.
   const lowerInitial = word.charAt(0) === word.charAt(0).toLowerCase();
   if (!lowerInitial && word.length > 2) {
-    t *= scoreDwellMultiplier(
-      TextParsingTools.stripPunctuation(word).toLowerCase(),
-      DEFAULT_PACING_CONFIG,
-    );
+    const { config, enabled } = loadPacingSettings();
+    if (enabled) {
+      t *= scoreDwellMultiplier(
+        TextParsingTools.stripPunctuation(word).toLowerCase(),
+        config,
+        undefined,
+        sentence,
+      );
+    }
   }
 
   return t;

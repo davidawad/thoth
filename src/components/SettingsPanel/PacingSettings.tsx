@@ -8,6 +8,7 @@ import {
 } from '../schemas';
 import { scoreDwellMultiplier } from '../pacing/dwellMultiplier';
 import { scorerRegistry } from '../pacing/scorers';
+import '../pacing';
 
 export const PACING_CONFIG_STORAGE_KEY = 'thoth.pacingConfig';
 const PACING_ENABLED_STORAGE_KEY = 'thoth.pacingEnabled';

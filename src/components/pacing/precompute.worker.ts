@@ -1,4 +1,6 @@
 import { scoreDwellMultiplier } from "./dwellMultiplier";
+import "./formulaScorers";
+import "./extraScorers";
 import type { PacingConfig } from "../schemas";
 
 interface WorkerRequest {
