@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { CompositeDecorator } from 'draft-js';
 import type { ContentBlock } from 'draft-js';
 import TextParsingTools from '../TextParsingTools';
+import { sentenceRanges } from '../pacing/sentences';
 
 // Reading-difficulty heat map: every sentence in the loaded text gets a
 // background from green (easy) to red (hard). Difficulty is RELATIVE to the
@@ -9,35 +10,13 @@ import TextParsingTools from '../TextParsingTools';
 // sentences - so the map always shows where the hard parts of *this* text are,
 // whatever its absolute level.
 
-export interface Range {
-  start: number;
-  end: number;
-}
+export type { SentenceRange as Range } from '../pacing/sentences';
 
 // Extra difficulty per word in a sentence: longer sentences are harder to hold
 // in mind, independent of how hard each word is.
 const LENGTH_WEIGHT = 0.01;
 
-// A sentence ends at ./!/? (plus any closing quote/bracket) followed by
-// whitespace or the end of the block, so decimals like "3.5" don't split.
-const SENTENCE_PATTERN = /[\s\S]+?(?:[.!?]+["')\]]*(?=\s|$)|$)\s*/g;
-
-// Sentence ranges within one block (paragraph) of text, trimmed of trailing
-// whitespace and with empty ranges dropped.
-export function sentenceRanges(text: string): Range[] {
-  const ranges: Range[] = [];
-
-  for (const match of text.matchAll(SENTENCE_PATTERN)) {
-    const start = match.index;
-    const end = start + match[0].trimEnd().length;
-
-    if (end > start && match[0].trim().length > 0) {
-      ranges.push({ start, end });
-    }
-  }
-
-  return ranges;
-}
+export { sentenceRanges };
 
 // Raw difficulty of one sentence: mean per-word difficulty multiplier (the same
 // measure that scales how long each word is shown) plus a length term.

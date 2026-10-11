@@ -1,4 +1,6 @@
 import TextParsingTools from '../TextParsingTools';
+import { DEFAULT_PACING_CONFIG } from '../schemas';
+import { scoreDwellMultiplier } from '../pacing/dwellMultiplier';
 
 /**
  * How long one word stays on screen, in ms, at `wpm` words per minute. The
@@ -29,8 +31,9 @@ export function wordDisplayTime(word: string, wpm: number): number {
   // pronouns, ...) and very short words are excluded.
   const lowerInitial = word.charAt(0) === word.charAt(0).toLowerCase();
   if (!lowerInitial && word.length > 2) {
-    t *= TextParsingTools.wordDifficultyMultiplier(
+    t *= scoreDwellMultiplier(
       TextParsingTools.stripPunctuation(word).toLowerCase(),
+      DEFAULT_PACING_CONFIG,
     );
   }
 
