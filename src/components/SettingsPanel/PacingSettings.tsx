@@ -8,6 +8,7 @@ import {
 } from '../schemas';
 import { scoreDwellMultiplier } from '../pacing/dwellMultiplier';
 import { scorerRegistry } from '../pacing/scorers';
+import { notifyPacingSettingsChanged } from '../Reader/wordTiming';
 import '../pacing';
 
 export const PACING_CONFIG_STORAGE_KEY = 'thoth.pacingConfig';
@@ -53,6 +54,7 @@ export default function PacingSettings() {
     } catch {
       // Storage can be unavailable; settings still work for this session.
     }
+    notifyPacingSettingsChanged();
   }, [config]);
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function PacingSettings() {
     } catch {
       // Storage can be unavailable; settings still work for this session.
     }
+    notifyPacingSettingsChanged();
   }, [enabled]);
 
   const update = (changes: Partial<PacingConfig>) =>

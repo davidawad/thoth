@@ -9,6 +9,9 @@ import {
 import SpreadReader from './SpreadReader';
 import type { Book } from './bookModel';
 import { loadPositions } from './storage';
+import { layoutBook } from './bookModel';
+import { indexBook } from './spreadModel';
+import { sentenceAt } from './useSpreadReader';
 
 const sentence = (i: number): string =>
   `Sentence number ${i} runs along for a few words.`;
@@ -72,6 +75,13 @@ afterEach(() => {
 });
 
 describe('SpreadReader', () => {
+  it('provides the containing sentence for sentence-level pacing', () => {
+    const ix = indexBook(
+      layoutBook([{ title: 'Chapter', text: 'Alpha. Beta Gamma.' }], 100),
+    );
+    expect(sentenceAt(ix, { chapter: 0, offset: 2 })).toBe('Beta Gamma.');
+  });
+
   it('shows a two-page spread with the current word marked', () => {
     mount();
     expect(screen.getByTestId('book-page-left')).toBeTruthy();
@@ -110,6 +120,25 @@ describe('SpreadReader', () => {
     const frozen = screen.getByTestId('book-current-word').textContent;
     act(() => vi.advanceTimersByTime(3000));
     expect(screen.getByTestId('book-current-word').textContent).toBe(frozen);
+  });
+
+  it('reschedules the next word when pacing settings change during playback', () => {
+    mount();
+    key(' ', { code: 'Space' });
+    const first = screen.getByTestId('book-current-word').textContent;
+    window.localStorage.setItem(
+      'thoth.pacingConfig',
+      JSON.stringify({
+        weights: { wordDifficulty: 1 },
+        minMultiplier: 0.01,
+        maxMultiplier: 0.01,
+        curve: 1,
+        smoothing: 1,
+      }),
+    );
+    act(() => window.dispatchEvent(new Event('thoth:pacing-settings-changed')));
+    act(() => vi.advanceTimersByTime(2));
+    expect(screen.getByTestId('book-current-word').textContent).not.toBe(first);
   });
 
   it('does not hijack keys while typing in a field or behind a modal', () => {

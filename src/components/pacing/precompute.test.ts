@@ -32,11 +32,16 @@ describe("pacing precompute cache", () => {
       }),
     ).toBe(first);
 
-    const changed = { ...DEFAULT_PACING_CONFIG, maxMultiplier: 12 };
+    const changed = {
+      ...DEFAULT_PACING_CONFIG,
+      minMultiplier: 3,
+      maxMultiplier: 3,
+    };
     const second = await cache.get("A book sentence.", changed, {
       useWorker: false,
     });
     expect(second).not.toBe(first);
+    expect(Array.from(second)).not.toEqual(Array.from(first));
     expect(cache.size).toBe(1);
     cache.invalidate();
     expect(cache.size).toBe(0);

@@ -1,6 +1,7 @@
 import TextParsingTools from '../TextParsingTools';
 import { scoreDwellMultiplier } from '../pacing/dwellMultiplier';
 import '../pacing';
+import { scorerRegistry } from '../pacing/scorers';
 import {
   pacingConfigSchema,
   DEFAULT_PACING_CONFIG,
@@ -20,6 +21,14 @@ export function loadPacingSettings() {
     };
   } catch {
     return { config: DEFAULT_PACING_CONFIG, enabled: true };
+  }
+}
+
+export const PACING_SETTINGS_CHANGED = 'thoth:pacing-settings-changed';
+
+export function notifyPacingSettingsChanged(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(PACING_SETTINGS_CHANGED));
   }
 }
 
@@ -64,6 +73,13 @@ export function wordDisplayTime(
         undefined,
         sentence,
       );
+    } else {
+      // The toggle only disables configurable scorers. Preserve the original
+      // word difficulty adjustment regardless of the dynamic pacing setting.
+      const baseline = scorerRegistry.get('wordDifficulty');
+      if (baseline) {
+        t *= baseline.score(TextParsingTools.stripPunctuation(word).toLowerCase());
+      }
     }
   }
 

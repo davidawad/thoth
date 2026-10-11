@@ -14,7 +14,10 @@ import {
   type RefObject,
 } from 'react';
 import { layoutBook, type Book } from './bookModel';
-import { wordDisplayTime } from '../Reader/wordTiming';
+import {
+  PACING_SETTINGS_CHANGED,
+  wordDisplayTime,
+} from '../Reader/wordTiming';
 import '../pacing';
 import { tokenizePage } from './pageWords';
 import { loadPositions, saveCurrentBookId, savePosition } from './storage';
@@ -67,6 +70,16 @@ export function wordAt(ix: BookIndex, loc: Loc): string {
   const w = whereIs(ix, loc);
   const text = ix.layout.pages[w.pos.chapter]?.[w.pos.page] ?? '';
   return tokenizePage(text).words[w.word] ?? '';
+}
+
+export function sentenceAt(ix: BookIndex, loc: Loc): string {
+  const chapter = ix.layout.pages[loc.chapter] ?? [];
+  const tokens = tokenizePage(chapter.join(' '));
+  const sentenceIndex = tokens.sentenceOf[loc.offset];
+  if (sentenceIndex === undefined) return wordAt(ix, loc);
+  return tokens.words
+    .filter((_, index) => tokens.sentenceOf[index] === sentenceIndex)
+    .join(' ');
 }
 
 /** The word `delta` away from `loc` as text ('' off the ends of the book). */
@@ -193,6 +206,13 @@ export function usePlayback(
 ): void {
   const { playing, stop, wpm } = run;
   const word = wordAt(ix, cursor);
+  const sentence = sentenceAt(ix, cursor);
+  const [settingsRevision, setSettingsRevision] = useState(0);
+  useEffect(() => {
+    const changed = (): void => setSettingsRevision((revision) => revision + 1);
+    window.addEventListener(PACING_SETTINGS_CHANGED, changed);
+    return () => window.removeEventListener(PACING_SETTINGS_CHANGED, changed);
+  }, []);
   useEffect(() => {
     if (!playing) {
       return;
@@ -205,10 +225,10 @@ export function usePlayback(
           stop();
         }
       },
-      wordDisplayTime(word, wpm),
+      wordDisplayTime(word, wpm, sentence),
     );
     return () => clearTimeout(id);
-  }, [playing, stop, cursor, word, wpm, ix, dispatch]);
+  }, [playing, stop, cursor, word, sentence, wpm, ix, dispatch, settingsRevision]);
 }
 
 /** Saves the book + word shortly after it settles; returns a flush for leaving the book. */

@@ -32,6 +32,7 @@ import DisplayReel from '../DisplayReel';
 import { wordDisplayTime } from './wordTiming';
 import '../pacing';
 import { sentenceRanges } from '../pacing/sentences';
+import { endsSentence } from '../Book/pageWords';
 import { currentPosition, focusIndex, surroundingWords } from './wordRow';
 import type { AppSettings } from '../types';
 
@@ -470,7 +471,15 @@ class Reader extends Component<ReaderProps, ReaderState> {
     const len = str.length;
     const focus = focusIndex(str);
 
-    const sentenceText = [...words.map((item) => item.text), str].join(' ');
+    const sentenceWords = [...words.map((item) => item.text), str];
+    let sentenceStart = 0;
+    for (let index = sentenceWords.length - 2; index >= 0; index -= 1) {
+      if (endsSentence(sentenceWords[index] ?? '')) {
+        sentenceStart = index + 1;
+        break;
+      }
+    }
+    const sentenceText = sentenceWords.slice(sentenceStart).join(' ');
     const ranges = sentenceRanges(sentenceText);
     const containing = ranges.find((range) => range.end === sentenceText.length);
     const sentence = containing ? sentenceText.slice(containing.start, containing.end) : str;
