@@ -51,3 +51,25 @@ export const uploadedFileSchema = z.object({
   type: z.enum([PDF_MIME_TYPE, EPUB_MIME_TYPE]),
   size: z.number().int().positive().max(MAX_UPLOAD_SIZE_BYTES),
 });
+
+// Runtime-safe pacing configuration. Weights are normalized by the engine.
+export const pacingConfigSchema = z
+  .object({
+    weights: z.record(z.string(), z.number().finite().nonnegative()),
+    minMultiplier: z.number().finite().positive(),
+    maxMultiplier: z.number().finite().positive(),
+    curve: z.number().finite().positive(),
+    smoothing: z.number().finite().min(0).max(1),
+  })
+  .refine((config) => config.minMultiplier <= config.maxMultiplier, {
+    message: 'minMultiplier must be <= maxMultiplier',
+  });
+export type PacingConfig = z.infer<typeof pacingConfigSchema>;
+
+export const DEFAULT_PACING_CONFIG: PacingConfig = {
+  weights: { wordDifficulty: 1 },
+  minMultiplier: 0.01,
+  maxMultiplier: 100,
+  curve: 1,
+  smoothing: 1,
+};
