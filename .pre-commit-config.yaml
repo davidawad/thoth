@@ -24,11 +24,7 @@ repos:
         pass_filenames: true
       - id: commitlint
         name: commitlint (Conventional Commits)
-        # `land` builds its candidate with a synthetic "chore: merge <branch> into
-        # candidate (land)" commit inside a scratch worktree that has no
-        # node_modules; commitlint's absence there was reported as a merge
-        # conflict. Those commits are not authored history, so skip them.
-        entry: sh -c 'case "$(head -n1 "$1")" in "chore: merge "*" into candidate (land)") exit 0;; esac; exec pnpm exec commitlint --edit "$1"' --
+        entry: pnpm exec commitlint --edit
         language: system
         stages: [commit-msg]
-        pass_filenames: true
+        pass_filenames: false
