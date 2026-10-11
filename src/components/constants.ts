@@ -173,6 +173,27 @@ export const FOUNDATIONAL_RESEARCH_PAPER = {
 
 export const FOUNDATIONAL_RESEARCH: FoundationalResearchCategory[] = [
   {
+    title: 'Pacing scorer references',
+    references: [
+      {
+        citation:
+          'Speer, R., and Chin, J. Wordfreq: word frequency estimates in multiple languages (English frequency data derived from published corpora).',
+        url: 'https://github.com/rspeer/wordfreq',
+        note: 'The compact bundled Zipf-frequency sample in pacing/extraScorers.ts uses the wordfreq frequency scale as its source and is marked CC BY-SA 4.0 there; uncommon unlisted words receive a low-frequency fallback.',
+      },
+      {
+        citation: 'Compromise NLP: part-of-speech tagging and text analysis.',
+        url: 'https://github.com/spencermountain/compromise',
+        note: 'Used for lightweight conjunction detection in the sentence clause-depth heuristic.',
+      },
+      {
+        citation: 'syllable: count syllables in English words.',
+        url: 'https://github.com/words/syllable',
+        note: 'Used to estimate average syllables per word for word and sentence pacing.',
+      },
+    ],
+  },
+  {
     title: 'RSVP & speed reading',
     references: [
       {
