@@ -17,6 +17,22 @@ Thoth is hosted online @ https://davidawad.gitlab.io/thoth/
 
 Looking to study instead? Try [Seshat](https://github.com/davidawad/Seshat).
 
+## Dynamic pacing
+
+Dynamic pacing adjusts each word's display time using a weighted blend of
+readability and language-complexity scorers. This makes dwell time respond to
+the words and sentences being read instead of relying only on a fixed pace.
+
+Available scorers are `wordDifficulty`, `fleschKincaid`, `gunningFog`, `smog`,
+`colemanLiau`, `automatedReadability`, `daleChall`, `spache`,
+`lexicalDensity`, `wordRarity`, `clauseDepth`, and `wordLength`.
+
+In Settings, enable or disable dynamic pacing and adjust each scorer's weight,
+the minimum and maximum multiplier, the curve around the baseline, and
+smoothing between consecutive words. These settings are saved in
+`localStorage`. For long texts, pacing values can be precomputed in a Web
+Worker, with a chunked fallback when workers are unavailable.
+
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 
 ## Available Scripts

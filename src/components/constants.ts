@@ -71,20 +71,18 @@ export const DEFAULT_AGE = 12;
 export const MAX_AGE = 22;
 export const AGE_SCALE = 6;
 
-// --- Per-word difficulty scaling (replaces the old fixed 1.5x "unfamiliar
-// word" multiplier flagged as a known weakness in the paper's Future Work,
-// §8.1 - "Thoth uses fixed assumptions about how much longer to display a
-// word that is unfamiliar"). See TextParsingTools.wordDifficultyMultiplier.
-// Tunable here rather than hardcoded inside the timing logic.
+// --- Per-word difficulty scaling, motivated by the fixed unfamiliar-word
+// timing assumption flagged in the paper's Future Work, §8.1. Dynamic pacing
+// now combines this scorer with selectable readability and language-complexity
+// scorers. See TextParsingTools.wordDifficultyMultiplier.
 export const DIFFICULTY_BASE_MULTIPLIER = 1; // multiplier floor - easy, short, familiar words are unaffected
 export const DIFFICULTY_SYLLABLE_WEIGHT = 0.15; // extra multiplier per syllable beyond the word's first
 export const DIFFICULTY_UNFAMILIAR_WEIGHT = 0.5; // extra multiplier when a word isn't in the dale-chall familiar list
 export const DIFFICULTY_HARD_WEIGHT = 0.35; // additional multiplier stacked on when a word is ALSO absent from the (easier) spache list
 export const MAX_DIFFICULTY_MULTIPLIER = 3; // cap so pathologically long/rare words don't stall playback
 
-// --- Selectable readability/difficulty metric (paper §6/§8.2 future work:
-// Dale-Chall was hardcoded as the default and other formulas were computed
-// but never exposed for the reader to choose between).
+// --- Selectable readability/difficulty metrics address paper §6/§8.2 future
+// work: other formulas were computed but not exposed for readers to choose.
 export const DEFAULT_READABILITY_METRIC = 'average';
 export const READABILITY_METRIC_STORAGE_KEY = 'thoth.readabilityMetric';
 
