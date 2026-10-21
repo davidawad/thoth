@@ -29,9 +29,15 @@ import {
 import SpeedControl from './SpeedControl';
 import PlaybackHead from '../PlaybackHead/PlaybackHead';
 import DisplayReel from '../DisplayReel';
-import { wordDisplayTime } from './wordTiming';
+import {
+  PACING_SETTINGS_CHANGED,
+  loadPacingSettings,
+  wordDisplayTime,
+  wordDisplayTimeWithMultiplier,
+} from './wordTiming';
 import '../pacing';
 import { tokenSentences } from '../pacing/sentences';
+import { pacingPrecomputeCache } from '../pacing/precompute';
 import { currentPosition, focusIndex, surroundingWords } from './wordRow';
 import type { AppSettings } from '../types';
 
@@ -102,6 +108,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // set when playback ran off the end of a page and the parent is supplying the next one
   continuePlaying = false;
   colorStyleMap: DraftStyleMap = {};
+  private deferPacing = false;
+  private pacingJob = 0;
+  private readonly reelSentences = new WeakMap<DisplayReel, string>();
 
   constructor(props: ReaderProps) {
     super(props);
@@ -210,6 +219,11 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // catch a space press anywhere else on the page.
   componentDidMount(): void {
     document.addEventListener('keydown', this.handleGlobalKeyDown);
+    window.addEventListener(
+      PACING_SETTINGS_CHANGED,
+      this.handlePacingSettingsChanged,
+    );
+    this.precomputeTape(this.state.tape);
 
     this.setState({
       statsPortalTarget: document.getElementById(READER_STATS_PORTAL_ID),
@@ -218,6 +232,11 @@ class Reader extends Component<ReaderProps, ReaderState> {
 
   componentWillUnmount(): void {
     document.removeEventListener('keydown', this.handleGlobalKeyDown);
+    window.removeEventListener(
+      PACING_SETTINGS_CHANGED,
+      this.handlePacingSettingsChanged,
+    );
+    this.pacingJob += 1;
     if (this.loopTimer !== null) {
       clearTimeout(this.loopTimer);
     }
@@ -279,7 +298,8 @@ class Reader extends Component<ReaderProps, ReaderState> {
     // Moving the wpm slider re-times the words but must not lose your place
     // (or restart the page): rebuild the tape and keep the index.
     if (changed.length === 1 && changed[0] === 'readingSpeed') {
-      this.setState({ tape: this.parse(this.state.displayText) });
+      const tape = this.parse(this.state.displayText);
+      this.setState({ tape }, () => this.precomputeTape(tape));
       return;
     }
 
@@ -294,6 +314,50 @@ class Reader extends Component<ReaderProps, ReaderState> {
       settings as Pick<ReaderState, keyof ReaderState>,
       this.propHandler,
     );
+  }
+
+  private handlePacingSettingsChanged = (): void => {
+    pacingPrecomputeCache.invalidate();
+    if (this.deferPacing) {
+      if (this.loopTimer !== null) clearTimeout(this.loopTimer);
+      this.precomputeTape(this.state.tape);
+    } else {
+      const tape = this.parse(this.state.displayText);
+      this.setState({ tape }, () => this.precomputeTape(tape));
+    }
+  };
+
+  private precomputeTape(tape: DisplayReel[]): void {
+    if (!this.deferPacing || tape.length < 1_000) return;
+    const job = ++this.pacingJob;
+    const text = tape.map((reel) => reel.text).join(' ');
+    const sentences = tape.map(
+      (reel) => this.reelSentences.get(reel) ?? reel.text,
+    );
+    const { config, enabled } = loadPacingSettings();
+    void pacingPrecomputeCache
+      .get(text, config, { enabled, sentences, chunkSize: 250 })
+      .then((values) => {
+        if (job !== this.pacingJob || this.state.tape !== tape) return;
+        const wpm = Number(this.props.readingSpeed);
+        tape.forEach((reel, index) => {
+          reel.displayTime = wordDisplayTimeWithMultiplier(
+            reel.text,
+            wpm,
+            values[index] ?? 1,
+          );
+        });
+        this.setState(
+          {
+            tape: [...tape],
+            currentReel:
+              tape[this.state.index] ?? tape[0] ?? this.state.currentReel,
+          },
+          () => {
+            if (!this.state.paused) this.loop();
+          },
+        );
+      });
   }
 
   // required function for draft.js
@@ -446,6 +510,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
         speedWritingActive: speedWritingActive,
       },
       () => {
+        this.precomputeTape(arr);
         this.reset();
         // Page turned while playing (or auto-advanced at the end of a page):
         // keep going on the new page. loop() clears any pending timer first,
@@ -470,9 +535,13 @@ class Reader extends Component<ReaderProps, ReaderState> {
     const len = str.length;
     const focus = focusIndex(str);
 
-    const t = wordDisplayTime(str, Number(this.props.readingSpeed), sentence);
+    const t = this.deferPacing
+      ? wordDisplayTimeWithMultiplier(str, Number(this.props.readingSpeed), 1)
+      : wordDisplayTime(str, Number(this.props.readingSpeed), sentence);
 
-    let ret = words.concat([new DisplayReel(str, focus, t)]);
+    const reel = new DisplayReel(str, focus, t);
+    this.reelSentences.set(reel, sentence);
+    let ret = words.concat([reel]);
 
     // note: these length thresholds are arbitrary, not empirically tuned
     if (len > 14 || len - focus > 7) {
@@ -562,6 +631,9 @@ class Reader extends Component<ReaderProps, ReaderState> {
   // `sentence`, when given, is the complete sentence every token belongs to
   // (hyphenated pieces keep their source word's sentence).
   parse(words: string, sentence?: string): DisplayReel[] {
+    if (sentence === undefined) {
+      this.deferPacing = (words.match(/\S+/g)?.length ?? 0) >= 1_000;
+    }
 
     // strings will be broken out into words
     // find the focus point of the word
@@ -579,8 +651,7 @@ class Reader extends Component<ReaderProps, ReaderState> {
       ? tokens.map(() => sentence)
       : tokenSentences(tokens);
     return tokens.reduce(
-      (reels, token, index) =>
-        this.timingBelt(reels, token, sentences[index]),
+      (reels, token, index) => this.timingBelt(reels, token, sentences[index]),
       [] as DisplayReel[],
     );
   }

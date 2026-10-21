@@ -216,7 +216,10 @@ export function usePlayback(
     values: Float32Array;
   } | null>(null);
   useEffect(() => {
-    const changed = (): void => setSettingsRevision((revision) => revision + 1);
+    const changed = (): void => {
+      pacingPrecomputeCache.invalidate();
+      setSettingsRevision((revision) => revision + 1);
+    };
     window.addEventListener(PACING_SETTINGS_CHANGED, changed);
     return () => window.removeEventListener(PACING_SETTINGS_CHANGED, changed);
   }, []);
@@ -245,7 +248,11 @@ export function usePlayback(
     );
     let live = true;
     void pacingPrecomputeCache
-      .get(pageTokens.words.join(' '), config, { enabled, sentences })
+      .get(pageTokens.words.join(' '), config, {
+        enabled,
+        sentences,
+        chunkSize: 250,
+      })
       .then((values) => {
         if (live) setPrecomputed({ chapter: cursor.chapter, values });
       });
