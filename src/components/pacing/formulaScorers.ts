@@ -119,7 +119,7 @@ function makeScorer(id: string, formula: AgeFormula): Scorer {
 // equivalent before applying the published formula. This is explicitly an
 // approximation and is noisy for very short sentences.
 const scorers: Scorer[] = [
-  makeScorer('fleschKincaid', (c) => fleschToAge(flesch(c))),
+  makeScorer('fleschReadingEase', (c) => fleschToAge(flesch(c))),
   makeScorer('gunningFog', (c) => gradeToAge(gunningFog(c))),
   makeScorer('smog', (c) =>
     smogToAge(

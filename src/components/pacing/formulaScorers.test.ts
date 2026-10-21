@@ -8,7 +8,7 @@ describe('sentence formula scorers', () => {
     expect(
       formulaScorers.map(({ id, granularity }) => [id, granularity]),
     ).toEqual([
-      ['fleschKincaid', 'sentence'],
+      ['fleschReadingEase', 'sentence'],
       ['gunningFog', 'sentence'],
       ['smog', 'sentence'],
       ['colemanLiau', 'sentence'],

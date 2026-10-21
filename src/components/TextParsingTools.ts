@@ -233,7 +233,7 @@ const READABILITY_METRICS: ReadabilityMetricOption[] = [
   { key: 'average', label: 'Average of all metrics' },
   { key: 'daleChall', label: 'Dale-Chall' },
   { key: 'spacheFormula', label: 'Spache' },
-  { key: 'flesch', label: 'Flesch-Kincaid' },
+  { key: 'flesch', label: 'Flesch Reading Ease' },
   { key: 'smog', label: 'SMOG' },
   { key: 'gunningFog', label: 'Gunning Fog' },
   { key: 'colemanLiau', label: 'Coleman-Liau' },

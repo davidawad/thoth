@@ -23,7 +23,7 @@ Dynamic pacing adjusts each word's display time using a weighted blend of
 readability and language-complexity scorers. This makes dwell time respond to
 the words and sentences being read instead of relying only on a fixed pace.
 
-Available scorers are `wordDifficulty`, `fleschKincaid`, `gunningFog`, `smog`,
+Available scorers are `wordDifficulty`, `fleschReadingEase`, `gunningFog`, `smog`,
 `colemanLiau`, `automatedReadability`, `daleChall`, `spache`,
 `lexicalDensity`, `wordRarity`, `clauseDepth`, and `wordLength`.
 

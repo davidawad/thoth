@@ -67,6 +67,28 @@ describe('PacingSettings', () => {
       false,
     );
   });
+
+  it('migrates the old Flesch-Kincaid weight to Flesch Reading Ease', () => {
+    window.localStorage.setItem(
+      PACING_CONFIG_STORAGE_KEY,
+      JSON.stringify({
+        weights: { fleschKincaid: 1.25 },
+        minMultiplier: 0.1,
+        maxMultiplier: 4,
+        curve: 1,
+        smoothing: 1,
+      }),
+    );
+    render(<PacingSettings />);
+
+    expect(screen.getByTestId('pacing-weight-fleschReadingEase')).toHaveProperty(
+      'value',
+      '1.25',
+    );
+    expect(
+      JSON.parse(window.localStorage.getItem(PACING_CONFIG_STORAGE_KEY)!).weights,
+    ).toEqual({ fleschReadingEase: 1.25 });
+  });
 });
 
 describe('PacingSettings preview when disabled', () => {

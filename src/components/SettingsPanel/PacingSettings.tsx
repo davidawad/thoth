@@ -24,7 +24,16 @@ function loadConfig(): PacingConfig {
     const stored = window.localStorage.getItem(PACING_CONFIG_STORAGE_KEY);
     if (!stored) return DEFAULT_PACING_CONFIG;
     const parsed = pacingConfigSchema.safeParse(JSON.parse(stored));
-    return parsed.success ? parsed.data : DEFAULT_PACING_CONFIG;
+    if (!parsed.success) return DEFAULT_PACING_CONFIG;
+
+    const { fleschKincaid, ...weights } = parsed.data.weights;
+    if (
+      weights.fleschReadingEase === undefined &&
+      fleschKincaid !== undefined
+    ) {
+      weights.fleschReadingEase = fleschKincaid;
+    }
+    return { ...parsed.data, weights };
   } catch {
     return DEFAULT_PACING_CONFIG;
   }

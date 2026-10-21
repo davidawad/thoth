@@ -270,7 +270,7 @@ export const FOUNDATIONAL_RESEARCH: FoundationalResearchCategory[] = [
       {
         citation:
           'Kincaid, J. P., Fishburne, R. P., Rogers, R. L., & Chissom, B. S. (1975). Derivation of new readability formulas (automated readability index, fog count, and flesch reading ease formula) for Navy enlisted personnel. Research Branch Report 8–75.',
-        note: 'Source of the Automated Readability Index and Flesch-Kincaid metrics, both selectable in Settings → Readability.',
+        note: 'Source of the Automated Readability Index and Flesch-Kincaid grade-level formula.',
       },
       {
         citation:
