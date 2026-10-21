@@ -1,3 +1,6 @@
 # Vitest property tests are required for the TypeScript pacing engine's bounds,
 # weighted-blend, and monotonicity guarantees.
 src/components/pacing/engine.test.ts
+# This scorer registry must integrate with the existing TypeScript Reader and
+# pacing settings APIs, so its pure engine belongs in the app's TS source tree.
+src/components/pacing/engine.ts
