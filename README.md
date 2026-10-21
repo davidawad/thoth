@@ -20,19 +20,41 @@ Looking to study instead? Try [Seshat](https://github.com/davidawad/Seshat).
 ## Dynamic pacing
 
 Dynamic pacing adjusts each word's display time using a weighted blend of
-readability and language-complexity scorers. This makes dwell time respond to
-the words and sentences being read instead of relying only on a fixed pace.
+word-level and sentence-level readability and language-complexity scorers. A
+score above 1 lengthens dwell time; a score below 1 shortens it. The result is
+clamped and smoothed before it is applied to the selected words-per-minute
+baseline.
 
-Available scorers are `wordDifficulty`, `fleschReadingEase`, `gunningFog`, `smog`,
-`colemanLiau`, `automatedReadability`, `daleChall`, `spache`,
-`lexicalDensity`, `wordRarity`, `clauseDepth`, and `wordLength`.
+The scorer weights in Settings cover these signals:
+
+- `wordDifficulty`: syllable count and Dale–Chall/Spache dictionary familiarity.
+- `fleschReadingEase`, `gunningFog`, `smog`, `colemanLiau`,
+  `automatedReadability`, `daleChall`, and `spache`: sentence-level readability
+  formulas.
+- `lexicalDensity`: the sentence's proportion of content words.
+- `wordRarity`: an approximate word-frequency signal.
+- `clauseDepth`: a sentence-level estimate based on subordinate conjunctions,
+  commas, and sentence length.
+- `wordLength`: word length and syllable count, with a sentence-level average.
 
 In Settings, enable or disable dynamic pacing and adjust each scorer's weight,
 the minimum and maximum multiplier, the curve around the baseline, and
-smoothing between consecutive words. These settings are saved in
-`localStorage`. Playback computes each word's pacing as it is scheduled.
-`src/components/pacing/precompute.ts` also provides an internal Web Worker
-precompute cache (with a chunked fallback); it is not yet used by playback.
+smoothing between consecutive words. The settings are saved in `localStorage`.
+Disabling dynamic pacing turns off the configurable scorers; the existing
+`wordDifficulty` adjustment remains active. Playback computes pacing as each
+word is scheduled. `src/components/pacing/precompute.ts` offers an internal
+Web Worker precompute cache with a chunked fallback, but playback does not use
+it yet.
+
+### Research context and future work
+
+The [Thoth research paper](http://arxiv.org/abs/1908.01699) identifies fixed
+unfamiliar-word timing as a limitation in §8.1 and comparing dictionaries as
+future work in §8.2. Dynamic pacing expands the timing heuristic with graduated
+word and sentence signals, and exposes the readability scorers as adjustable
+weights. These are heuristic estimates, not a validated model of an individual
+reader's comprehension. The paper's user study proposal in §8.3 remains open;
+the scorer weights and dictionary choices still need evaluation with readers.
 
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 

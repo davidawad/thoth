@@ -282,7 +282,7 @@ const easyWord = function checkAgainstSpacheDictionary(w: string): boolean {
 
 // Continuous, graduated per-word display-time multiplier - replaces the old
 // fixed "unfamiliar word gets 1.5x/2.5x time" binary flag (paper §8.1 Future
-// Work explicitly calls this out as losing gradations of difficulty).
+// Work calls out fixed unfamiliar-word timing and lost complexity gradations).
 // Combines two free per-word signals:
 //   - syllable count: longer words take more of the multiplier
 //   - dictionary familiarity tier: words absent from spache (the easier,

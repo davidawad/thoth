@@ -71,10 +71,11 @@ export const DEFAULT_AGE = 12;
 export const MAX_AGE = 22;
 export const AGE_SCALE = 6;
 
-// --- Per-word difficulty scaling, motivated by the fixed unfamiliar-word
-// timing assumption flagged in the paper's Future Work, §8.1. Dynamic pacing
-// now combines this scorer with selectable readability and language-complexity
-// scorers. See TextParsingTools.wordDifficultyMultiplier.
+// --- Per-word difficulty scaling. The paper's Future Work, §8.1, calls out
+// fixed unfamiliar-word timing and lost gradations of word complexity. This
+// heuristic adds syllable and dictionary-familiarity tiers; configurable word
+// and sentence scorers extend it (see README's Research context and future
+// work). It has not been validated against reader comprehension.
 export const DIFFICULTY_BASE_MULTIPLIER = 1; // multiplier floor - easy, short, familiar words are unaffected
 export const DIFFICULTY_SYLLABLE_WEIGHT = 0.15; // extra multiplier per syllable beyond the word's first
 export const DIFFICULTY_UNFAMILIAR_WEIGHT = 0.5; // extra multiplier when a word isn't in the dale-chall familiar list
