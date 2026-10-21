@@ -56,7 +56,7 @@ export interface PacingPrecomputeOptions {
   useWorker?: boolean;
   chunkSize?: number;
   enabled?: boolean;
-  sentences?: string[];
+  sentences?: string[] | undefined;
 }
 
 function idle(): Promise<void> {
@@ -67,13 +67,21 @@ function idle(): Promise<void> {
   });
 }
 
-async function computeChunked(
-  text: string,
-  config: LegacyPacingConfig,
-  enabled: boolean,
-  chunkSize: number,
-  sentenceList?: string[],
-): Promise<PacingMultipliers> {
+interface ChunkRequest {
+  text: string;
+  config: LegacyPacingConfig;
+  enabled: boolean;
+  chunkSize: number;
+  sentences: string[] | undefined;
+}
+
+async function computeChunked({
+  text,
+  config,
+  enabled,
+  chunkSize,
+  sentences: sentenceList,
+}: ChunkRequest): Promise<PacingMultipliers> {
   const words = text.match(/\S+/g) ?? [];
   const sentences = sentenceList ?? tokenSentences(words);
   const result = new Float32Array(words.length);
@@ -129,14 +137,7 @@ export class PacingPrecomputeCache {
   private activeConfigHash: string | undefined;
   private generation = 0;
 
-  async get(
-    text: string,
-    config: LegacyPacingConfig,
-    options: PacingPrecomputeOptions = {},
-  ): Promise<PacingMultipliers> {
-    const enabled = options.enabled ?? true;
-    const key = pacingCacheKey(text, config, enabled, options.sentences);
-    const configHash = `${hash(canonical(config))}:${enabled}`;
+  private selectConfig(configHash: string): void {
     if (
       this.activeConfigHash !== undefined &&
       this.activeConfigHash !== configHash
@@ -145,38 +146,46 @@ export class PacingPrecomputeCache {
       this.generation += 1;
     }
     this.activeConfigHash = configHash;
+  }
+
+  private async compute(
+    text: string,
+    config: LegacyPacingConfig,
+    enabled: boolean,
+    options: PacingPrecomputeOptions,
+  ): Promise<PacingMultipliers> {
+    const request = {
+      text,
+      config,
+      enabled,
+      chunkSize: Math.max(1, options.chunkSize ?? 10_000),
+      sentences: options.sentences,
+    };
+    if (options.useWorker === false || typeof Worker === 'undefined') {
+      return computeChunked(request);
+    }
+
+    try {
+      return await computeInWorker(text, config, enabled, options.sentences);
+    } catch {
+      return computeChunked(request);
+    }
+  }
+
+  async get(
+    text: string,
+    config: LegacyPacingConfig,
+    options: PacingPrecomputeOptions = {},
+  ): Promise<PacingMultipliers> {
+    const enabled = options.enabled ?? true;
+    const key = pacingCacheKey(text, config, enabled, options.sentences);
+    const configHash = `${hash(canonical(config))}:${enabled}`;
+    this.selectConfig(configHash);
     const cached = this.cache.get(key);
     if (cached) return cached;
 
-    const chunkSize = Math.max(1, options.chunkSize ?? 10_000);
     const generation = this.generation;
-    let values: PacingMultipliers;
-    if (options.useWorker !== false && typeof Worker !== 'undefined') {
-      try {
-        values = await computeInWorker(
-          text,
-          config,
-          enabled,
-          options.sentences,
-        );
-      } catch {
-        values = await computeChunked(
-          text,
-          config,
-          enabled,
-          chunkSize,
-          options.sentences,
-        );
-      }
-    } else {
-      values = await computeChunked(
-        text,
-        config,
-        enabled,
-        chunkSize,
-        options.sentences,
-      );
-    }
+    const values = await this.compute(text, config, enabled, options);
     if (
       generation === this.generation &&
       this.activeConfigHash === configHash

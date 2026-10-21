@@ -1,41 +1,41 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_PACING_CONFIG } from "../schemas";
-import { PacingPrecomputeCache, pacingCacheKey } from "./precompute";
-import { pacingMultiplier } from "../Reader/wordTiming";
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_PACING_CONFIG } from '../schemas';
+import { PacingPrecomputeCache, pacingCacheKey } from './precompute';
+import { pacingMultiplier } from '../Reader/wordTiming';
 
-describe("pacing precompute cache", () => {
-  it("keys text and canonicalized config independently of key insertion order", () => {
+describe('pacing precompute cache', () => {
+  it('keys text and canonicalized config independently of key insertion order', () => {
     const config = {
       ...DEFAULT_PACING_CONFIG,
       weights: { wordDifficulty: 0.5, other: 1 },
     };
     const reordered = { ...config, weights: { other: 1, wordDifficulty: 0.5 } };
-    expect(pacingCacheKey("one two", config)).toBe(
-      pacingCacheKey("one two", reordered),
+    expect(pacingCacheKey('one two', config)).toBe(
+      pacingCacheKey('one two', reordered),
     );
-    expect(pacingCacheKey("one two", config)).not.toBe(
-      pacingCacheKey("one three", config),
+    expect(pacingCacheKey('one two', config)).not.toBe(
+      pacingCacheKey('one three', config),
     );
-    expect(pacingCacheKey("one two", config, false)).not.toBe(
-      pacingCacheKey("one two", config, true),
+    expect(pacingCacheKey('one two', config, false)).not.toBe(
+      pacingCacheKey('one two', config, true),
     );
-    expect(pacingCacheKey("one two", config)).not.toBe(
-      pacingCacheKey("one two", { ...config, curve: 0.5 }),
+    expect(pacingCacheKey('one two', config)).not.toBe(
+      pacingCacheKey('one two', { ...config, curve: 0.5 }),
     );
     expect(
-      pacingCacheKey("one two", config, true, ["one two", "one two"]),
-    ).not.toBe(pacingCacheKey("one two", config, true, ["one", "two"]));
+      pacingCacheKey('one two', config, true, ['one two', 'one two']),
+    ).not.toBe(pacingCacheKey('one two', config, true, ['one', 'two']));
   });
 
-  it("misses on first request, hits the same tape, and invalidates on config change", async () => {
+  it('misses on first request, hits the same tape, and invalidates on config change', async () => {
     const cache = new PacingPrecomputeCache();
     expect(cache.size).toBe(0);
-    const first = await cache.get("A book sentence.", DEFAULT_PACING_CONFIG, {
+    const first = await cache.get('A book sentence.', DEFAULT_PACING_CONFIG, {
       useWorker: false,
     });
     expect(cache.size).toBe(1);
     expect(
-      await cache.get("A book sentence.", DEFAULT_PACING_CONFIG, {
+      await cache.get('A book sentence.', DEFAULT_PACING_CONFIG, {
         useWorker: false,
       }),
     ).toBe(first);
@@ -45,7 +45,7 @@ describe("pacing precompute cache", () => {
       minMultiplier: 3,
       maxMultiplier: 3,
     };
-    const second = await cache.get("A book sentence.", changed, {
+    const second = await cache.get('A book sentence.', changed, {
       useWorker: false,
     });
     expect(second).not.toBe(first);
@@ -54,8 +54,8 @@ describe("pacing precompute cache", () => {
     expect(cache.size).toBe(0);
   });
 
-  it("precomputes the same unsmoothed multipliers playback uses", async () => {
-    const text = "The exceptionally difficult sentence, ends here.";
+  it('precomputes the same unsmoothed multipliers playback uses', async () => {
+    const text = 'The exceptionally difficult sentence, ends here.';
     const words = text.match(/\S+/g)!;
     const cache = new PacingPrecomputeCache();
     const values = await cache.get(text, DEFAULT_PACING_CONFIG, {
@@ -68,7 +68,26 @@ describe("pacing precompute cache", () => {
     );
   });
 
-  it("sends and receives the typed worker message contract", async () => {
+  it('applies normalized scorer weights to a cached tape', async () => {
+    const text = 'The exceptionally difficult sentence ends here.';
+    const unitWeight = {
+      ...DEFAULT_PACING_CONFIG,
+      weights: { wordDifficulty: 1 },
+    };
+    const scaledWeight = {
+      ...DEFAULT_PACING_CONFIG,
+      weights: { wordDifficulty: 7 },
+    };
+    const cache = new PacingPrecomputeCache();
+    const unitValues = await cache.get(text, unitWeight, { useWorker: false });
+    const scaledValues = await cache.get(text, scaledWeight, {
+      useWorker: false,
+    });
+
+    expect(Array.from(scaledValues)).toEqual(Array.from(unitValues));
+  });
+
+  it('sends and receives the typed worker message contract', async () => {
     class MockWorker {
       static instance: MockWorker;
       onmessage: ((event: MessageEvent<Float32Array>) => void) | null = null;
@@ -87,18 +106,18 @@ describe("pacing precompute cache", () => {
         } as MessageEvent<Float32Array>);
       }
     }
-    vi.stubGlobal("Worker", MockWorker);
+    vi.stubGlobal('Worker', MockWorker);
 
     const config = DEFAULT_PACING_CONFIG;
-    const sentences = ["The first sentence.", "The second sentence."];
+    const sentences = ['The first sentence.', 'The second sentence.'];
     const values = await new PacingPrecomputeCache().get(
-      "first second",
+      'first second',
       config,
       { enabled: false, sentences },
     );
 
     expect(MockWorker.instance.request).toEqual({
-      text: "first second",
+      text: 'first second',
       config,
       enabled: false,
       sentences,
