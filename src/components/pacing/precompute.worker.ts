@@ -1,11 +1,11 @@
-import { scoreDwellMultiplier } from "./dwellMultiplier";
-import "./formulaScorers";
-import "./extraScorers";
-import type { PacingConfig } from "../schemas";
+import { scoreDwellMultiplier } from './dwellMultiplier';
+import './formulaScorers';
+import './extraScorers';
+import type { LegacyPacingConfig } from '../schemas';
 
 interface WorkerRequest {
   text: string;
-  config: PacingConfig;
+  config: LegacyPacingConfig;
 }
 
 const workerScope = self as unknown as {

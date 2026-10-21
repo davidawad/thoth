@@ -1,19 +1,19 @@
-import type { PacingConfig } from "../schemas";
-import { scoreDwellMultiplier } from "./dwellMultiplier";
+import type { LegacyPacingConfig } from '../schemas';
+import { scoreDwellMultiplier } from './dwellMultiplier';
 
 export type PacingMultipliers = Float32Array;
 
 // Stable serialization makes equivalent configs share cache entries regardless
 // of property insertion order.
 function canonical(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  if (value && typeof value === "object") {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (value && typeof value === 'object') {
     return `{${Object.entries(value as Record<string, unknown>)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`)
-      .join(",")}}`;
+      .join(',')}}`;
   }
-  return JSON.stringify(value) ?? "undefined";
+  return JSON.stringify(value) ?? 'undefined';
 }
 
 function hash(value: string): string {
@@ -23,10 +23,13 @@ function hash(value: string): string {
     result ^= BigInt(value.charCodeAt(index));
     result = BigInt.asUintN(64, result * 0x100000001b3n);
   }
-  return result.toString(16).padStart(16, "0");
+  return result.toString(16).padStart(16, '0');
 }
 
-export function pacingCacheKey(text: string, config: PacingConfig): string {
+export function pacingCacheKey(
+  text: string,
+  config: LegacyPacingConfig,
+): string {
   return `${hash(text)}:${hash(canonical(config))}`;
 }
 
@@ -38,7 +41,7 @@ export interface PacingPrecomputeOptions {
 
 function idle(): Promise<void> {
   return new Promise((resolve) => {
-    if (typeof requestIdleCallback === "function")
+    if (typeof requestIdleCallback === 'function')
       requestIdleCallback(() => resolve());
     else setTimeout(resolve, 0);
   });
@@ -46,7 +49,7 @@ function idle(): Promise<void> {
 
 async function computeChunked(
   text: string,
-  config: PacingConfig,
+  config: LegacyPacingConfig,
   chunkSize: number,
 ): Promise<PacingMultipliers> {
   const words = text.match(/\S+/g) ?? [];
@@ -81,12 +84,12 @@ async function computeChunked(
 
 function computeInWorker(
   text: string,
-  config: PacingConfig,
+  config: LegacyPacingConfig,
 ): Promise<PacingMultipliers> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(
-      new URL("./precompute.worker.ts", import.meta.url),
-      { type: "module" },
+      new URL('./precompute.worker.ts', import.meta.url),
+      { type: 'module' },
     );
     worker.onmessage = (event: MessageEvent<Float32Array>) => {
       worker.terminate();
@@ -107,11 +110,11 @@ export class PacingPrecomputeCache {
 
   async get(
     text: string,
-    config: PacingConfig,
+    config: LegacyPacingConfig,
     options: PacingPrecomputeOptions = {},
   ): Promise<PacingMultipliers> {
     const key = pacingCacheKey(text, config);
-    const configHash = key.slice(key.indexOf(":") + 1);
+    const configHash = key.slice(key.indexOf(':') + 1);
     if (
       this.activeConfigHash !== undefined &&
       this.activeConfigHash !== configHash
@@ -123,7 +126,7 @@ export class PacingPrecomputeCache {
 
     const chunkSize = Math.max(1, options.chunkSize ?? 10_000);
     let values: PacingMultipliers;
-    if (options.useWorker !== false && typeof Worker !== "undefined") {
+    if (options.useWorker !== false && typeof Worker !== 'undefined') {
       try {
         values = await computeInWorker(text, config);
       } catch {

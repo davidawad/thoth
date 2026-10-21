@@ -4,7 +4,7 @@ import {
   DEFAULT_PACING_CONFIG,
   pacingConfigSchema,
   storedBooleanSchema,
-  type PacingConfig,
+  type LegacyPacingConfig,
 } from '../schemas';
 import { scorerRegistry } from '../pacing/scorers';
 import {
@@ -18,7 +18,7 @@ const PACING_ENABLED_STORAGE_KEY = 'thoth.pacingEnabled';
 const SAMPLE_SENTENCE =
   'The curious reader paused to consider the unfamiliar word.';
 
-function loadConfig(): PacingConfig {
+function loadConfig(): LegacyPacingConfig {
   try {
     if (typeof window === 'undefined') return DEFAULT_PACING_CONFIG;
     const stored = window.localStorage.getItem(PACING_CONFIG_STORAGE_KEY);
@@ -52,7 +52,7 @@ function loadEnabled(): boolean {
 }
 
 export default function PacingSettings() {
-  const [config, setConfig] = useState<PacingConfig>(loadConfig);
+  const [config, setConfig] = useState<LegacyPacingConfig>(loadConfig);
   const [enabled, setEnabled] = useState(loadEnabled);
   const scorers = useMemo(() => scorerRegistry.list(), []);
 
@@ -77,7 +77,7 @@ export default function PacingSettings() {
     notifyPacingSettingsChanged();
   }, [enabled]);
 
-  const update = (changes: Partial<PacingConfig>) =>
+  const update = (changes: Partial<LegacyPacingConfig>) =>
     setConfig((current) => ({ ...current, ...changes }));
   // Same path playback takes (wordDisplayTime), including when disabled.
   const preview = pacingMultiplier(SAMPLE_SENTENCE, config, enabled);

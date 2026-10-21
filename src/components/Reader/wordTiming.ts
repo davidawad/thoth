@@ -6,7 +6,7 @@ import {
   pacingConfigSchema,
   DEFAULT_PACING_CONFIG,
   storedBooleanSchema,
-  type PacingConfig,
+  type LegacyPacingConfig,
 } from '../schemas';
 
 export function loadPacingSettings() {
@@ -76,7 +76,7 @@ const LEGACY_SCORER = 'wordDifficulty';
  */
 export function pacingMultiplier(
   word: string,
-  config: PacingConfig,
+  config: LegacyPacingConfig,
   enabled: boolean,
   sentence = word,
 ): number {
@@ -97,5 +97,10 @@ export function pacingMultiplier(
         Object.entries(config.weights).filter(([id]) => id !== LEGACY_SCORER),
       );
   if (!Object.values(weights).some((weight) => weight > 0)) return 1;
-  return scoreDwellMultiplier(scored, { ...config, weights }, undefined, sentence);
+  return scoreDwellMultiplier(
+    scored,
+    { ...config, weights },
+    undefined,
+    sentence,
+  );
 }

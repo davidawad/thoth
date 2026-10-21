@@ -2,7 +2,13 @@
 import './formulaScorers';
 import './extraScorers';
 
-export * from './scorers';
-export * from './dwellMultiplier';
+export {
+  scorerRegistry as legacyScorerRegistry,
+  wordDifficultyScorer as legacyWordDifficultyScorer,
+} from './scorers';
+export type { Scorer as LegacyScorer } from './scorers';
+export { dwellMultiplier, scoreDwellMultiplier } from './dwellMultiplier';
 export * from './sentences';
 export * from './precompute';
+export { scorerRegistry, wordDifficultyScorer } from './engine';
+export type { Scorer, ScorerContext, ScorerGranularity } from './engine';

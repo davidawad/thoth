@@ -64,9 +64,42 @@ export const pacingConfigSchema = z
   .refine((config) => config.minMultiplier <= config.maxMultiplier, {
     message: 'minMultiplier must be <= maxMultiplier',
   });
-export type PacingConfig = z.infer<typeof pacingConfigSchema>;
+export type LegacyPacingConfig = z.infer<typeof pacingConfigSchema>;
 
-export const DEFAULT_PACING_CONFIG: PacingConfig = {
+// Normalized scorer engine config. The older multiplier-based config above
+// remains supported for saved settings and the current tuning panel.
+export const pacingEngineConfigSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    scorers: z
+      .array(
+        z.object({
+          key: z.string().min(1),
+          weight: z.number().finite().nonnegative(),
+        }),
+      )
+      .default([{ key: 'word-difficulty', weight: 1 }]),
+    granularity: z.enum(['word', 'sentence', 'both']).default('word'),
+    minMultiplier: z.number().finite().positive().default(1),
+    maxMultiplier: z.number().finite().positive().default(3),
+    curve: z.enum(['linear', 'ease']).default('linear'),
+    smoothing: z
+      .object({
+        method: z.enum(['ema', 'moving-average']).default('ema'),
+        window: z.number().int().min(1).max(1000).default(1),
+      })
+      .default({ method: 'ema', window: 1 }),
+  })
+  .refine((config) => config.minMultiplier <= config.maxMultiplier, {
+    message: 'minMultiplier must be <= maxMultiplier',
+  });
+export type PacingConfig = z.infer<typeof pacingEngineConfigSchema>;
+export type PacingEngineConfig = PacingConfig;
+
+export const DEFAULT_PACING_ENGINE_CONFIG: PacingEngineConfig =
+  pacingEngineConfigSchema.parse({});
+
+export const DEFAULT_PACING_CONFIG: LegacyPacingConfig = {
   weights: { wordDifficulty: 1 },
   minMultiplier: 0.01,
   maxMultiplier: 100,

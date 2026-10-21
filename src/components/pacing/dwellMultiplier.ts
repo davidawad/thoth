@@ -1,4 +1,6 @@
-import type { PacingConfig } from '../schemas';
+import type { LegacyPacingConfig, PacingConfig } from '../schemas';
+import type { ScorerContext } from './engine';
+import { dwellMultiplier as normalizedDwellMultiplier } from './engine';
 import { scorerRegistry } from './scorers';
 
 export interface ScorerValue {
@@ -7,9 +9,9 @@ export interface ScorerValue {
 }
 
 /** Blend scorer multipliers, clamp, curve around 1, then smooth against history. */
-export function dwellMultiplier(
+function legacyDwellMultiplier(
   values: ScorerValue[],
-  config: PacingConfig,
+  config: LegacyPacingConfig,
   previous?: number,
 ): number {
   const weighted = values.reduce(
@@ -40,10 +42,40 @@ export function dwellMultiplier(
   );
 }
 
+/** Apply normalized complexity scores, or use the legacy value blend overload. */
+export function dwellMultiplier(
+  unit: unknown,
+  config: PacingConfig,
+  ctx?: ScorerContext,
+): number;
+export function dwellMultiplier(
+  values: ScorerValue[],
+  config: LegacyPacingConfig,
+  previous?: number,
+): number;
+export function dwellMultiplier(
+  unitOrValues: unknown,
+  config: PacingConfig | LegacyPacingConfig,
+  ctxOrPrevious?: ScorerContext | number,
+): number {
+  if (Array.isArray(unitOrValues)) {
+    return legacyDwellMultiplier(
+      unitOrValues as ScorerValue[],
+      config as LegacyPacingConfig,
+      typeof ctxOrPrevious === 'number' ? ctxOrPrevious : undefined,
+    );
+  }
+  return normalizedDwellMultiplier(
+    unitOrValues,
+    config as PacingConfig,
+    typeof ctxOrPrevious === 'object' ? ctxOrPrevious : undefined,
+  );
+}
+
 /** Score a word using the configured scorers, then apply the pacing blend. */
 export function scoreDwellMultiplier(
   word: string,
-  config: PacingConfig,
+  config: LegacyPacingConfig,
   previous?: number,
   containingSentence?: string,
 ): number {
