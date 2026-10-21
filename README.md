@@ -39,12 +39,14 @@ The scorer weights in Settings cover these signals:
 
 In Settings, enable or disable dynamic pacing and adjust each scorer's weight,
 the minimum and maximum multiplier, the curve around the baseline, and
-smoothing between consecutive words. The settings are saved in `localStorage`.
+smoothing between consecutive words. These settings are saved in
+`localStorage`.
 Disabling dynamic pacing turns off the configurable scorers; the existing
 `wordDifficulty` adjustment remains active. Playback computes pacing as each
-word is scheduled. `src/components/pacing/precompute.ts` offers an internal
-Web Worker precompute cache with a chunked fallback, but playback does not use
-it yet.
+word is scheduled. Book playback precomputes large chapters in a Web Worker,
+with a chunked fallback and a cache keyed by text, sentence boundaries, and
+pacing settings. Cached multipliers use the same word and sentence scoring as
+`wordDisplayTime`.
 
 ### Research context and future work
 
@@ -55,6 +57,8 @@ word and sentence signals, and exposes the readability scorers as adjustable
 weights. These are heuristic estimates, not a validated model of an individual
 reader's comprehension. The paper's user study proposal in §8.3 remains open;
 the scorer weights and dictionary choices still need evaluation with readers.
+The chunked 100,000-word fallback benchmark averages 757 ms on the development
+container (`pnpm exec vitest bench --run bench/pacingPrecompute.bench.ts`).
 
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 

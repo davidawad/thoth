@@ -24,11 +24,18 @@ export function sentenceRanges(text: string): SentenceRange[] {
 export function tokenSentences(tokens: string[]): string[] {
   const text = tokens.join(' ');
   const ranges = sentenceRanges(text);
+  const sentenceByRange = new Map<SentenceRange, string>();
   let offset = 0;
   return tokens.map((token) => {
     const start = offset;
     offset += token.length + 1;
     const range = ranges.find((r) => start >= r.start && start < r.end);
-    return range ? text.slice(range.start, range.end) : token;
+    if (!range) return token;
+    let sentence = sentenceByRange.get(range);
+    if (sentence === undefined) {
+      sentence = text.slice(range.start, range.end);
+      sentenceByRange.set(range, sentence);
+    }
+    return sentence;
   });
 }

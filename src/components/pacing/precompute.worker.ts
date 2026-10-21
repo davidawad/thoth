@@ -1,11 +1,12 @@
-import { scoreDwellMultiplier } from './dwellMultiplier';
-import './formulaScorers';
-import './extraScorers';
 import type { LegacyPacingConfig } from '../schemas';
+import { pacingMultiplier } from '../Reader/wordTiming';
+import { tokenSentences } from './sentences';
 
 interface WorkerRequest {
   text: string;
   config: LegacyPacingConfig;
+  enabled: boolean;
+  sentences?: string[];
 }
 
 const workerScope = self as unknown as {
@@ -15,27 +16,28 @@ const workerScope = self as unknown as {
 
 workerScope.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const words = event.data.text.match(/\S+/g) ?? [];
+  const sentences = event.data.sentences ?? tokenSentences(words);
   const multipliers = new Float32Array(words.length);
-  const scored = new Map<string, number>();
-  let previous: number | undefined;
+  const scored = new Map<string, Map<string, number>>();
   for (let index = 0; index < words.length; index += 1) {
     const word = words[index]!;
-    let target = scored.get(word);
-    if (target === undefined) {
-      target = scoreDwellMultiplier(word, event.data.config);
-      scored.set(word, target);
+    const sentence = sentences[index] ?? word;
+    let sentenceScores = scored.get(sentence);
+    if (!sentenceScores) {
+      sentenceScores = new Map();
+      scored.set(sentence, sentenceScores);
     }
-    previous =
-      previous === undefined
-        ? target
-        : Math.min(
-            event.data.config.maxMultiplier,
-            Math.max(
-              event.data.config.minMultiplier,
-              previous + event.data.config.smoothing * (target - previous),
-            ),
-          );
-    multipliers[index] = previous;
+    let multiplier = sentenceScores.get(word);
+    if (multiplier === undefined) {
+      multiplier = pacingMultiplier(
+        word,
+        event.data.config,
+        event.data.enabled,
+        sentence,
+      );
+      sentenceScores.set(word, multiplier);
+    }
+    multipliers[index] = multiplier;
   }
   workerScope.postMessage(multipliers, [multipliers.buffer]);
 };

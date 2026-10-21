@@ -12,6 +12,7 @@ import { loadPositions } from './storage';
 import { layoutBook } from './bookModel';
 import { indexBook } from './spreadModel';
 import { sentenceAt } from './useSpreadReader';
+import { pacingPrecomputeCache } from '../pacing/precompute';
 
 const sentence = (i: number): string =>
   `Sentence number ${i} runs along for a few words.`;
@@ -45,10 +46,10 @@ function installStorage(): void {
   });
 }
 
-function mount(onClose = vi.fn(), modalOpen = false) {
+function mount(onClose = vi.fn(), modalOpen = false, targetBook = book) {
   const utils = render(
     <SpreadReader
-      book={book}
+      book={targetBook}
       settings={{ readingSpeed: 600 }}
       onSpeedChange={vi.fn()}
       onClose={onClose}
@@ -139,6 +140,27 @@ describe('SpreadReader', () => {
     act(() => window.dispatchEvent(new Event('thoth:pacing-settings-changed')));
     act(() => vi.advanceTimersByTime(2));
     expect(screen.getByTestId('book-current-word').textContent).not.toBe(first);
+  });
+
+  it('uses the pacing precompute cache for a large chapter', () => {
+    const get = vi.spyOn(pacingPrecomputeCache, 'get');
+    const largeBook = {
+      ...book,
+      chapters: [
+        {
+          title: 'Large',
+          text: Array.from(
+            { length: 1_000 },
+            (_, index) =>
+              `Sentence ${index} has enough words for the pacing cache.`,
+          ).join(' '),
+        },
+      ],
+    } satisfies Book;
+    mount(vi.fn(), false, largeBook);
+    expect(get).toHaveBeenCalledOnce();
+    expect(get.mock.calls[0]?.[2]).toMatchObject({ enabled: true });
+    get.mockRestore();
   });
 
   it('does not hijack keys while typing in a field or behind a modal', () => {

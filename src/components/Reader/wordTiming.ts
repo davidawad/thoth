@@ -45,6 +45,19 @@ export function wordDisplayTime(
   wpm: number,
   sentence = word,
 ): number {
+  const { config, enabled } = loadPacingSettings();
+  return wordDisplayTimeWithMultiplier(
+    word,
+    wpm,
+    pacingMultiplier(word, config, enabled, sentence),
+  );
+}
+
+export function wordDisplayTimeWithMultiplier(
+  word: string,
+  wpm: number,
+  multiplier: number,
+): number {
   let t = 60000 / wpm;
 
   // over six characters: a quarter longer
@@ -62,8 +75,7 @@ export function wordDisplayTime(
     t += t * 1.5;
   }
 
-  const { config, enabled } = loadPacingSettings();
-  return t * pacingMultiplier(word, config, enabled, sentence);
+  return t * multiplier;
 }
 
 const LEGACY_SCORER = 'wordDifficulty';

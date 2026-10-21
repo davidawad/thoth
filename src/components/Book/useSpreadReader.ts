@@ -16,10 +16,13 @@ import {
 import { layoutBook, type Book } from './bookModel';
 import {
   PACING_SETTINGS_CHANGED,
+  loadPacingSettings,
   wordDisplayTime,
+  wordDisplayTimeWithMultiplier,
 } from '../Reader/wordTiming';
 import '../pacing';
 import { tokenizePage } from './pageWords';
+import { pacingPrecomputeCache } from '../pacing/precompute';
 import { loadPositions, saveCurrentBookId, savePosition } from './storage';
 import {
   INITIAL_FIT,
@@ -208,15 +211,58 @@ export function usePlayback(
   const word = wordAt(ix, cursor);
   const sentence = sentenceAt(ix, cursor);
   const [settingsRevision, setSettingsRevision] = useState(0);
+  const [precomputed, setPrecomputed] = useState<{
+    chapter: number;
+    values: Float32Array;
+  } | null>(null);
   useEffect(() => {
     const changed = (): void => setSettingsRevision((revision) => revision + 1);
     window.addEventListener(PACING_SETTINGS_CHANGED, changed);
     return () => window.removeEventListener(PACING_SETTINGS_CHANGED, changed);
   }, []);
+  const chapterText = ix.layout.pages[cursor.chapter]?.join(' ') ?? '';
+  const isLargeChapter = (chapterText.match(/\S+/g)?.length ?? 0) >= 1_000;
   useEffect(() => {
-    if (!playing) {
+    if (!isLargeChapter) {
+      setPrecomputed(null);
       return;
     }
+    setPrecomputed(null);
+    const { config, enabled } = loadPacingSettings();
+    const pageTokens = tokenizePage(chapterText);
+    const sentenceWords = new Map<number, string[]>();
+    pageTokens.words.forEach((word, index) => {
+      const sentence = pageTokens.sentenceOf[index]!;
+      const words = sentenceWords.get(sentence) ?? [];
+      words.push(word);
+      sentenceWords.set(sentence, words);
+    });
+    const sentenceText = new Map(
+      [...sentenceWords].map(([index, words]) => [index, words.join(' ')]),
+    );
+    const sentences = pageTokens.sentenceOf.map((sentence) =>
+      sentenceText.get(sentence)!,
+    );
+    let live = true;
+    void pacingPrecomputeCache
+      .get(pageTokens.words.join(' '), config, { enabled, sentences })
+      .then((values) => {
+        if (live) setPrecomputed({ chapter: cursor.chapter, values });
+      });
+    return () => {
+      live = false;
+    };
+  }, [chapterText, cursor.chapter, settingsRevision, isLargeChapter]);
+  useEffect(() => {
+    if (
+      !playing ||
+      (isLargeChapter && precomputed?.chapter !== cursor.chapter)
+    ) {
+      return;
+    }
+    const multiplier = isLargeChapter
+      ? (precomputed!.values[cursor.offset] ?? 1)
+      : undefined;
     const id = setTimeout(
       () => {
         if (stepLoc(ix, cursor, 1)) {
@@ -225,10 +271,24 @@ export function usePlayback(
           stop();
         }
       },
-      wordDisplayTime(word, wpm, sentence),
+      multiplier === undefined
+        ? wordDisplayTime(word, wpm, sentence)
+        : wordDisplayTimeWithMultiplier(word, wpm, multiplier),
     );
     return () => clearTimeout(id);
-  }, [playing, stop, cursor, word, sentence, wpm, ix, dispatch, settingsRevision]);
+  }, [
+    playing,
+    stop,
+    cursor,
+    word,
+    sentence,
+    wpm,
+    ix,
+    dispatch,
+    settingsRevision,
+    precomputed,
+    isLargeChapter,
+  ]);
 }
 
 /** Saves the book + word shortly after it settles; returns a flush for leaving the book. */

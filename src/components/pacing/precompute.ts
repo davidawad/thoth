@@ -1,5 +1,6 @@
 import type { LegacyPacingConfig } from '../schemas';
-import { scoreDwellMultiplier } from './dwellMultiplier';
+import { pacingMultiplier } from '../Reader/wordTiming';
+import { tokenSentences } from './sentences';
 
 export type PacingMultipliers = Float32Array;
 
@@ -29,14 +30,33 @@ function hash(value: string): string {
 export function pacingCacheKey(
   text: string,
   config: LegacyPacingConfig,
+  enabled = true,
+  sentences?: string[],
 ): string {
-  return `${hash(text)}:${hash(canonical(config))}`;
+  let sentenceKey = 'default-sentences';
+  if (sentences) {
+    const sentenceHashes = new Map<string, string>();
+    const ranges: { start: number; sentence: string }[] = [];
+    sentences.forEach((sentence, index) => {
+      if (index > 0 && sentences[index - 1] === sentence) return;
+      let sentenceHash = sentenceHashes.get(sentence);
+      if (!sentenceHash) {
+        sentenceHash = hash(sentence);
+        sentenceHashes.set(sentence, sentenceHash);
+      }
+      ranges.push({ start: index, sentence: sentenceHash });
+    });
+    sentenceKey = hash(canonical(ranges));
+  }
+  return `${hash(text)}:${hash(canonical(config))}:${enabled}:${sentenceKey}`;
 }
 
 export interface PacingPrecomputeOptions {
   /** Set false to force the chunked fallback (also useful in non-worker hosts). */
   useWorker?: boolean;
   chunkSize?: number;
+  enabled?: boolean;
+  sentences?: string[];
 }
 
 function idle(): Promise<void> {
@@ -50,32 +70,30 @@ function idle(): Promise<void> {
 async function computeChunked(
   text: string,
   config: LegacyPacingConfig,
+  enabled: boolean,
   chunkSize: number,
+  sentenceList?: string[],
 ): Promise<PacingMultipliers> {
   const words = text.match(/\S+/g) ?? [];
+  const sentences = sentenceList ?? tokenSentences(words);
   const result = new Float32Array(words.length);
-  const scored = new Map<string, number>();
-  let previous: number | undefined;
+  const scored = new Map<string, Map<string, number>>();
   for (let start = 0; start < words.length; start += chunkSize) {
     const end = Math.min(start + chunkSize, words.length);
     for (let index = start; index < end; index += 1) {
       const word = words[index]!;
-      let target = scored.get(word);
-      if (target === undefined) {
-        target = scoreDwellMultiplier(word, config);
-        scored.set(word, target);
+      const sentence = sentences[index] ?? word;
+      let sentenceScores = scored.get(sentence);
+      if (!sentenceScores) {
+        sentenceScores = new Map();
+        scored.set(sentence, sentenceScores);
       }
-      previous =
-        previous === undefined
-          ? target
-          : Math.min(
-              config.maxMultiplier,
-              Math.max(
-                config.minMultiplier,
-                previous + config.smoothing * (target - previous),
-              ),
-            );
-      result[index] = previous;
+      let multiplier = sentenceScores.get(word);
+      if (multiplier === undefined) {
+        multiplier = pacingMultiplier(word, config, enabled, sentence);
+        sentenceScores.set(word, multiplier);
+      }
+      result[index] = multiplier;
     }
     if (end < words.length) await idle();
   }
@@ -85,6 +103,8 @@ async function computeChunked(
 function computeInWorker(
   text: string,
   config: LegacyPacingConfig,
+  enabled: boolean,
+  sentences?: string[],
 ): Promise<PacingMultipliers> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(
@@ -99,7 +119,7 @@ function computeInWorker(
       worker.terminate();
       reject(event.error ?? new Error(event.message));
     };
-    worker.postMessage({ text, config });
+    worker.postMessage({ text, config, enabled, sentences });
   });
 }
 
@@ -107,41 +127,69 @@ function computeInWorker(
 export class PacingPrecomputeCache {
   private readonly cache = new Map<string, PacingMultipliers>();
   private activeConfigHash: string | undefined;
+  private generation = 0;
 
   async get(
     text: string,
     config: LegacyPacingConfig,
     options: PacingPrecomputeOptions = {},
   ): Promise<PacingMultipliers> {
-    const key = pacingCacheKey(text, config);
-    const configHash = key.slice(key.indexOf(':') + 1);
+    const enabled = options.enabled ?? true;
+    const key = pacingCacheKey(text, config, enabled, options.sentences);
+    const configHash = `${hash(canonical(config))}:${enabled}`;
     if (
       this.activeConfigHash !== undefined &&
       this.activeConfigHash !== configHash
-    )
+    ) {
       this.cache.clear();
+      this.generation += 1;
+    }
     this.activeConfigHash = configHash;
     const cached = this.cache.get(key);
     if (cached) return cached;
 
     const chunkSize = Math.max(1, options.chunkSize ?? 10_000);
+    const generation = this.generation;
     let values: PacingMultipliers;
     if (options.useWorker !== false && typeof Worker !== 'undefined') {
       try {
-        values = await computeInWorker(text, config);
+        values = await computeInWorker(
+          text,
+          config,
+          enabled,
+          options.sentences,
+        );
       } catch {
-        values = await computeChunked(text, config, chunkSize);
+        values = await computeChunked(
+          text,
+          config,
+          enabled,
+          chunkSize,
+          options.sentences,
+        );
       }
     } else {
-      values = await computeChunked(text, config, chunkSize);
+      values = await computeChunked(
+        text,
+        config,
+        enabled,
+        chunkSize,
+        options.sentences,
+      );
     }
-    this.cache.set(key, values);
+    if (
+      generation === this.generation &&
+      this.activeConfigHash === configHash
+    ) {
+      this.cache.set(key, values);
+    }
     return values;
   }
 
   invalidate(): void {
     this.cache.clear();
     this.activeConfigHash = undefined;
+    this.generation += 1;
   }
 
   get size(): number {
