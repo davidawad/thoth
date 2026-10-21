@@ -1,0 +1,3 @@
+# Vitest property tests are required for the TypeScript pacing engine's bounds,
+# weighted-blend, and monotonicity guarantees.
+src/components/pacing/engine.test.ts
