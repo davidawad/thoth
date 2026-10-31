@@ -59,7 +59,7 @@
     "is-wsl": "^3.1.1",
     "lint-staged": "^17.2.0",
     "mini-css-extract-plugin": "2.10.2",
-    "next": "^16.3.8",
+    "next": "^16.4.1",
     "optimize-css-assets-webpack-plugin": "6.0.1",
     "pdfjs-dist": "6.2.108",
     "pnp-webpack-plugin": "1.7.0",
