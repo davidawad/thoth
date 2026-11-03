@@ -96,7 +96,7 @@
     "webpack-manifest-plugin": "6.0.1",
     "workbox-webpack-plugin": "7.4.1",
     "worker-loader": "^3.0.8",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
