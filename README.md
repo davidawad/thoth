@@ -19,6 +19,8 @@ Looking to study instead? Try [Seshat](https://github.com/davidawad/Seshat).
 
 This project is a proof of concept implementing Thoth as described in [this research paper](http://arxiv.org/abs/1908.01699)
 
+TEST CHANGE
+
 ## Available Scripts
 
 The super short version
