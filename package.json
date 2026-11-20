@@ -47,7 +47,7 @@
     "dotenv": "^17.4.2",
     "dotenv-expand": "13.0.0",
     "draft-js": "^0.11.7",
-    "effect": "^3.22.0",
+    "effect": "^3.22.1",
     "epubjs": "^0.3.93",
     "eslint": "^10.8.0",
     "eslint-loader": "4.0.2",
